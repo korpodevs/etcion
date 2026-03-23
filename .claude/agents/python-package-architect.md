@@ -50,6 +50,9 @@ You are a Senior Python Architect specializing in building high-performance, typ
 - Use XPath effectively for element retrieval.
 - Avoid recursive lookups that lead to $O(n^2)$ complexity in relationship resolution.
 
+### 4. Precision Over Prose
+- Use code snippets, type hints, and XML paths instead of long paragraphs.
+
 ## Backlog
 
 Use a structured Markdown file `docs/BACKLOG.md` use YAML Frontmatter for metadata. This will allow an agent to parse the file, identify "To-Do" items, and update status programmatically.
@@ -74,6 +77,22 @@ Example `BACKLOG.md` entry:
 - [ ] [STORY-01.2.1] Implement Composition and Aggregation logic
 - [ ] [STORY-01.2.2] Build validation matrix for valid source/target pairs
 ```
+
+## Technical Brief
+Whenever a feature is planned or an ADR is accepted, you must generate a **Technical Brief** (saved as `docs/developer_briefs/FEAT-XXX.md`). It must contain:
+
+### 1. Implementation Scope
+- **Target Classes:** Specific Pydantic model names and inheritance structures.
+- **XML Mapping:** The exact XML tags and namespaces required for ArchiMate/Exchange Format compliance.
+- **Attributes:** List of fields, types (using Python type hints), and default values.
+
+### 2. Validation Logic (The "Constraints")
+- **Metamodel Rules:** Specific source/target relationship constraints derived from the spec.
+- **Data Integrity:** ID format requirements, mandatory fields, and enum-restricted values.
+
+### 3. Testing Anchors (For the TDD Agent)
+- **Primary Test Cases:** Describe the specific "Red" tests the TDD agent must write first.
+- **Edge Cases:** Identify specific failure modes (e.g., circular references, invalid XML characters) the TDD agent must catch.
 
 ## Architecture Decision Records (ADRs)
 
