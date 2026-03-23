@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.18">
+<meta name="keywords" content="Standard, Template, The Open Group, www.opengroup.org">
+<meta name="author" content="The Open Group">
+<meta name="copyright" content="©The Open Group, 2012-2023">
+<title>Language Structure: ArchiMate&#174; 3.2 Specification</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link type="text/css" rel="stylesheet" href="style.css">
+<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KEWTYEPPT3"></script>
+<script src="./ganalytics.js"></script>
+ 
+</head>
+<body id="ch-Language-Structure" class="book toc2 toc-left">
+<div id="header">
+<h1>ArchiMate&#174; 3.2 Specification</h1>
+<div class="details">
+<span id="author" class="author">The Open Group</span><br>
+</div>
+<div id="toc" class="toc2">
+<hr>
+<h5>Search</h5>
+<div>
+<small><a href=/cgi/awordsearch.cgi>
+<i class="fa fa-search"></i> Word Search</a> | Search Index
+<!--
+<a href=glossary.html><i class="fa fa-info-circle"></i> Glossary Index</a> -->
+</small>
+<br><br>
+<form method="GET" action="/cgi/akman4.cgi" target="main">
+<input name="value" size="16"><input type="submit" value="Search..">
+</form>
+<br>
+[<a href="language-notation-guide.html" title="Clickable notation guide" alt="Clickable notation guide" text="Clickable notation guide">Language Notation Guide</a>]
+</div>
+<hr>
+<div class="tooltip">
+<span class= "tooltiptext">Provide feedback on this page</span>
+<a href="/cgi/c226feedback.cgi" target="_blank">
+<span style="color: #00667F;">
+<i class="fa fa-comments fa-2x" aria-hidden="true"></i>
+<i class="fa fa-bug fa-2x" aria-hidden="true"></i>
+</span>
+</a>
+</div>
+<hr>
+
+<div id="toctitle">Table of Contents</div>
+<p><span class="toc-root"><a href="index.html">ArchiMate&#174; 3.2 Specification</a></span></p><ul class="sectlevel0">
+<li><a href="_archimate_3_2_specification.html">ArchiMate 3.2 Specification</a>
+<ul class="sectlevel1">
+<li><a href="ch-Preface.html">Preface</a>
+</li>
+<li><a href="ch-Trademarks.html">Trademarks</a>
+</li>
+<li><a href="_acknowledgements.html">Acknowledgements</a>
+</li>
+<li><a href="ch-Referenced-docs.html">Referenced Documents</a>
+</li>
+<li><a href="ch-Introduction.html">1. Introduction</a>
+</li>
+<li><a href="ch-Definitions.html">2. Definitions</a>
+</li>
+<li><a href="ch-Language-Structure.html"><span class="toc-current">3. Language Structure</span></a>
+<ul class="sectlevel2">
+<li><a href="ch-Language-Structure.html#sec-Language-Design-Considerations">3.1. Language Design Considerations</a>
+</li>
+<li><a href="ch-Language-Structure.html#sec-Top-Level-Language-Structure">3.2. Top-Level Language Structure</a>
+</li>
+<li><a href="ch-Language-Structure.html#sec-Layering-of-the-ArchiMate-Language">3.3. Layering of the ArchiMate Language</a>
+</li>
+<li><a href="ch-Language-Structure.html#sec-The-ArchiMate-Core-Framework">3.4. The ArchiMate Core Framework</a>
+</li>
+<li><a href="ch-Language-Structure.html#sec-The-ArchiMate-Full-Framework">3.5. The ArchiMate Full Framework</a>
+</li>
+<li><a href="ch-Language-Structure.html#sec-Abstraction-in-the-ArchiMate-Language">3.6. Abstraction in the ArchiMate Language</a>
+</li>
+<li><a href="ch-Language-Structure.html#sec-Concepts-and-their-Notation">3.7. Concepts and their Notation</a>
+</li>
+<li><a href="ch-Language-Structure.html#sec-Use-of-Nesting">3.8. Use of Nesting</a>
+</li>
+<li><a href="ch-Language-Structure.html#sec-Use-of-Colors-and-Notational-Cues">3.9. Use of Colors and Notational Cues</a>
+</li>
+</ul>
+</li>
+<li><a href="ch-Generic-Metamodel.html">4. Generic Metamodel</a>
+</li>
+<li><a href="ch-Relationships-and-Relationship-Connectors.html">5. Relationships and Relationship Connectors</a>
+</li>
+<li><a href="ch-Motivation-Elements.html">6. Motivation Elements</a>
+</li>
+<li><a href="ch-Strategy-Layer.html">7. Strategy Layer</a>
+</li>
+<li><a href="ch-Business-Layer.html">8. Business Layer</a>
+</li>
+<li><a href="ch-Application-Layer.html">9. Application Layer</a>
+</li>
+<li><a href="ch-Technology-Layer.html">10. Technology Layer</a>
+</li>
+<li><a href="ch-Relationships-Between-Core-Layers.html">11. Relationships Between Core Layers</a>
+</li>
+<li><a href="ch-Implementation-and-Migration-Layer.html">12. Implementation and Migration Layer</a>
+</li>
+<li><a href="ch-Stakeholders-Architecture-Views-and-Viewpoints.html">13. Stakeholders, Architecture Views, and Viewpoints</a>
+</li>
+<li><a href="ch-Language-Customization-Mechanisms.html">14. Language Customization Mechanisms</a>
+</li>
+<li><a href="ch-Summary-of-Language-Notation.html">Appendix A: Summary of Language Notation</a>
+</li>
+<li><a href="ch-relationships-Normative.html">Appendix B: Relationships (Normative)</a>
+</li>
+<li><a href="ch-Example-Viewpoints.html">Appendix C: Example Viewpoints</a>
+</li>
+<li><a href="ch-Relationship-to-Other-Standards-Specifications-and-Guidance-Documents.html">Appendix D: Relationship to Other Standards, Specifications, and Guidance Documents</a>
+</li>
+<li><a href="ch-Changes-from-previous-versions.html">Appendix E: Changes from Version 2.1 to Version 3.2</a>
+</li>
+<li><a href="ch-Acronyms.html">Appendix F: Acronyms</a>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="ch-Language-Structure">3. Language Structure</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter describes the structure of the ArchiMate Enterprise Architecture modeling language. The detailed definition and examples of its standard set of elements and relationships follow in <a href="ch-Generic-Metamodel.html">Chapter 4</a> to <a href="ch-Implementation-and-Migration-Layer.html">Chapter 12</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="sec-Language-Design-Considerations">3.1. Language Design Considerations</h3>
+<div class="paragraph">
+<p>A key challenge in the development of a general metamodel for Enterprise Architecture is to strike a balance between the specificity of languages for individual architecture domains and a very general set of architecture concepts, which reflects a view of systems as a mere set of inter-related entities.</p>
+</div>
+<div class="paragraph">
+<p>The design of the ArchiMate language started from a set of relatively generic concepts. These have been specialized towards application at different architectural layers, as explained in the following sections. The most important design restriction on the language is that it has been explicitly designed to be as small as possible, but still usable for most Enterprise Architecture modeling tasks. Many other languages try to accommodate the needs of all possible users. In the interest of simplicity of learning and use, the ArchiMate language has been limited to the concepts that suffice for modeling the proverbial 80% of practical cases.</p>
+</div>
+<div class="paragraph">
+<p>This standard does not describe the detailed rationale behind the design of the ArchiMate language. The interested reader is referred to [<a href="ch-Referenced-docs.html#Ref1">1</a>], [<a href="ch-Referenced-docs.html#Ref2">2</a>], and [<a href="ch-Referenced-docs.html#Ref3">3</a>], which provide a detailed description of the language construction and design considerations.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sec-Top-Level-Language-Structure">3.2. Top-Level Language Structure</h3>
+<div class="paragraph">
+<p><a href="ch-Language-Structure.html#fig-Top-Level-Hierarchy-of-ArchiMate-Concepts">Figure 1</a> outlines the top-level hierarchical structure of the language:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>A model is a collection of <em>concepts</em> &#8211; a concept is either an <em>element</em> or a <em>relationship</em></p>
+</li>
+<li>
+<p>An element is either a behavior element, a structure element, a motivation element, or a composite element</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Note that these are <em>abstract</em> concepts; they are not intended to be used directly in models. To signify this, they are depicted in white with labels in italics. See <a href="ch-Generic-Metamodel.html">Chapter 4</a> for an explanation of the notation used in <a href="ch-Language-Structure.html#fig-Top-Level-Hierarchy-of-ArchiMate-Concepts">Figure 1</a>.</p>
+</div>
+<div id="fig-Top-Level-Hierarchy-of-ArchiMate-Concepts" class="imageblock text-center">
+<div class="content">
+<img src="images/fig-Top-Level-Hierarchy-of-ArchiMate-Concepts.png" alt="fig Top Level Hierarchy of ArchiMate Concepts" width="465" height="314">
+</div>
+<div class="title">Figure 1. Top-Level Hierarchy of ArchiMate Concepts</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sec-Layering-of-the-ArchiMate-Language">3.3. Layering of the ArchiMate Language</h3>
+<div class="paragraph">
+<p>The ArchiMate core language defines a structure of generic elements and their relationships, which can be specialized in different layers. Three layers are defined within the ArchiMate core language as follows:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The <em>Business Layer</em> depicts business services offered to customers, which are realized in the organization by business processes performed by business actors.</p>
+</li>
+<li>
+<p>The <em>Application Layer</em> depicts application services that support the business, and the applications that realize them.</p>
+</li>
+<li>
+<p>The <em>Technology Layer</em> comprises both information and operational technology. You can model, for example, processing, storage, and communication technology in support of the application world and Business Layers, and model operational or physical technology with facilities, physical equipment, materials, and distribution networks.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The general structure of models within the different layers is similar. The same types of elements and relationships are used, although their exact nature and granularity differ. In the next chapter, the structure of the generic metamodel is presented. In <a href="ch-Business-Layer.html">Chapter 8</a>, <a href="ch-Application-Layer.html">Chapter 9</a>, and <a href="ch-Technology-Layer.html">Chapter 10</a> these elements are specialized to obtain elements specific to a particular layer.</p>
+</div>
+<div class="paragraph">
+<p>In alignment with service-orientation, the most important relationship between layers is formed by “serving”<sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_footnotedef_1" title="View footnote.">1</a>]</sup> relationships, which show how the elements in one layer are served by the services of other layers. (Note, however, that services need not only serve elements in another layer, but also can serve elements in the same layer.) A second type of link is formed by realization relationships: elements in lower layers may realize comparable elements in higher layers; e.g., a “data object” (Application Layer) may realize a “business object” (Business Layer); or an “artifact” (Technology Layer) may realize either a “data object” or an “application component” (Application Layer).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sec-The-ArchiMate-Core-Framework">3.4. The ArchiMate Core Framework</h3>
+<div class="paragraph">
+<p>The ArchiMate Core Framework is a framework of nine cells used to classify elements of the ArchiMate core language. It is made up of three aspects and three layers, as illustrated in <a href="ch-Language-Structure.html#fig-ArchiMate-Core-Framework">Figure 2</a>. This is known as the ArchiMate Core Framework.</p>
+</div>
+<div class="paragraph">
+<p>It is important to understand that the classification of elements based on aspects and layers is only a global one. Real-life architecture elements need not strictly be confined to one aspect or layer because elements that link the different aspects and layers, play a central role in a coherent architectural description. For example, running somewhat ahead of the later conceptual discussions, business roles serve as intermediary elements between “purely behavioral” elements and “purely structural” elements, and it may depend on the context whether a certain piece of software is considered to be part of the Application Layer or the Technology Layer.</p>
+</div>
+<div id="fig-ArchiMate-Core-Framework" class="imageblock text-center">
+<div class="content">
+<img src="images/fig-ArchiMate-Core-Framework.png" alt="fig ArchiMate Core Framework" width="75%">
+</div>
+<div class="title">Figure 2. ArchiMate Core Framework</div>
+</div>
+<div class="paragraph">
+<p>The structure of the framework allows for modeling of the enterprise from different viewpoints, where the position within the cells highlights the concerns of the stakeholder. A stakeholder typically can have concerns that cover multiple cells.</p>
+</div>
+<div class="paragraph">
+<p>The dimensions of the framework are as follows:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Layers &#8211; the three levels at which an enterprise can be modeled in ArchiMate &#8211; Business, Application, and Technology (as described in <a href="ch-Language-Structure.html#sec-Layering-of-the-ArchiMate-Language">Section 3.3</a>)</p>
+</li>
+<li>
+<p>Aspects:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>The <em>Active Structure Aspect</em>, which represents the structural elements (the business actors, application components, and devices that display actual behavior; i.e., the “subjects” of activity)</p>
+</li>
+<li>
+<p>The <em>Behavior Aspect</em>, which represents the behavior (processes, functions, events, and services) performed by the actors; structural elements are assigned to behavioral elements, to show who or what displays the behavior</p>
+</li>
+<li>
+<p>The <em>Passive Structure Aspect</em>, which represents the objects on which behavior is performed; these are usually information objects in the Business Layer and data objects in the Application Layer, but they may also be used to represent physical objects</p>
+<div class="paragraph">
+<p>These three aspects were inspired by natural language where a sentence has a subject (active structure), a verb (behavior), and an object (passive structure). By using the same constructs that people are used to in their own languages, the ArchiMate language is easier to learn and read.</p>
+</div>
+<div class="paragraph">
+<p>Since ArchiMate notation is a <em>graphical</em> language where elements are organized spatially, this order is of no consequence in modeling.</p>
+</div>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>A composite element, as shown in <a href="ch-Language-Structure.html#fig-Top-Level-Hierarchy-of-ArchiMate-Concepts">Figure 1</a>, is an element that does not necessarily fit in a single aspect (column) of the framework but may combine two or more aspects.</p>
+</div>
+<div class="paragraph">
+<p>Note that the ArchiMate language does not require the modeler to use any particular layout such as the structure of this framework; it is merely a categorization of the language elements.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sec-The-ArchiMate-Full-Framework">3.5. The ArchiMate Full Framework</h3>
+<div class="paragraph">
+<p>The ArchiMate Full Framework, as described in this version of the standard, adds a number of layers and an aspect to the Core Framework. The physical elements are included in the Technology Layer for modeling physical facilities and equipment, distribution networks, and materials. As such, these are also core elements. The strategy elements are introduced to model strategic direction and choices. They are described in <a href="ch-Strategy-Layer.html">Chapter 7</a>. The motivation aspect is introduced at a generic level in the next chapter and described in detail in <a href="ch-Motivation-Elements.html">Chapter 6</a>. The implementation and migration elements are described in <a href="ch-Implementation-and-Migration-Layer.html">Chapter 12</a>. The resulting ArchiMate Full Framework is shown
+in <a href="ch-Language-Structure.html#fig-ArchiMate-Full-Framework">Figure 3</a>.</p>
+</div>
+<div id="fig-ArchiMate-Full-Framework" class="imageblock text-center">
+<div class="content">
+<img src="images/fig-ArchiMate-Full-Framework.png" alt="fig ArchiMate Full Framework" width="80%">
+</div>
+<div class="title">Figure 3. ArchiMate Full Framework</div>
+</div>
+<div class="paragraph">
+<p>The ArchiMate language does not define a specific layer for information; however, elements from the passive structure aspect such as business objects, data objects, and artifacts are used to represent information entities. Information modeling is supported across the different ArchiMate layers.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sec-Abstraction-in-the-ArchiMate-Language">3.6. Abstraction in the ArchiMate Language</h3>
+<div class="paragraph">
+<p>The structure of the ArchiMate language accommodates several familiar forms of abstraction and refinement. First of all, the distinction between an external (black-box, abstracting from the contents of the box) and internal (white-box) view is common in systems design. The external view depicts what the system has to do for its environment, while the internal view depicts how it does this.</p>
+</div>
+<div class="paragraph">
+<p>Second, the distinction between behavior and active structure is commonly used to separate what the system must do and how the system does it from the system constituents (people, applications, and infrastructure) that do it. In modeling new systems, it is often useful to start with the behaviors that the system must perform, while in modeling existing systems, it is often useful to start with the people, applications, and infrastructure that comprise the system, and then analyze in detail the behaviors performed by these active structures.</p>
+</div>
+<div class="paragraph">
+<p>A third distinction is between conceptual, logical, and physical abstraction levels. This has its roots in data modeling: conceptual elements represent the information the business finds relevant; logical elements provide logical structure to this information for manipulation by information systems; physical elements describe the storage of this information; for example, in the form of files or database tables. In the ArchiMate language, this corresponds with business objects, data objects, and artifacts, along with the realization relationships between them.</p>
+</div>
+<div class="paragraph">
+<p>The distinction between logical and physical elements has also been carried over to the description of applications. The TOGAF Enterprise Metamodel [<a href="ch-Referenced-docs.html#Ref4">4</a>] includes a set of entities that describe business, data, application, and technology components and services to describe architecture concepts. Logical components are implementation or product-independent encapsulations of data or functionality, whereas physical components are tangible software components, devices, etc. This distinction is captured in the TOGAF framework in the form of Architecture Building Blocks (ABBs) and Solution Building Blocks (SBBs). This distinction is again useful in progressing Enterprise Architectures from high-level, abstract descriptions to tangible, implementation-level designs. Note that building blocks may contain multiple elements, which are typically modeled using the grouping concept in the ArchiMate language.</p>
+</div>
+<div class="paragraph">
+<p>The ArchiMate language has three ways of modeling such abstractions. First, as described in [<a href="ch-Referenced-docs.html#Ref6">6</a>], behavior elements such as application and technology functions can be used to model logical components, since they represent implementation-independent encapsulations of functionality. The corresponding physical components can then be modeled using active structure elements such as application components and nodes, assigned to the behavior elements. Second, the ArchiMate language supports the concept of realization. This can best be described by working with the Technology Layer upwards. The Technology Layer defines the physical artifacts and software that realize an application component. It also provides a mapping to other physical concepts such as devices, networks, etc. needed for the realization of an information system. The realization relationship is also used to model more abstract kinds of realization, such as that between a (more specific) requirement and a (more generic) principle, where fulfillment of the requirement implies adherence to the principle. Realization is also allowed between application components and between nodes. This way you can model a physical application or technology component realizing a logical application or technology component, respectively. Third, logical and physical application components can be defined as metamodel-level specializations of the application component element, as described in <a href="ch-Language-Customization-Mechanisms.html">Chapter 14</a> (see also the examples in <a href="ch-Language-Customization-Mechanisms.html#sec-Examples-of-Specializations-of-Application-Layer-Elements-Informative">Section 14.2.2</a>). The same holds for the logical and physical technology components of the TOGAF Content Metamodel, which can be defined as specializations of the node element (see <a href="ch-Language-Customization-Mechanisms.html#sec-Examples-of-Specializations-of-Technology-Layer-Elements-Informative">Section 14.2.3</a>).</p>
+</div>
+<div class="paragraph">
+<p>The ArchiMate language intentionally does not support a difference between types and instances. At the Enterprise Architecture abstraction level, it is more common to model types and/or exemplars rather than instances. Similarly, a business process in the ArchiMate language does not describe an individual instance (i.e., one execution of that process). In most cases, a business object is therefore used to model an object type (<em>cf.</em> a UML<sup>&#174;</sup>) class), of which several instances may exist within the organization. For instance, each execution of an insurance application process may result in a specific instance of the insurance policy business object, but that is not modeled in the Enterprise Architecture.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sec-Concepts-and-their-Notation">3.7. Concepts and their Notation</h3>
+<div class="paragraph">
+<p>The ArchiMate language separates the language concepts (i.e., the constituents of the metamodel) from their notation. Different stakeholder groups may require different notations in order to understand an architecture model or view. In this respect, the ArchiMate language differs from languages such as UML or BPMN&#8482;, which have only one standardized notation. The viewpoint mechanism explained in <a href="ch-Stakeholders-Architecture-Views-and-Viewpoints.html">Chapter 13</a> provides the means for defining such stakeholder-oriented visualizations.</p>
+</div>
+<div class="paragraph">
+<p>Although the notation of the ArchiMate concepts can (and should) be stakeholder-specific, the standard provides one common graphical notation which can be used by architects and others who develop ArchiMate models. This notation is targeted towards an audience used to existing technical modeling techniques such as Entity Relationship Diagrams (ERDs), UML, or BPMN, and therefore resembles them. In the remainder of this document, unless otherwise noted, the symbols used to depict the language concepts represent the ArchiMate standard notation. This standard notation for most elements consists of a box with an icon in the upper-right corner. In several cases, this icon by itself may also be used as an alternative notation. This standard iconography should be preferred whenever possible so that anyone knowing the ArchiMate language can read the diagrams produced in the language.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sec-Use-of-Nesting">3.8. Use of Nesting</h3>
+<div class="paragraph">
+<p>Nesting elements inside other elements can be used as an alternative graphical notation to express some relationships. This is explained in more detail in <a href="ch-Relationships-and-Relationship-Connectors.html">Chapter 5</a> and in the definition of each of these relationships.</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="sect2">
+<h3 id="sec-Use-of-Colors-and-Notational-Cues">3.9. Use of Colors and Notational Cues</h3>
+<div class="paragraph">
+<p>In the metamodel pictures within this standard, shades of grey are used to distinguish elements belonging to the different aspects of the ArchiMate framework, as follows:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>White for abstract (i.e., non-instantiable) concepts</p>
+</li>
+<li>
+<p>Light grey for passive structures</p>
+</li>
+<li>
+<p>Medium grey for behavior</p>
+</li>
+<li>
+<p>Dark grey for active structures</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In ArchiMate models, there are no formal semantics assigned to colors and the use of color is left to the modeler. However, they can be used freely to stress certain aspects in models. For instance, in many of the example models presented in this standard, colors are used to distinguish between the layers of the ArchiMate Core Framework, as follows:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Yellow for the Business Layer</p>
+</li>
+<li>
+<p>Blue for the Application Layer</p>
+</li>
+<li>
+<p>Green for the Technology Layer</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>They can also be used for visual emphasis; see <a href="ch-Motivation-Elements.html">Chapter 6</a> in [<a href="ch-Referenced-docs.html#Ref1">1</a>]. In addition to the colors, other notational cues can be used to distinguish between the layers of the framework. A letter M, S, B, A, T, P, or I in the top-left corner of an element can be used to denote a Motivation, Strategy, Business, Application, Technology, Physical, or Implementation &amp; Migration element, respectively. An example of this notation is depicted in <a href="ch-Relationships-Between-Core-Layers.html#ex-Cross-Layer-Relationships">Example 34</a>.</p>
+</div>
+<div class="paragraph">
+<p>The standard notation also uses a convention with the shape of the corners of its symbols for different element types, as follows:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Square corners are used to denote structure elements</p>
+</li>
+<li>
+<p>Round corners are used to denote behavior elements</p>
+</li>
+<li>
+<p>Diagonal corners are used to denote motivation elements</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph nav-footer">
+<p>← Previous: <a href="ch-Definitions.html">Definitions</a> | ↑ Up: <a href="_archimate_3_2_specification.html">ArchiMate 3.2 Specification</a> | ⌂ Home: <a href="index.html">ArchiMate&#174; 3.2 Specification</a> | Next: <a href="ch-Generic-Metamodel.html">Generic Metamodel</a> →</p>
+</div>
+</div>
+<div id="footnotes">
+<hr>
+<div class="footnote" id="_footnotedef_1">
+<a href="#_footnoteref_1">1</a>. Note that this was called “used by” in previous versions of the standard. For the sake of clarity, this name has been changed to “serving”.
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+&copy; The Open Group, All Rights Reserved. Last Updated 2023-01-03 14:45:18 UTC
+</div>
+</div>
+</body>
+</html>

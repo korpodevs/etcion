@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.18">
+<meta name="keywords" content="Standard, Template, The Open Group, www.opengroup.org">
+<meta name="author" content="The Open Group">
+<meta name="copyright" content="©The Open Group, 2012-2023">
+<title>Relationships between Core Layers: ArchiMate&#174; 3.2 Specification</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link type="text/css" rel="stylesheet" href="style.css">
+<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KEWTYEPPT3"></script>
+<script src="./ganalytics.js"></script>
+ 
+</head>
+<body id="ch-Relationships-Between-Core-Layers" class="book toc2 toc-left">
+<div id="header">
+<h1>ArchiMate&#174; 3.2 Specification</h1>
+<div class="details">
+<span id="author" class="author">The Open Group</span><br>
+</div>
+<div id="toc" class="toc2">
+<hr>
+<h5>Search</h5>
+<div>
+<small><a href=/cgi/awordsearch.cgi>
+<i class="fa fa-search"></i> Word Search</a> | Search Index
+<!--
+<a href=glossary.html><i class="fa fa-info-circle"></i> Glossary Index</a> -->
+</small>
+<br><br>
+<form method="GET" action="/cgi/akman4.cgi" target="main">
+<input name="value" size="16"><input type="submit" value="Search..">
+</form>
+<br>
+[<a href="language-notation-guide.html" title="Clickable notation guide" alt="Clickable notation guide" text="Clickable notation guide">Language Notation Guide</a>]
+</div>
+<hr>
+<div class="tooltip">
+<span class= "tooltiptext">Provide feedback on this page</span>
+<a href="/cgi/c226feedback.cgi" target="_blank">
+<span style="color: #00667F;">
+<i class="fa fa-comments fa-2x" aria-hidden="true"></i>
+<i class="fa fa-bug fa-2x" aria-hidden="true"></i>
+</span>
+</a>
+</div>
+<hr>
+
+<div id="toctitle">Table of Contents</div>
+<p><span class="toc-root"><a href="index.html">ArchiMate&#174; 3.2 Specification</a></span></p><ul class="sectlevel0">
+<li><a href="_archimate_3_2_specification.html">ArchiMate 3.2 Specification</a>
+<ul class="sectlevel1">
+<li><a href="ch-Preface.html">Preface</a>
+</li>
+<li><a href="ch-Trademarks.html">Trademarks</a>
+</li>
+<li><a href="_acknowledgements.html">Acknowledgements</a>
+</li>
+<li><a href="ch-Referenced-docs.html">Referenced Documents</a>
+</li>
+<li><a href="ch-Introduction.html">1. Introduction</a>
+</li>
+<li><a href="ch-Definitions.html">2. Definitions</a>
+</li>
+<li><a href="ch-Language-Structure.html">3. Language Structure</a>
+</li>
+<li><a href="ch-Generic-Metamodel.html">4. Generic Metamodel</a>
+</li>
+<li><a href="ch-Relationships-and-Relationship-Connectors.html">5. Relationships and Relationship Connectors</a>
+</li>
+<li><a href="ch-Motivation-Elements.html">6. Motivation Elements</a>
+</li>
+<li><a href="ch-Strategy-Layer.html">7. Strategy Layer</a>
+</li>
+<li><a href="ch-Business-Layer.html">8. Business Layer</a>
+</li>
+<li><a href="ch-Application-Layer.html">9. Application Layer</a>
+</li>
+<li><a href="ch-Technology-Layer.html">10. Technology Layer</a>
+</li>
+<li><a href="ch-Relationships-Between-Core-Layers.html"><span class="toc-current">11. Relationships Between Core Layers</span></a>
+<ul class="sectlevel2">
+<li><a href="ch-Relationships-Between-Core-Layers.html#sec-Alignment-of-the-Business-Layer-and-Lower-Layers">11.1. Alignment of the Business Layer and Lower Layers</a>
+</li>
+<li><a href="ch-Relationships-Between-Core-Layers.html#sec-Alignment-of-the-Application-and-Technology-Layers">11.2. Alignment of the Application and Technology Layers</a>
+</li>
+<li><a href="ch-Relationships-Between-Core-Layers.html#_example_16">11.3. Example</a>
+</li>
+</ul>
+</li>
+<li><a href="ch-Implementation-and-Migration-Layer.html">12. Implementation and Migration Layer</a>
+</li>
+<li><a href="ch-Stakeholders-Architecture-Views-and-Viewpoints.html">13. Stakeholders, Architecture Views, and Viewpoints</a>
+</li>
+<li><a href="ch-Language-Customization-Mechanisms.html">14. Language Customization Mechanisms</a>
+</li>
+<li><a href="ch-Summary-of-Language-Notation.html">Appendix A: Summary of Language Notation</a>
+</li>
+<li><a href="ch-relationships-Normative.html">Appendix B: Relationships (Normative)</a>
+</li>
+<li><a href="ch-Example-Viewpoints.html">Appendix C: Example Viewpoints</a>
+</li>
+<li><a href="ch-Relationship-to-Other-Standards-Specifications-and-Guidance-Documents.html">Appendix D: Relationship to Other Standards, Specifications, and Guidance Documents</a>
+</li>
+<li><a href="ch-Changes-from-previous-versions.html">Appendix E: Changes from Version 2.1 to Version 3.2</a>
+</li>
+<li><a href="ch-Acronyms.html">Appendix F: Acronyms</a>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="ch-Relationships-Between-Core-Layers">11. Relationships Between Core Layers</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The previous chapters have presented the concepts to model the Business, Application, and Technology Layers of an enterprise. However, a central issue in Enterprise Architecture is business-IT alignment: how can these layers be matched? This chapter describes the relationships that the ArchiMate language offers to model the link between business, applications, and technology.</p>
+</div>
+<div class="sect2">
+<h3 id="sec-Alignment-of-the-Business-Layer-and-Lower-Layers">11.1. Alignment of the Business Layer and Lower Layers</h3>
+<div class="paragraph">
+<p><a href="ch-Relationships-Between-Core-Layers.html#fig-Relationships-Between-Business-Layer-and-Application-and-Technology-Layer-Elements">Figure 104</a>  shows the relationships between the Business Layer, the Application Layer, and the Technology Layer elements. There are two main types of relationships between these layers:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><em>Serving</em> relationships; for example, between application service and the different types of business behavior elements, and between application interface and business role; <em>vice versa</em>, serving relationships between business service and application behavior elements, and between business interface and application component. These relationships represent the behavioral and structural aspects of the support of the business by applications.</p>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><em>Realization</em> relationships; for example, from an application process or function to a business process or function, or from a data object or a technology passive structure element to a business object, to indicate that the data object is a digital representation of the corresponding business object, or the technology element is a physical representation of the business object. Note that there is no realization of business internal active structure elements by application or technology elements because people cannot be realized by applications or technology. Instead, the business behavior of those active structure elements can be realized by application or technology behavior elements, to which in turn application or technology active structure elements can be assigned.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>In addition, there may be an aggregation relationship between a product and an application or technology service, and a data or technology passive structure element, to indicate that these services or objects can be offered directly to a customer as part of the product.</p>
+</div>
+<div id="fig-Relationships-Between-Business-Layer-and-Application-and-Technology-Layer-Elements" class="imageblock text-center">
+<div class="content">
+<img src="images/fig-Relationships-Between-Business-Layer-and-Application-and-Technology-Layer-Elements.png" alt="fig Relationships Between Business Layer and Application and Technology Layer Elements">
+</div>
+<div class="title">Figure 104. Relationships Between Business Layer and Application and Technology Layer Elements</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+This figure does not show all permitted relationships; there are indirect relationships that can be derived, as explained in <a href="ch-Relationships-and-Relationship-Connectors.html#sec-Derivation-of-Relationships">Section 5.7</a>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sec-Alignment-of-the-Application-and-Technology-Layers">11.2. Alignment of the Application and Technology Layers</h3>
+<div class="paragraph">
+<p><a href="ch-Relationships-Between-Core-Layers.html#fig-Relationships-Between-Application-Layer-and-Technology-Layer-Elements">Figure 105</a>  shows the relationships between Application Layer and Technology Layer elements. There are two types of relationships between these layers:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><em>Serving</em> relationships, between technology service and the different types of application behavior elements, and between technology interface and application component; <em>vice versa</em>, serving relationships between application service and technology behavior, and application interface and technology internal active structure element. These relationships represent the behavioral and structural aspects of the use of technology infrastructure by applications and <em>vice versa</em>.</p>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="2">
+<li>
+<p><em>Realization</em> relationships from technology process or function to application process or function, from artifact to data object, to indicate that the data object is realized by, for example, a physical data file, from artifact to application component, to indicate that a physical data file is an executable that realizes an application or part of an application. (NOTE: In this case, an artifact represents a “physical” component that is deployed on a device or system software element; this is modeled with an assignment relationship. A (logical) application component is realized by an artifact and, indirectly, by the element on which the artifact is deployed.)</p>
+</li>
+</ol>
+</div>
+<div id="fig-Relationships-Between-Application-Layer-and-Technology-Layer-Elements" class="imageblock text-center">
+<div class="content">
+<img src="images/Relationships-Between-Application-Layer-and-Technology-Layer-Elements.png" alt="Relationships Between Application Layer and Technology Layer Elements">
+</div>
+<div class="title">Figure 105. Relationships Between Application Layer and Technology Layer Elements</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+This figure does not show all permitted relationships; there are indirect relationships that can be derived, as explained in <a href="ch-Relationships-and-Relationship-Connectors.html#sec-Derivation-of-Relationships">Section 5.7</a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Due to the derived relationships that are explained in <a href="ch-Relationships-and-Relationship-Connectors.html#sec-Derivation-of-Relationships">Section 5.7</a>, it is also possible to draw relationships directly between the Business and Technology Layers. For example, if a business object is realized by a data object, which in turn is realized by an artifact, this artifact indirectly realizes the business object.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_16">11.3. Example</h3>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p><a href="ch-Relationships-Between-Core-Layers.html#ex-Cross-Layer-Relationships">Example 34</a> shows how the cross-layer relationships integrate the different layers, and how this can be depicted in one view. It also shows how the optional notation with letters in the upper-left corner is used to distinguish between layers.</p>
+</div>
+</div>
+</div>
+<div id="ex-Cross-Layer-Relationships" class="imageblock text-center">
+<div class="content">
+<img src="images/ex-Cross-Layer-Relationships.png" alt="ex Cross Layer Relationships">
+</div>
+<div class="title">Example 34: Cross-Layer Relationships</div>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph nav-footer">
+<p>← Previous: <a href="ch-Technology-Layer.html">Technology Layer</a> | ↑ Up: <a href="_archimate_3_2_specification.html">ArchiMate 3.2 Specification</a> | ⌂ Home: <a href="index.html">ArchiMate&#174; 3.2 Specification</a> | Next: <a href="ch-Implementation-and-Migration-Layer.html">Implementation and Migration Layer</a> →</p>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+&copy; The Open Group, All Rights Reserved. Last Updated 2023-01-03 14:45:18 UTC
+</div>
+</div>
+</body>
+</html>
