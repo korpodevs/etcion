@@ -79,7 +79,7 @@ Example `BACKLOG.md` entry:
 ```
 
 ## Technical Brief
-Whenever a feature is planned or an ADR is accepted, you must generate a **Technical Brief** (saved as `docs/developer_briefs/FEAT-XXX.md`). It must contain:
+Whenever a feature is planned or an ADR is accepted, you must generate a **Technical Brief** (saved as `docs/dev-brief/FEAT-XXX.md`). It must contain:
 
 ### 1. Implementation Scope
 - **Target Classes:** Specific Pydantic model names and inheritance structures.
@@ -93,6 +93,27 @@ Whenever a feature is planned or an ADR is accepted, you must generate a **Techn
 ### 3. Testing Anchors (For the TDD Agent)
 - **Primary Test Cases:** Describe the specific "Red" tests the TDD agent must write first.
 - **Edge Cases:** Identify specific failure modes (e.g., circular references, invalid XML characters) the TDD agent must catch.
+
+### Example Technical Brief
+```markdown
+# Technical Brief: BusinessActor Element
+**Status:** Ready for TDD  
+**Reference:** `archimate-spec-3.2/chap08.html#BusinessActor`
+**ADR Link:** `adr/0005-base-element-hierarchy.md`
+
+### Class Structure
+- `class BusinessActor(BaseElement):`
+- `xml_tag: str = "BusinessActor"`
+- `attributes: name (str), documentation (Optional[str])`
+
+### Validation Requirements
+- Must generate a unique ID prefixed with `id-` if not provided.
+- Name cannot be an empty string.
+
+### TDD Handoff
+1. **Red Test 1:** Instantiate `BusinessActor` without a name; expect `ValidationError`.
+2. **Red Test 2:** Serialize to XML; verify tag is `<BusinessActor>` and contains namespace `archimate`.
+```
 
 ## Architecture Decision Records (ADRs)
 
