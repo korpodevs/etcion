@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**pyarchi** is an early-stage Python project. The repository skeleton is in place but contains no source code or configuration yet.
+**pyarchi** is an early-stage Python library implementing the ArchiMate 3.2 metamodel.
 
 - Python 3.12.3 via `.venv/`
-- Source code goes in `src/`
+- Source code goes in `src/pyarchi/`
 - Tests go in `test/`
-- No package manager config (`pyproject.toml`, etc.) exists yet
+- Build system: `hatchling` via `pyproject.toml`
 
 ## Directory Layout
 
@@ -23,10 +23,40 @@ assets/   # Static assets / images
 
 ## Development Setup
 
-Activate the virtual environment before running anything:
+Activate the virtual environment and install in editable mode with dev dependencies:
 
 ```bash
 source .venv/bin/activate
+pip install -e ".[dev]"
 ```
 
-No build system, test runner, or linter has been configured yet. When they are added, update this file with the relevant commands.
+### Running Tests
+
+```bash
+pytest                    # Run all tests
+pytest -x                 # Stop on first failure
+pytest -m "not slow"      # Skip slow tests
+```
+
+### Linting and Formatting
+
+```bash
+ruff check src/ test/           # Lint
+ruff check src/ test/ --fix     # Lint and auto-fix
+ruff format src/ test/          # Format in place
+ruff format --check src/ test/  # Check formatting without changing files
+```
+
+### Type Checking
+
+```bash
+mypy src/         # Type-check library source
+mypy src/ test/   # Type-check library and tests
+```
+
+### Build
+
+```bash
+pip install -e ".[dev]"   # Editable install with dev dependencies
+pip install -e .          # Editable install, runtime deps only
+```

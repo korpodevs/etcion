@@ -18,11 +18,11 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 **Priority:** High
 
 ### [FEAT-00.1] Package Configuration
-- [ ] [STORY-00.1.1] Create `pyproject.toml` with project metadata, Python 3.12 minimum, and dependency declarations (pydantic v2)
-- [ ] [STORY-00.1.2] Establish `src/pyarchi/` package directory with `__init__.py` exposing the public API
-- [ ] [STORY-00.1.3] Configure pytest as the test runner in `pyproject.toml` and create `test/conftest.py` with shared fixtures
-- [ ] [STORY-00.1.4] Configure ruff as the linter and formatter with strict PEP 8 and type-hint enforcement rules
-- [ ] [STORY-00.1.5] Add mypy configuration for strict static type checking across the library
+- [x] [STORY-00.1.1] Create `pyproject.toml` with project metadata, Python 3.12 minimum, and dependency declarations (pydantic v2)
+- [x] [STORY-00.1.2] Establish `src/pyarchi/` package directory with `__init__.py` exposing the public API
+- [x] [STORY-00.1.3] Configure pytest as the test runner in `pyproject.toml` and create `test/conftest.py` with shared fixtures
+- [x] [STORY-00.1.4] Configure ruff as the linter and formatter with strict PEP 8 and type-hint enforcement rules
+- [x] [STORY-00.1.5] Add mypy configuration for strict static type checking across the library
 
 ### [FEAT-00.2] Module Layout
 - [ ] [STORY-00.2.1] Create `src/pyarchi/metamodel/` sub-package for all metamodel classes (concepts, elements, relationships)
