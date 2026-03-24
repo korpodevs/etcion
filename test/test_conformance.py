@@ -200,10 +200,6 @@ class TestShallFeatures:
         assert hasattr(pyarchi, "Plateau")
         assert hasattr(pyarchi, "Gap")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-005: Relationship types and Junction not yet implemented",
-    )
     def test_cross_layer_relationships(self) -> None:
         assert hasattr(pyarchi, "Composition")
         assert hasattr(pyarchi, "Aggregation")
@@ -218,10 +214,6 @@ class TestShallFeatures:
         assert hasattr(pyarchi, "Specialization")
         assert hasattr(pyarchi, "Junction")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-005 (FEAT-05.11): Permission table not yet implemented",
-    )
     def test_relationship_permission_table(self) -> None:
         assert hasattr(pyarchi, "is_permitted")
 

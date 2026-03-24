@@ -132,26 +132,18 @@ class TestIsNestedOnStructuralRelationship:
     Requires Composition class from EPIC-005 (FEAT-05.2).
     """
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-005: StructuralRelationship/Composition not yet defined",
-    )
     def test_composition_accepts_is_nested_true(self) -> None:
         """Composition(is_nested=True) must not raise ValidationError."""
-        from pyarchi import Composition  # type: ignore[attr-defined]
+        from pyarchi import Composition
 
         source = _StubElement(name="whole")
         target = _StubElement(name="part")
         comp = Composition(name="nesting", source=source, target=target, is_nested=True)
         assert comp.is_nested is True
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-005: StructuralRelationship/Composition not yet defined",
-    )
     def test_composition_is_nested_defaults_false(self) -> None:
         """Composition() without is_nested must default to False."""
-        from pyarchi import Composition  # type: ignore[attr-defined]
+        from pyarchi import Composition
 
         source = _StubElement(name="whole")
         target = _StubElement(name="part")
@@ -170,13 +162,9 @@ class TestIsNestedRejectedOnNonStructural:
     Requires Triggering class from EPIC-005 (FEAT-05.7).
     """
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-005: Triggering not yet defined",
-    )
     def test_triggering_rejects_is_nested(self) -> None:
         """Triggering(is_nested=True) must raise ValidationError."""
-        from pyarchi import Triggering  # type: ignore[attr-defined]
+        from pyarchi import Triggering
 
         source = _StubElement(name="src")
         target = _StubElement(name="tgt")

@@ -1,7 +1,16 @@
 """pyarchi -- Python implementation of the ArchiMate 3.2 metamodel."""
 
 from pyarchi.conformance import CONFORMANCE, ConformanceProfile
-from pyarchi.enums import Aspect, Layer
+from pyarchi.derivation.engine import DerivationEngine
+from pyarchi.enums import (
+    AccessMode,
+    Aspect,
+    AssociationDirection,
+    InfluenceSign,
+    JunctionType,
+    Layer,
+    RelationshipCategory,
+)
 from pyarchi.exceptions import (
     ConformanceError,
     DerivationError,
@@ -34,6 +43,25 @@ from pyarchi.metamodel.elements import (
 )
 from pyarchi.metamodel.model import Model
 from pyarchi.metamodel.notation import NotationMetadata
+from pyarchi.metamodel.relationships import (
+    Access,
+    Aggregation,
+    Assignment,
+    Association,
+    Composition,
+    DependencyRelationship,
+    DynamicRelationship,
+    Flow,
+    Influence,
+    Junction,
+    OtherRelationship,
+    Realization,
+    Serving,
+    Specialization,
+    StructuralRelationship,
+    Triggering,
+)
+from pyarchi.validation.permissions import is_permitted
 
 SPEC_VERSION: str = "3.2"
 """The ArchiMate specification version implemented by this library."""
@@ -75,11 +103,28 @@ __all__: list[str] = [
     "PassiveStructureElement",
     "Process",
     "StructureElement",
-    #
     # EPIC-005: Relationships and Relationship Connectors
-    # - Composition, Aggregation, Assignment, Realization
-    # - Serving, Access, Influence, Association
-    # - Triggering, Flow, Specialization
-    # - Junction
-    # - DerivationEngine
+    "RelationshipCategory",
+    "AccessMode",
+    "AssociationDirection",
+    "InfluenceSign",
+    "JunctionType",
+    "StructuralRelationship",
+    "DependencyRelationship",
+    "DynamicRelationship",
+    "OtherRelationship",
+    "Composition",
+    "Aggregation",
+    "Assignment",
+    "Realization",
+    "Serving",
+    "Access",
+    "Influence",
+    "Association",
+    "Triggering",
+    "Flow",
+    "Specialization",
+    "Junction",
+    "DerivationEngine",
+    "is_permitted",
 ]

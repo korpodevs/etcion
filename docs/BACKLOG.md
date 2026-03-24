@@ -1,7 +1,7 @@
 ---
 project: pyarchi
 phase: 1
-last_updated: 2026-03-23
+last_updated: 2026-03-24
 total_epics: 6
 total_features: 24
 total_stories: 96
@@ -97,7 +97,7 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 ---
 
 ## [EPIC-003] Language Structure and Classification Framework (Requirement 3)
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 ### [FEAT-03.1] Layer Enum
@@ -126,7 +126,7 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 ---
 
 ## [EPIC-004] Generic Metamodel -- Abstract Element Hierarchy (Requirement 4)
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 ### [FEAT-04.1] StructureElement Hierarchy
@@ -174,99 +174,99 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 ---
 
 ## [EPIC-005] Relationships and Relationship Connectors (Requirement 5)
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 ### [FEAT-05.1] RelationshipCategory Enum
-- [ ] [STORY-05.1.1] Define `RelationshipCategory` enum in `src/pyarchi/enums.py` with members: `STRUCTURAL`, `DEPENDENCY`, `DYNAMIC`, `OTHER`
-- [ ] [STORY-05.1.2] Write test asserting all four values are present
+- [x] [STORY-05.1.1] Define `RelationshipCategory` enum in `src/pyarchi/enums.py` with members: `STRUCTURAL`, `DEPENDENCY`, `DYNAMIC`, `OTHER`
+- [x] [STORY-05.1.2] Write test asserting all four values are present
 
 ### [FEAT-05.2] Structural Relationships
-- [ ] [STORY-05.2.1] Define `StructuralRelationship(Relationship)` as an ABC with `category = RelationshipCategory.STRUCTURAL` and `is_nested: bool = False`
-- [ ] [STORY-05.2.2] Define `Composition(StructuralRelationship)` as a concrete class
-- [ ] [STORY-05.2.3] Define `Aggregation(StructuralRelationship)` as a concrete class
-- [ ] [STORY-05.2.4] Define `Assignment(StructuralRelationship)` as a concrete class
-- [ ] [STORY-05.2.5] Define `Realization(StructuralRelationship)` as a concrete class
-- [ ] [STORY-05.2.6] Implement validation: Composition source is the whole, target is the part; permitted between same-type elements universally
-- [ ] [STORY-05.2.7] Implement validation: Aggregation source is the whole, target is the part; permitted between same-type elements universally
-- [ ] [STORY-05.2.8] Implement validation: when target of Aggregation or Composition is a `Relationship`, source must be a `CompositeElement`; otherwise raise `ValidationError`
-- [ ] [STORY-05.2.9] Implement validation: Assignment enforces directionality (active structure toward behavior, active structure toward passive structure, behavior toward passive structure); wrong direction raises `ValidationError`
-- [ ] [STORY-05.2.10] Implement validation: Realization is directed from realizing (lower abstraction) to realized (higher abstraction); wrong direction raises `ValidationError`
-- [ ] [STORY-05.2.11] Implement validation: no structural relationship may have a `Relationship` as target unless source is a `CompositeElement`
-- [ ] [STORY-05.2.12] Write test: `Composition(source=A, target=B)` where A and B are same-type elements is valid
-- [ ] [STORY-05.2.13] Write test: `Assignment(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError`
-- [ ] [STORY-05.2.14] Write test: `Aggregation(source=non_composite, target=relationship)` raises `ValidationError`
-- [ ] [STORY-05.2.15] Write test: `is_nested = True` on `Composition` does not affect validation outcome
+- [x] [STORY-05.2.1] Define `StructuralRelationship(Relationship)` as an ABC with `category = RelationshipCategory.STRUCTURAL` and `is_nested: bool = False`
+- [x] [STORY-05.2.2] Define `Composition(StructuralRelationship)` as a concrete class
+- [x] [STORY-05.2.3] Define `Aggregation(StructuralRelationship)` as a concrete class
+- [x] [STORY-05.2.4] Define `Assignment(StructuralRelationship)` as a concrete class
+- [x] [STORY-05.2.5] Define `Realization(StructuralRelationship)` as a concrete class
+- [x] [STORY-05.2.6] Implement validation: Composition source is the whole, target is the part; permitted between same-type elements universally
+- [x] [STORY-05.2.7] Implement validation: Aggregation source is the whole, target is the part; permitted between same-type elements universally
+- [x] [STORY-05.2.8] Implement validation: when target of Aggregation or Composition is a `Relationship`, source must be a `CompositeElement`; otherwise raise `ValidationError`
+- [x] [STORY-05.2.9] Implement validation: Assignment enforces directionality (active structure toward behavior, active structure toward passive structure, behavior toward passive structure); wrong direction raises `ValidationError`
+- [x] [STORY-05.2.10] Implement validation: Realization is directed from realizing (lower abstraction) to realized (higher abstraction); wrong direction raises `ValidationError`
+- [x] [STORY-05.2.11] Implement validation: no structural relationship may have a `Relationship` as target unless source is a `CompositeElement`
+- [x] [STORY-05.2.12] Write test: `Composition(source=A, target=B)` where A and B are same-type elements is valid
+- [x] [STORY-05.2.13] Write test: `Assignment(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError`
+- [x] [STORY-05.2.14] Write test: `Aggregation(source=non_composite, target=relationship)` raises `ValidationError`
+- [x] [STORY-05.2.15] Write test: `is_nested = True` on `Composition` does not affect validation outcome
 
 ### [FEAT-05.3] Dependency Relationships -- Serving
-- [ ] [STORY-05.3.1] Define `DependencyRelationship(Relationship)` as an ABC with `category = RelationshipCategory.DEPENDENCY`
-- [ ] [STORY-05.3.2] Define `Serving(DependencyRelationship)` as a concrete class
-- [ ] [STORY-05.3.3] Implement validation: Serving direction is from provider (source) to consumer (target)
+- [x] [STORY-05.3.1] Define `DependencyRelationship(Relationship)` as an ABC with `category = RelationshipCategory.DEPENDENCY`
+- [x] [STORY-05.3.2] Define `Serving(DependencyRelationship)` as a concrete class
+- [x] [STORY-05.3.3] Implement validation: Serving direction is from provider (source) to consumer (target)
 
 ### [FEAT-05.4] Dependency Relationships -- Access
-- [ ] [STORY-05.4.1] Define `AccessMode` enum with members: `READ`, `WRITE`, `READ_WRITE`, `UNSPECIFIED`
-- [ ] [STORY-05.4.2] Define `Access(DependencyRelationship)` as a concrete class with `access_mode: AccessMode = AccessMode.UNSPECIFIED`
-- [ ] [STORY-05.4.3] Implement validation: Access is directed from behavior or active structure element (accessor) to passive structure element (accessed); reversed direction raises `ValidationError`
-- [ ] [STORY-05.4.4] Write test: `Access(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError`
-- [ ] [STORY-05.4.5] Write test: `Access` instance accepts all four `AccessMode` enum values
+- [x] [STORY-05.4.1] Define `AccessMode` enum with members: `READ`, `WRITE`, `READ_WRITE`, `UNSPECIFIED`
+- [x] [STORY-05.4.2] Define `Access(DependencyRelationship)` as a concrete class with `access_mode: AccessMode = AccessMode.UNSPECIFIED`
+- [x] [STORY-05.4.3] Implement validation: Access is directed from behavior or active structure element (accessor) to passive structure element (accessed); reversed direction raises `ValidationError`
+- [x] [STORY-05.4.4] Write test: `Access(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError`
+- [x] [STORY-05.4.5] Write test: `Access` instance accepts all four `AccessMode` enum values
 
 ### [FEAT-05.5] Dependency Relationships -- Influence
-- [ ] [STORY-05.5.1] Define `InfluenceSign` enum with members: `STRONG_POSITIVE` ("++"), `POSITIVE` ("+"), `NEUTRAL` ("0"), `NEGATIVE` ("-"), `STRONG_NEGATIVE` ("--")
-- [ ] [STORY-05.5.2] Define `Influence(DependencyRelationship)` as a concrete class with `sign: InfluenceSign | None = None` and `strength: str | None = None`
-- [ ] [STORY-05.5.3] Write test: `Influence` instance `sign` and `strength` both default to `None`
+- [x] [STORY-05.5.1] Define `InfluenceSign` enum with members: `STRONG_POSITIVE` ("++"), `POSITIVE` ("+"), `NEUTRAL` ("0"), `NEGATIVE` ("-"), `STRONG_NEGATIVE` ("--")
+- [x] [STORY-05.5.2] Define `Influence(DependencyRelationship)` as a concrete class with `sign: InfluenceSign | None = None` and `strength: str | None = None`
+- [x] [STORY-05.5.3] Write test: `Influence` instance `sign` and `strength` both default to `None`
 
 ### [FEAT-05.6] Dependency Relationships -- Association
-- [ ] [STORY-05.6.1] Define `AssociationDirection` enum with members: `UNDIRECTED`, `DIRECTED`
-- [ ] [STORY-05.6.2] Define `Association(DependencyRelationship)` as a concrete class with `direction: AssociationDirection = AssociationDirection.UNDIRECTED`
-- [ ] [STORY-05.6.3] Implement validation: undirected Association is always permitted between any two concepts (elements and/or relationships)
-- [ ] [STORY-05.6.4] Write test: `Association(source=any_element, target=some_relationship)` is valid without restriction
-- [ ] [STORY-05.6.5] Write test: directed Association is valid between any two element types
+- [x] [STORY-05.6.1] Define `AssociationDirection` enum with members: `UNDIRECTED`, `DIRECTED`
+- [x] [STORY-05.6.2] Define `Association(DependencyRelationship)` as a concrete class with `direction: AssociationDirection = AssociationDirection.UNDIRECTED`
+- [x] [STORY-05.6.3] Implement validation: undirected Association is always permitted between any two concepts (elements and/or relationships)
+- [x] [STORY-05.6.4] Write test: `Association(source=any_element, target=some_relationship)` is valid without restriction
+- [x] [STORY-05.6.5] Write test: directed Association is valid between any two element types
 
 ### [FEAT-05.7] Dynamic Relationships
-- [ ] [STORY-05.7.1] Define `DynamicRelationship(Relationship)` as an ABC with `category = RelationshipCategory.DYNAMIC`
-- [ ] [STORY-05.7.2] Define `Triggering(DynamicRelationship)` as a concrete class
-- [ ] [STORY-05.7.3] Define `Flow(DynamicRelationship)` as a concrete class with `flow_type: str | None = None`
-- [ ] [STORY-05.7.4] Implement validation: setting `is_nested = True` on `Triggering` or `Flow` raises `ValidationError`
-- [ ] [STORY-05.7.5] Write test: `Triggering` and `Flow` have `category == RelationshipCategory.DYNAMIC`
-- [ ] [STORY-05.7.6] Write test: `Flow` has `flow_type` attribute defaulting to `None`
-- [ ] [STORY-05.7.7] Write test: `is_nested = True` on `Triggering` raises `ValidationError`
+- [x] [STORY-05.7.1] Define `DynamicRelationship(Relationship)` as an ABC with `category = RelationshipCategory.DYNAMIC`
+- [x] [STORY-05.7.2] Define `Triggering(DynamicRelationship)` as a concrete class
+- [x] [STORY-05.7.3] Define `Flow(DynamicRelationship)` as a concrete class with `flow_type: str | None = None`
+- [x] [STORY-05.7.4] Implement validation: setting `is_nested = True` on `Triggering` or `Flow` raises `ValidationError`
+- [x] [STORY-05.7.5] Write test: `Triggering` and `Flow` have `category == RelationshipCategory.DYNAMIC`
+- [x] [STORY-05.7.6] Write test: `Flow` has `flow_type` attribute defaulting to `None`
+- [x] [STORY-05.7.7] Write test: `is_nested = True` on `Triggering` raises `ValidationError`
 
 ### [FEAT-05.8] Other Relationships -- Specialization
-- [ ] [STORY-05.8.1] Define `OtherRelationship(Relationship)` as an ABC with `category = RelationshipCategory.OTHER`
-- [ ] [STORY-05.8.2] Define `Specialization(OtherRelationship)` as a concrete class
-- [ ] [STORY-05.8.3] Implement validation: Specialization is only permitted between elements of the same concrete type; different types raise `ValidationError`
-- [ ] [STORY-05.8.4] Write test: `Specialization(source=BusinessProcess, target=BusinessProcess)` is valid
-- [ ] [STORY-05.8.5] Write test: `Specialization(source=BusinessProcess, target=ApplicationFunction)` raises `ValidationError`
-- [ ] [STORY-05.8.6] Write test: `Specialization` has `category == RelationshipCategory.OTHER`
+- [x] [STORY-05.8.1] Define `OtherRelationship(Relationship)` as an ABC with `category = RelationshipCategory.OTHER`
+- [x] [STORY-05.8.2] Define `Specialization(OtherRelationship)` as a concrete class
+- [x] [STORY-05.8.3] Implement validation: Specialization is only permitted between elements of the same concrete type; different types raise `ValidationError`
+- [x] [STORY-05.8.4] Write test: `Specialization(source=BusinessProcess, target=BusinessProcess)` is valid
+- [x] [STORY-05.8.5] Write test: `Specialization(source=BusinessProcess, target=ApplicationFunction)` raises `ValidationError`
+- [x] [STORY-05.8.6] Write test: `Specialization` has `category == RelationshipCategory.OTHER`
 
 ### [FEAT-05.9] Junction (Relationship Connector)
-- [ ] [STORY-05.9.1] Define `JunctionType` enum in `src/pyarchi/enums.py` with members: `AND`, `OR`
-- [ ] [STORY-05.9.2] Define `Junction(RelationshipConnector)` as a concrete class with mandatory `junction_type: JunctionType` field
-- [ ] [STORY-05.9.3] Implement validation: all relationships connected to a Junction must be of the same concrete relationship type; mixed types raise `ValidationError`
-- [ ] [STORY-05.9.4] Implement validation: endpoint elements of a chain through a Junction must permit a direct relationship of the connected type (per Appendix B); otherwise raise `ValidationError`
-- [ ] [STORY-05.9.5] Support multiple incoming/one outgoing, one incoming/multiple outgoing, and multiple/multiple connection topologies
-- [ ] [STORY-05.9.6] Write test: `Junction` cannot be instantiated without providing `junction_type`
-- [ ] [STORY-05.9.7] Write test: connecting `Composition` and `Serving` to the same `Junction` raises `ValidationError`
-- [ ] [STORY-05.9.8] Write test: `isinstance(Junction(junction_type=JunctionType.AND), RelationshipConnector)` is `True`
-- [ ] [STORY-05.9.9] Write test: `isinstance(Junction(junction_type=JunctionType.AND), Relationship)` is `False`
-- [ ] [STORY-05.9.10] Write test: Junction connecting two `Serving` relationships where endpoint elements do not permit direct `Serving` raises `ValidationError`
+- [x] [STORY-05.9.1] Define `JunctionType` enum in `src/pyarchi/enums.py` with members: `AND`, `OR`
+- [x] [STORY-05.9.2] Define `Junction(RelationshipConnector)` as a concrete class with mandatory `junction_type: JunctionType` field
+- [x] [STORY-05.9.3] Implement validation: all relationships connected to a Junction must be of the same concrete relationship type; mixed types raise `ValidationError`
+- [x] [STORY-05.9.4] Implement validation: endpoint elements of a chain through a Junction must permit a direct relationship of the connected type (per Appendix B); otherwise raise `ValidationError`
+- [x] [STORY-05.9.5] Support multiple incoming/one outgoing, one incoming/multiple outgoing, and multiple/multiple connection topologies
+- [x] [STORY-05.9.6] Write test: `Junction` cannot be instantiated without providing `junction_type`
+- [x] [STORY-05.9.7] Write test: connecting `Composition` and `Serving` to the same `Junction` raises `ValidationError`
+- [x] [STORY-05.9.8] Write test: `isinstance(Junction(junction_type=JunctionType.AND), RelationshipConnector)` is `True`
+- [x] [STORY-05.9.9] Write test: `isinstance(Junction(junction_type=JunctionType.AND), Relationship)` is `False`
+- [x] [STORY-05.9.10] Write test: Junction connecting two `Serving` relationships where endpoint elements do not permit direct `Serving` raises `ValidationError`
 
 ### [FEAT-05.10] Derivation Engine
-- [ ] [STORY-05.10.1] Define `DerivationEngine` class in `src/pyarchi/derivation/engine.py`
-- [ ] [STORY-05.10.2] Implement `derive(self, model: Model) -> list[Relationship]` method that computes all derivable relationships from chains in the model
-- [ ] [STORY-05.10.3] Implement `is_directly_permitted(self, rel_type: type[Relationship], source: Element, target: Element) -> bool` method that checks the Appendix B permission table
-- [ ] [STORY-05.10.4] Implement chain traversal rules: structural relationships propagate through structural chains, dependency through dependency chains
-- [ ] [STORY-05.10.5] Mark all derived relationships with `is_derived = True`
-- [ ] [STORY-05.10.6] Ensure `derive()` does not modify the source `Model` in-place; it returns new `Relationship` objects
-- [ ] [STORY-05.10.7] Implement derivation direction constraint: valid only from more detail to less detail (abstraction direction)
-- [ ] [STORY-05.10.8] Write test: three-hop realization chain produces one derived `Realization` between endpoints
-- [ ] [STORY-05.10.9] Write test: derived relationships have `is_derived == True`
-- [ ] [STORY-05.10.10] Write test: `derive()` returns new objects and source model remains unmodified
-- [ ] [STORY-05.10.11] Write test: `is_directly_permitted(Serving, ApplicationService, BusinessProcess)` returns `True`
+- [x] [STORY-05.10.1] Define `DerivationEngine` class in `src/pyarchi/derivation/engine.py`
+- [x] [STORY-05.10.2] Implement `derive(self, model: Model) -> list[Relationship]` method that computes all derivable relationships from chains in the model
+- [x] [STORY-05.10.3] Implement `is_directly_permitted(self, rel_type: type[Relationship], source: Element, target: Element) -> bool` method that checks the Appendix B permission table
+- [x] [STORY-05.10.4] Implement chain traversal rules: structural relationships propagate through structural chains, dependency through dependency chains
+- [x] [STORY-05.10.5] Mark all derived relationships with `is_derived = True`
+- [x] [STORY-05.10.6] Ensure `derive()` does not modify the source `Model` in-place; it returns new `Relationship` objects
+- [x] [STORY-05.10.7] Implement derivation direction constraint: valid only from more detail to less detail (abstraction direction)
+- [x] [STORY-05.10.8] Write test: three-hop realization chain produces one derived `Realization` between endpoints
+- [x] [STORY-05.10.9] Write test: derived relationships have `is_derived == True`
+- [x] [STORY-05.10.10] Write test: `derive()` returns new objects and source model remains unmodified
+- [x] [STORY-05.10.11] Write test: `is_directly_permitted(Serving, ApplicationService, BusinessProcess)` returns `True`
 
 ### [FEAT-05.11] Appendix B Permission Table
-- [ ] [STORY-05.11.1] Encode the normative Appendix B relationship permission table as a data structure in `src/pyarchi/validation/permissions.py`
-- [ ] [STORY-05.11.2] Implement lookup function: given a relationship type, source element type, and target element type, return whether the relationship is permitted
-- [ ] [STORY-05.11.3] Include universal same-type permissions for Composition, Aggregation, and Specialization
-- [ ] [STORY-05.11.4] Include universal Association permission between any two concepts
-- [ ] [STORY-05.11.5] Write tests verifying representative permitted and forbidden relationship/source/target triplets from the table
+- [x] [STORY-05.11.1] Encode the normative Appendix B relationship permission table as a data structure in `src/pyarchi/validation/permissions.py`
+- [x] [STORY-05.11.2] Implement lookup function: given a relationship type, source element type, and target element type, return whether the relationship is permitted
+- [x] [STORY-05.11.3] Include universal same-type permissions for Composition, Aggregation, and Specialization
+- [x] [STORY-05.11.4] Include universal Association permission between any two concepts
+- [x] [STORY-05.11.5] Write tests verifying representative permitted and forbidden relationship/source/target triplets from the table
