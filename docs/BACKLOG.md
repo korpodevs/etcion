@@ -35,7 +35,7 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 ---
 
 ## [EPIC-001] Scope and Conformance (Requirement 1)
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 ### [FEAT-01.1] ConformanceProfile
@@ -45,13 +45,13 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 - [x] [STORY-01.1.4] Mark optional features (Appendix C example viewpoints) with a `may` designation that does not affect conformance checks
 
 ### [FEAT-01.2] Conformance Test Suite
-- [ ] [STORY-01.2.1] Create `test/test_conformance.py` with assertions for each `shall`-level mandatory feature presence in the public API
-- [ ] [STORY-01.2.2] Add warning-level checks for `should`-level features using `pytest.warns` or custom markers
-- [ ] [STORY-01.2.3] Verify that `may`-level features do not cause test failure when absent
+- [x] [STORY-01.2.1] Create `test/test_conformance.py` with assertions for each `shall`-level mandatory feature presence in the public API
+- [x] [STORY-01.2.2] Add warning-level checks for `should`-level features using `pytest.warns` or custom markers
+- [x] [STORY-01.2.3] Verify that `may`-level features do not cause test failure when absent
 
 ### [FEAT-01.3] Undefined Type Guard
-- [ ] [STORY-01.3.1] Implement guard logic so that attempting to use an element type not defined in the ArchiMate 3.2 spec raises `NotImplementedError` or `TypeError`
-- [ ] [STORY-01.3.2] Write tests confirming that fabricated/undefined element type names raise errors, not silent failures
+- [x] [STORY-01.3.1] Implement guard logic so that attempting to use an element type not defined in the ArchiMate 3.2 spec raises `NotImplementedError` or `TypeError`
+- [x] [STORY-01.3.2] Write tests confirming that fabricated/undefined element type names raise errors, not silent failures
 
 ---
 
