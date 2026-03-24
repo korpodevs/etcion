@@ -14,7 +14,7 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 ---
 
 ## [EPIC-000] Project Scaffold and Build System
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 ### [FEAT-00.1] Package Configuration
@@ -25,12 +25,12 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 - [x] [STORY-00.1.5] Add mypy configuration for strict static type checking across the library
 
 ### [FEAT-00.2] Module Layout
-- [ ] [STORY-00.2.1] Create `src/pyarchi/metamodel/` sub-package for all metamodel classes (concepts, elements, relationships)
-- [ ] [STORY-00.2.2] Create `src/pyarchi/enums.py` module for all enumeration types (Layer, Aspect, RelationshipCategory, etc.)
-- [ ] [STORY-00.2.3] Create `src/pyarchi/validation/` sub-package for validation logic and error types
-- [ ] [STORY-00.2.4] Create `src/pyarchi/derivation/` sub-package for the derivation engine
-- [ ] [STORY-00.2.5] Create `src/pyarchi/exceptions.py` module defining `ValidationError` and other custom exception types
-- [ ] [STORY-00.2.6] Update `CLAUDE.md` with build, test, and lint commands once tooling is configured
+- [x] [STORY-00.2.1] Create `src/pyarchi/metamodel/` sub-package for all metamodel classes (concepts, elements, relationships)
+- [x] [STORY-00.2.2] Create `src/pyarchi/enums.py` module for all enumeration types (Layer, Aspect, RelationshipCategory, etc.)
+- [x] [STORY-00.2.3] Create `src/pyarchi/validation/` sub-package for validation logic and error types
+- [x] [STORY-00.2.4] Create `src/pyarchi/derivation/` sub-package for the derivation engine
+- [x] [STORY-00.2.5] Create `src/pyarchi/exceptions.py` module defining `ValidationError` and other custom exception types
+- [x] [STORY-00.2.6] Update `CLAUDE.md` with build, test, and lint commands once tooling is configured
 
 ---
 
@@ -39,10 +39,10 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 **Priority:** High
 
 ### [FEAT-01.1] ConformanceProfile
-- [ ] [STORY-01.1.1] Define `ConformanceProfile` dataclass in `src/pyarchi/conformance.py` enumerating all mandatory spec features as queryable boolean attributes
-- [ ] [STORY-01.1.2] Include attributes for: language structure, generic metamodel, all layer element types, cross-layer dependencies, iconography metadata, viewpoint mechanism, language customization, Appendix B relationship table
-- [ ] [STORY-01.1.3] Add class-level constant `SPEC_VERSION = "3.2"` and expose it in the library `__init__.py`
-- [ ] [STORY-01.1.4] Mark optional features (Appendix C example viewpoints) with a `may` designation that does not affect conformance checks
+- [x] [STORY-01.1.1] Define `ConformanceProfile` dataclass in `src/pyarchi/conformance.py` enumerating all mandatory spec features as queryable boolean attributes
+- [x] [STORY-01.1.2] Include attributes for: language structure, generic metamodel, all layer element types, cross-layer dependencies, iconography metadata, viewpoint mechanism, language customization, Appendix B relationship table
+- [x] [STORY-01.1.3] Add class-level constant `SPEC_VERSION = "3.2"` and expose it in the library `__init__.py`
+- [x] [STORY-01.1.4] Mark optional features (Appendix C example viewpoints) with a `may` designation that does not affect conformance checks
 
 ### [FEAT-01.2] Conformance Test Suite
 - [ ] [STORY-01.2.1] Create `test/test_conformance.py` with assertions for each `shall`-level mandatory feature presence in the public API

@@ -1,12 +1,26 @@
 """pyarchi -- Python implementation of the ArchiMate 3.2 metamodel."""
 
+from pyarchi.conformance import CONFORMANCE, ConformanceProfile
+from pyarchi.exceptions import (
+    ConformanceError,
+    DerivationError,
+    PyArchiError,
+    ValidationError,
+)
+
 SPEC_VERSION: str = "3.2"
 """The ArchiMate specification version implemented by this library."""
 
 __all__: list[str] = [
     "SPEC_VERSION",
-    # EPIC-001: Scope and Conformance
-    # - ConformanceProfile
+    # exceptions (FEAT-00.2)
+    "PyArchiError",
+    "ValidationError",
+    "DerivationError",
+    "ConformanceError",
+    # conformance (FEAT-01.1)
+    "ConformanceProfile",
+    "CONFORMANCE",
     #
     # EPIC-002: Root Type Hierarchy
     # - Concept, Element, Relationship, RelationshipConnector
