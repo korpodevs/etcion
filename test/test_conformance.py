@@ -98,10 +98,6 @@ class TestShallFeatures:
         assert hasattr(pyarchi, "Layer")
         assert hasattr(pyarchi, "Aspect")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-002: Generic metamodel ABCs not yet implemented",
-    )
     def test_generic_metamodel(self) -> None:
         assert hasattr(pyarchi, "Concept")
         assert hasattr(pyarchi, "Element")
@@ -303,29 +299,17 @@ class TestUndefinedTypeGuard:
     which is absorbed by the xfail marker.
     """
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-002: Model not yet implemented",
-    )
     def test_dict_raises_type_error(self) -> None:
         with pytest.raises(TypeError):
-            pyarchi.Model().add({})  # type: ignore[attr-defined]
+            pyarchi.Model().add({})  # type: ignore[arg-type]
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-002: Model not yet implemented",
-    )
     def test_arbitrary_object_raises_type_error(self) -> None:
         with pytest.raises(TypeError):
-            pyarchi.Model().add(object())  # type: ignore[attr-defined]
+            pyarchi.Model().add(object())  # type: ignore[arg-type]
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-002: Model not yet implemented",
-    )
     def test_non_concept_class_raises_type_error(self) -> None:
         class Fake:
             pass
 
         with pytest.raises(TypeError):
-            pyarchi.Model().add(Fake())  # type: ignore[attr-defined]
+            pyarchi.Model().add(Fake())  # type: ignore[arg-type]

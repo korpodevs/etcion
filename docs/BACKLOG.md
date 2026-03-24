@@ -56,43 +56,43 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 ---
 
 ## [EPIC-002] Definitions and Root Type Hierarchy (Requirement 2)
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 ### [FEAT-02.1] Concept Abstract Base Class
-- [ ] [STORY-02.1.1] Define `Concept` as an ABC in `src/pyarchi/metamodel/concepts.py` that cannot be directly instantiated
-- [ ] [STORY-02.1.2] Add unique identifier field (`id: str`) with UUID-based generation as default, supporting Archi-standard ID format override
-- [ ] [STORY-02.1.3] Write test asserting `Concept()` raises `TypeError`
+- [x] [STORY-02.1.1] Define `Concept` as an ABC in `src/pyarchi/metamodel/concepts.py` that cannot be directly instantiated
+- [x] [STORY-02.1.2] Add unique identifier field (`id: str`) with UUID-based generation as default, supporting Archi-standard ID format override
+- [x] [STORY-02.1.3] Write test asserting `Concept()` raises `TypeError`
 
 ### [FEAT-02.2] Element Abstract Base Class
-- [ ] [STORY-02.2.1] Define `Element(Concept)` as an ABC that cannot be directly instantiated
-- [ ] [STORY-02.2.2] Apply the `Attribute` mixin to `Element` providing `name: str`, `description: str | None`, and `documentation_url: str | None` fields
-- [ ] [STORY-02.2.3] Write test asserting `Element()` raises `TypeError`
-- [ ] [STORY-02.2.4] Write test asserting `isinstance(any_concrete_element, Concept)` returns `True`
+- [x] [STORY-02.2.1] Define `Element(Concept)` as an ABC that cannot be directly instantiated
+- [x] [STORY-02.2.2] Apply the `Attribute` mixin to `Element` providing `name: str`, `description: str | None`, and `documentation_url: str | None` fields
+- [x] [STORY-02.2.3] Write test asserting `Element()` raises `TypeError`
+- [x] [STORY-02.2.4] Write test asserting `isinstance(any_concrete_element, Concept)` returns `True`
 
 ### [FEAT-02.3] Relationship Abstract Base Class
-- [ ] [STORY-02.3.1] Define `Relationship(Concept)` as an ABC with `source` and `target` fields typed as `Concept`
-- [ ] [STORY-02.3.2] Apply the `Attribute` mixin to `Relationship` providing `name`, `description`, and `documentation_url` fields
-- [ ] [STORY-02.3.3] Add `is_derived: bool = False` field on `Relationship` for derivation engine use
-- [ ] [STORY-02.3.4] Add `category: RelationshipCategory` as an abstract class-level attribute that subclasses must define
-- [ ] [STORY-02.3.5] Write test asserting `Relationship()` raises `TypeError`
-- [ ] [STORY-02.3.6] Write test asserting `isinstance(any_concrete_relationship, Concept)` returns `True`
+- [x] [STORY-02.3.1] Define `Relationship(Concept)` as an ABC with `source` and `target` fields typed as `Concept`
+- [x] [STORY-02.3.2] Apply the `Attribute` mixin to `Relationship` providing `name`, `description`, and `documentation_url` fields
+- [x] [STORY-02.3.3] Add `is_derived: bool = False` field on `Relationship` for derivation engine use
+- [x] [STORY-02.3.4] Add `category: RelationshipCategory` as an abstract class-level attribute that subclasses must define
+- [x] [STORY-02.3.5] Write test asserting `Relationship()` raises `TypeError`
+- [x] [STORY-02.3.6] Write test asserting `isinstance(any_concrete_relationship, Concept)` returns `True`
 
 ### [FEAT-02.4] RelationshipConnector Abstract Base Class
-- [ ] [STORY-02.4.1] Define `RelationshipConnector(Concept)` as an ABC that is a sibling of `Relationship`, not a subtype
-- [ ] [STORY-02.4.2] Write test asserting `RelationshipConnector()` raises `TypeError`
-- [ ] [STORY-02.4.3] Write test asserting `RelationshipConnector` is not a subclass of `Relationship`
+- [x] [STORY-02.4.1] Define `RelationshipConnector(Concept)` as an ABC that is a sibling of `Relationship`, not a subtype
+- [x] [STORY-02.4.2] Write test asserting `RelationshipConnector()` raises `TypeError`
+- [x] [STORY-02.4.3] Write test asserting `RelationshipConnector` is not a subclass of `Relationship`
 
 ### [FEAT-02.5] Attribute Mixin
-- [ ] [STORY-02.5.1] Define `AttributeMixin` (or shared base) in `src/pyarchi/metamodel/mixins.py` with fields: `name: str`, `description: str | None = None`, `documentation_url: str | None = None`
-- [ ] [STORY-02.5.2] Write test confirming the mixin is present on both a concrete element and a concrete relationship instance
+- [x] [STORY-02.5.1] Define `AttributeMixin` (or shared base) in `src/pyarchi/metamodel/mixins.py` with fields: `name: str`, `description: str | None = None`, `documentation_url: str | None = None`
+- [x] [STORY-02.5.2] Write test confirming the mixin is present on both a concrete element and a concrete relationship instance
 
 ### [FEAT-02.6] Model Container
-- [ ] [STORY-02.6.1] Define `Model` class in `src/pyarchi/metamodel/model.py` with `concepts: list[Concept]` as the primary container
-- [ ] [STORY-02.6.2] Implement `__iter__` on `Model` to iterate over all concepts
-- [ ] [STORY-02.6.3] Implement `__getitem__` on `Model` to retrieve concepts by ID
-- [ ] [STORY-02.6.4] Add helper properties: `model.elements` (filtered view of Element instances), `model.relationships` (filtered view of Relationship instances)
-- [ ] [STORY-02.6.5] Write test asserting `Model` accepts a list of `Concept` instances and `model.concepts` is iterable
+- [x] [STORY-02.6.1] Define `Model` class in `src/pyarchi/metamodel/model.py` with `concepts: list[Concept]` as the primary container
+- [x] [STORY-02.6.2] Implement `__iter__` on `Model` to iterate over all concepts
+- [x] [STORY-02.6.3] Implement `__getitem__` on `Model` to retrieve concepts by ID
+- [x] [STORY-02.6.4] Add helper properties: `model.elements` (filtered view of Element instances), `model.relationships` (filtered view of Relationship instances)
+- [x] [STORY-02.6.5] Write test asserting `Model` accepts a list of `Concept` instances and `model.concepts` is iterable
 
 ---
 

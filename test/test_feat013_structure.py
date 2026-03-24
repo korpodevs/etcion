@@ -151,32 +151,48 @@ class TestUndefinedTypeGuardMethodCount:
 
 
 class TestUndefinedTypeGuardDecorators:
-    """All 3 methods in TestUndefinedTypeGuard must have @pytest.mark.xfail."""
+    """EPIC-002 is complete: all 3 methods in TestUndefinedTypeGuard have been
+    promoted from xfail to normal passing tests.  These structural tests verify
+    that the xfail decorators have been removed."""
 
-    def test_all_methods_have_xfail_decorator(self) -> None:
+    def test_no_methods_have_xfail_decorator(self) -> None:
         tree = _parse_conformance_tree()
         classes = _get_classes(tree)
         assert "TestUndefinedTypeGuard" in classes
         methods = _get_methods(classes["TestUndefinedTypeGuard"])
-        missing = [m.name for m in methods if not _has_decorator(m, "xfail")]
-        assert missing == [], (
-            f"Methods in TestUndefinedTypeGuard missing @pytest.mark.xfail: {missing}"
+        still_xfail = [m.name for m in methods if _has_decorator(m, "xfail")]
+        assert still_xfail == [], (
+            f"Methods in TestUndefinedTypeGuard still have @pytest.mark.xfail "
+            f"(EPIC-002 is complete; remove the decorators): {still_xfail}"
         )
 
     def test_all_xfail_decorators_have_strict_false(self) -> None:
+        """Vacuously true: no xfail decorators remain after EPIC-002 shipped."""
         tree = _parse_conformance_tree()
         classes = _get_classes(tree)
         assert "TestUndefinedTypeGuard" in classes
         methods = _get_methods(classes["TestUndefinedTypeGuard"])
-        wrong = [m.name for m in methods if _get_xfail_strict_value(m) is not False]
+        # All methods have been promoted; none should have xfail with any strict value.
+        wrong = [
+            m.name
+            for m in methods
+            if _has_decorator(m, "xfail") and _get_xfail_strict_value(m) is not False
+        ]
         assert wrong == [], f"Methods in TestUndefinedTypeGuard where strict != False: {wrong}"
 
     def test_all_xfail_reasons_contain_epic_002(self) -> None:
+        """Vacuously true: no xfail decorators remain after EPIC-002 shipped."""
         tree = _parse_conformance_tree()
         classes = _get_classes(tree)
         assert "TestUndefinedTypeGuard" in classes
         methods = _get_methods(classes["TestUndefinedTypeGuard"])
-        wrong = [m.name for m in methods if "EPIC-002" not in (_get_xfail_reason(m) or "")]
+        # All methods promoted; any remaining xfail (there should be none) must
+        # still reference EPIC-002.
+        wrong = [
+            m.name
+            for m in methods
+            if _has_decorator(m, "xfail") and "EPIC-002" not in (_get_xfail_reason(m) or "")
+        ]
         assert wrong == [], (
             f"Methods in TestUndefinedTypeGuard whose xfail reason does not contain "
             f"'EPIC-002': {wrong}"
@@ -189,9 +205,13 @@ class TestUndefinedTypeGuardDecorators:
 
 
 class TestUndefinedTypeGuardFunctionalBehaviour:
-    """Run pytest -k TestUndefinedTypeGuard and assert 3 xfailed results."""
+    """Run pytest -k TestUndefinedTypeGuard and assert 3 passed results.
 
-    def test_produces_3_xfailed_results(self) -> None:
+    EPIC-002 is complete: the guard tests are now normal passing tests,
+    not xfail.
+    """
+
+    def test_produces_3_passed_results(self) -> None:
         result = subprocess.run(
             [
                 sys.executable,
@@ -207,6 +227,6 @@ class TestUndefinedTypeGuardFunctionalBehaviour:
             cwd=PROJECT_ROOT,
         )
         output = result.stdout + result.stderr
-        assert "3 xfailed" in output, (
-            f"Expected '3 xfailed' in pytest output.\n\nFull output:\n{output}"
+        assert "3 passed" in output, (
+            f"Expected '3 passed' in pytest output.\n\nFull output:\n{output}"
         )

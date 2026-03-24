@@ -7,6 +7,13 @@ from pyarchi.exceptions import (
     PyArchiError,
     ValidationError,
 )
+from pyarchi.metamodel.concepts import (
+    Concept,
+    Element,
+    Relationship,
+    RelationshipConnector,
+)
+from pyarchi.metamodel.model import Model
 
 SPEC_VERSION: str = "3.2"
 """The ArchiMate specification version implemented by this library."""
@@ -21,11 +28,12 @@ __all__: list[str] = [
     # conformance (FEAT-01.1)
     "ConformanceProfile",
     "CONFORMANCE",
-    #
-    # EPIC-002: Root Type Hierarchy
-    # - Concept, Element, Relationship, RelationshipConnector
-    # - AttributeMixin
-    # - Model
+    # root type hierarchy (EPIC-002)
+    "Concept",
+    "Element",
+    "Relationship",
+    "RelationshipConnector",
+    "Model",
     #
     # EPIC-003: Language Structure and Classification
     # - Layer, Aspect, NotationMetadata

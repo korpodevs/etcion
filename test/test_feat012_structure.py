@@ -187,21 +187,37 @@ class TestMethodCounts:
 
 
 class TestShallFeaturesMarkers:
-    """Every method in TestShallFeatures must carry @pytest.mark.xfail(strict=False)."""
+    """Methods in TestShallFeatures that are still pending must carry
+    @pytest.mark.xfail(strict=False).  Methods whose implementing epic is
+    complete may have their xfail decorator removed; they are tracked in
+    the exclusion list below."""
 
-    def test_all_methods_have_xfail_decorator(self) -> None:
+    # Methods promoted to normal PASSED when their implementing epic ships.
+    _PROMOTED: set[str] = {"test_generic_metamodel"}
+
+    def test_pending_methods_have_xfail_decorator(self) -> None:
         tree = _parse_tree()
         classes = _get_classes(tree)
         methods = _get_methods(classes["TestShallFeatures"])
-        missing = [m.name for m in methods if not _has_decorator(m, "xfail")]
+        pending = [m for m in methods if m.name not in self._PROMOTED]
+        missing = [m.name for m in pending if not _has_decorator(m, "xfail")]
         assert missing == [], f"Methods in TestShallFeatures missing @pytest.mark.xfail: {missing}"
 
-    def test_all_xfail_decorators_have_strict_false(self) -> None:
+    def test_pending_xfail_decorators_have_strict_false(self) -> None:
         tree = _parse_tree()
         classes = _get_classes(tree)
         methods = _get_methods(classes["TestShallFeatures"])
-        wrong = [m.name for m in methods if _get_xfail_strict_value(m) is not False]
+        pending = [m for m in methods if m.name not in self._PROMOTED]
+        wrong = [m.name for m in pending if _get_xfail_strict_value(m) is not False]
         assert wrong == [], f"Methods in TestShallFeatures where strict != False: {wrong}"
+
+    def test_promoted_methods_have_no_xfail_decorator(self) -> None:
+        tree = _parse_tree()
+        classes = _get_classes(tree)
+        methods = _get_methods(classes["TestShallFeatures"])
+        promoted = [m for m in methods if m.name in self._PROMOTED]
+        wrong = [m.name for m in promoted if _has_decorator(m, "xfail")]
+        assert wrong == [], f"Promoted methods in TestShallFeatures still have xfail: {wrong}"
 
 
 # ---------------------------------------------------------------------------
@@ -286,10 +302,13 @@ class TestConformanceFunctionalBehaviour:
     """Run test_conformance.py with pytest and verify the expected summary counts."""
 
     def test_functional_outcome(self) -> None:
-        """7 passed, 17 xfailed, 1 skipped -- no failures or errors.
+        """11 passed, 13 xfailed, 1 skipped -- no failures or errors.
 
-        14 xfail from FEAT-01.2 (TestShallFeatures + TestShouldFeatures) +
-        3 xfail from FEAT-01.3 (TestUndefinedTypeGuard) = 17 total.
+        11 xfail from FEAT-01.2 (TestShallFeatures pending + TestShouldFeatures) +
+        2 xfail from FEAT-01.3 (TestUndefinedTypeGuard) = 13 total.
+        Previously 17 xfailed; 4 removed when EPIC-002 shipped:
+          - test_generic_metamodel (TestShallFeatures)
+          - 3 x TestUndefinedTypeGuard methods
         """
         result = subprocess.run(
             [
@@ -307,11 +326,11 @@ class TestConformanceFunctionalBehaviour:
         )
         output = result.stdout + result.stderr
 
-        assert "7 passed" in output, (
-            f"Expected '7 passed' in pytest output.\n\nFull output:\n{output}"
+        assert "11 passed" in output, (
+            f"Expected '11 passed' in pytest output.\n\nFull output:\n{output}"
         )
-        assert "17 xfailed" in output, (
-            f"Expected '17 xfailed' in pytest output.\n\nFull output:\n{output}"
+        assert "13 xfailed" in output, (
+            f"Expected '13 xfailed' in pytest output.\n\nFull output:\n{output}"
         )
         assert "1 skipped" in output, (
             f"Expected '1 skipped' in pytest output.\n\nFull output:\n{output}"
