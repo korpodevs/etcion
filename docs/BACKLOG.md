@@ -1,272 +1,362 @@
 ---
 project: pyarchi
-phase: 1
+phase: 2
 last_updated: 2026-03-24
-total_epics: 6
-total_features: 24
-total_stories: 96
+total_epics: 14
+total_features: 52
+total_stories: 199
 ---
 
-# Phase 1 Backlog
-
-Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope and conformance, root type hierarchy, language structure and classification framework, abstract element hierarchy, all eleven relationships, Junction, and the derivation engine.
+# pyarchi Backlog
 
 ---
 
-## [EPIC-000] Project Scaffold and Build System
-**Status:** Complete
+## Phase 1 — Completed
+
+Phase 1 covered Requirements 1 through 5: project scaffold, scope and conformance, root type hierarchy, language structure and classification framework, abstract element hierarchy, all eleven relationships, Junction, and the derivation engine.
+
+All 6 epics (EPIC-000 through EPIC-005), 24 features, and 96 stories are complete.
+Detailed history is preserved in git (branch `develop`, up to commit `e0e2e69`).
+
+| Epic | Title | Status |
+|------|-------|--------|
+| EPIC-000 | Project Scaffold and Build System | Complete |
+| EPIC-001 | Scope and Conformance (Requirement 1) | Complete |
+| EPIC-002 | Definitions and Root Type Hierarchy (Requirement 2) | Complete |
+| EPIC-003 | Language Structure and Classification Framework (Requirement 3) | Complete |
+| EPIC-004 | Generic Metamodel -- Abstract Element Hierarchy (Requirement 4) | Complete |
+| EPIC-005 | Relationships and Relationship Connectors (Requirement 5) | Complete |
+
+---
+
+## Phase 2 — Layer-Specific Element Types
+
+Phase 2 covers Requirements 6 through 13: concrete element classes for all ArchiMate layers, cross-layer relationship rules, and the Implementation & Migration layer.
+
+---
+
+## [EPIC-006] Strategy Layer Elements (Requirement 12)
+**Status:** To-Do
 **Priority:** High
 
-### [FEAT-00.1] Package Configuration
-- [x] [STORY-00.1.1] Create `pyproject.toml` with project metadata, Python 3.12 minimum, and dependency declarations (pydantic v2)
-- [x] [STORY-00.1.2] Establish `src/pyarchi/` package directory with `__init__.py` exposing the public API
-- [x] [STORY-00.1.3] Configure pytest as the test runner in `pyproject.toml` and create `test/conftest.py` with shared fixtures
-- [x] [STORY-00.1.4] Configure ruff as the linter and formatter with strict PEP 8 and type-hint enforcement rules
-- [x] [STORY-00.1.5] Add mypy configuration for strict static type checking across the library
+### [FEAT-06.1] Strategy Abstract Bases
+- [ ] [STORY-06.1.1] Define `StrategyStructureElement(StructureElement)` as an ABC with `layer = Layer.STRATEGY`, `aspect = Aspect.ACTIVE_STRUCTURE`
+- [ ] [STORY-06.1.2] Define `StrategyBehaviorElement(BehaviorElement)` as an ABC with `layer = Layer.STRATEGY`, `aspect = Aspect.BEHAVIOR`
+- [ ] [STORY-06.1.3] Write tests asserting direct instantiation of each ABC raises `TypeError`
 
-### [FEAT-00.2] Module Layout
-- [x] [STORY-00.2.1] Create `src/pyarchi/metamodel/` sub-package for all metamodel classes (concepts, elements, relationships)
-- [x] [STORY-00.2.2] Create `src/pyarchi/enums.py` module for all enumeration types (Layer, Aspect, RelationshipCategory, etc.)
-- [x] [STORY-00.2.3] Create `src/pyarchi/validation/` sub-package for validation logic and error types
-- [x] [STORY-00.2.4] Create `src/pyarchi/derivation/` sub-package for the derivation engine
-- [x] [STORY-00.2.5] Create `src/pyarchi/exceptions.py` module defining `ValidationError` and other custom exception types
-- [x] [STORY-00.2.6] Update `CLAUDE.md` with build, test, and lint commands once tooling is configured
+### [FEAT-06.2] Strategy Structure Elements
+- [ ] [STORY-06.2.1] Define `Resource(StrategyStructureElement)` as a concrete class with `_type_name = "Resource"`
+- [ ] [STORY-06.2.2] Wire `layer` and `aspect` ClassVars on `Resource`
+- [ ] [STORY-06.2.3] Attach `NotationMetadata` to `Resource` (corner_shape, layer_color, badge_letter="S")
+- [ ] [STORY-06.2.4] Write test: `Resource` can be instantiated; `isinstance(Resource(...), StrategyStructureElement)` is `True`
+- [ ] [STORY-06.2.5] Write test: `isinstance(Resource(...), ActiveStructureElement)` is `False`
 
----
-
-## [EPIC-001] Scope and Conformance (Requirement 1)
-**Status:** Complete
-**Priority:** High
-
-### [FEAT-01.1] ConformanceProfile
-- [x] [STORY-01.1.1] Define `ConformanceProfile` dataclass in `src/pyarchi/conformance.py` enumerating all mandatory spec features as queryable boolean attributes
-- [x] [STORY-01.1.2] Include attributes for: language structure, generic metamodel, all layer element types, cross-layer dependencies, iconography metadata, viewpoint mechanism, language customization, Appendix B relationship table
-- [x] [STORY-01.1.3] Add class-level constant `SPEC_VERSION = "3.2"` and expose it in the library `__init__.py`
-- [x] [STORY-01.1.4] Mark optional features (Appendix C example viewpoints) with a `may` designation that does not affect conformance checks
-
-### [FEAT-01.2] Conformance Test Suite
-- [x] [STORY-01.2.1] Create `test/test_conformance.py` with assertions for each `shall`-level mandatory feature presence in the public API
-- [x] [STORY-01.2.2] Add warning-level checks for `should`-level features using `pytest.warns` or custom markers
-- [x] [STORY-01.2.3] Verify that `may`-level features do not cause test failure when absent
-
-### [FEAT-01.3] Undefined Type Guard
-- [x] [STORY-01.3.1] Implement guard logic so that attempting to use an element type not defined in the ArchiMate 3.2 spec raises `NotImplementedError` or `TypeError`
-- [x] [STORY-01.3.2] Write tests confirming that fabricated/undefined element type names raise errors, not silent failures
+### [FEAT-06.3] Strategy Behavior Elements
+- [ ] [STORY-06.3.1] Define `Capability(StrategyBehaviorElement)` as a concrete class with `_type_name = "Capability"`
+- [ ] [STORY-06.3.2] Define `ValueStream(StrategyBehaviorElement)` as a concrete class with `_type_name = "ValueStream"`
+- [ ] [STORY-06.3.3] Define `CourseOfAction(BehaviorElement)` as a concrete class with `layer = Layer.STRATEGY`, `aspect = Aspect.BEHAVIOR`, `_type_name = "CourseOfAction"` -- note: NOT a subclass of `StrategyBehaviorElement`
+- [ ] [STORY-06.3.4] Wire `layer` and `aspect` ClassVars on `Capability`, `ValueStream`, `CourseOfAction`
+- [ ] [STORY-06.3.5] Attach `NotationMetadata` to `Capability`, `ValueStream`, `CourseOfAction`
+- [ ] [STORY-06.3.6] Write test: all three classes can be instantiated without error
+- [ ] [STORY-06.3.7] Write test: `isinstance(CourseOfAction(...), StrategyBehaviorElement)` is `False`
+- [ ] [STORY-06.3.8] Write test: `Serving(source=Capability(...), target=Capability(...))` is valid (same-type serving)
 
 ---
 
-## [EPIC-002] Definitions and Root Type Hierarchy (Requirement 2)
-**Status:** Complete
+## [EPIC-007] Business Layer Elements (Requirement 6)
+**Status:** To-Do
 **Priority:** High
 
-### [FEAT-02.1] Concept Abstract Base Class
-- [x] [STORY-02.1.1] Define `Concept` as an ABC in `src/pyarchi/metamodel/concepts.py` that cannot be directly instantiated
-- [x] [STORY-02.1.2] Add unique identifier field (`id: str`) with UUID-based generation as default, supporting Archi-standard ID format override
-- [x] [STORY-02.1.3] Write test asserting `Concept()` raises `TypeError`
+### [FEAT-07.1] Business Abstract Bases
+- [ ] [STORY-07.1.1] Define `BusinessInternalActiveStructureElement(InternalActiveStructureElement)` as an ABC with `layer = Layer.BUSINESS`, `aspect = Aspect.ACTIVE_STRUCTURE`
+- [ ] [STORY-07.1.2] Define `BusinessInternalBehaviorElement(InternalBehaviorElement)` as an ABC with `layer = Layer.BUSINESS`, `aspect = Aspect.BEHAVIOR`
+- [ ] [STORY-07.1.3] Define `BusinessPassiveStructureElement(PassiveStructureElement)` as an ABC with `layer = Layer.BUSINESS`, `aspect = Aspect.PASSIVE_STRUCTURE`
+- [ ] [STORY-07.1.4] Write tests asserting direct instantiation of each ABC raises `TypeError`
 
-### [FEAT-02.2] Element Abstract Base Class
-- [x] [STORY-02.2.1] Define `Element(Concept)` as an ABC that cannot be directly instantiated
-- [x] [STORY-02.2.2] Apply the `Attribute` mixin to `Element` providing `name: str`, `description: str | None`, and `documentation_url: str | None` fields
-- [x] [STORY-02.2.3] Write test asserting `Element()` raises `TypeError`
-- [x] [STORY-02.2.4] Write test asserting `isinstance(any_concrete_element, Concept)` returns `True`
+### [FEAT-07.2] Business Active Structure Elements
+- [ ] [STORY-07.2.1] Define `BusinessActor(BusinessInternalActiveStructureElement)` as a concrete class with `_type_name = "BusinessActor"`
+- [ ] [STORY-07.2.2] Define `BusinessRole(BusinessInternalActiveStructureElement)` as a concrete class with `_type_name = "BusinessRole"`
+- [ ] [STORY-07.2.3] Define `BusinessCollaboration(BusinessInternalActiveStructureElement)` as a concrete class with `_type_name = "BusinessCollaboration"`
+- [ ] [STORY-07.2.4] Define `BusinessInterface(ExternalActiveStructureElement)` as a concrete class with `layer = Layer.BUSINESS`, `aspect = Aspect.ACTIVE_STRUCTURE`, `_type_name = "BusinessInterface"`
+- [ ] [STORY-07.2.5] Wire `layer` and `aspect` ClassVars on all four classes
+- [ ] [STORY-07.2.6] Attach `NotationMetadata` to all four classes (badge_letter="B")
+- [ ] [STORY-07.2.7] Write test: all four classes can be instantiated without error
+- [ ] [STORY-07.2.8] Write test: `isinstance(BusinessActor(...), InternalActiveStructureElement)` is `True`
 
-### [FEAT-02.3] Relationship Abstract Base Class
-- [x] [STORY-02.3.1] Define `Relationship(Concept)` as an ABC with `source` and `target` fields typed as `Concept`
-- [x] [STORY-02.3.2] Apply the `Attribute` mixin to `Relationship` providing `name`, `description`, and `documentation_url` fields
-- [x] [STORY-02.3.3] Add `is_derived: bool = False` field on `Relationship` for derivation engine use
-- [x] [STORY-02.3.4] Add `category: RelationshipCategory` as an abstract class-level attribute that subclasses must define
-- [x] [STORY-02.3.5] Write test asserting `Relationship()` raises `TypeError`
-- [x] [STORY-02.3.6] Write test asserting `isinstance(any_concrete_relationship, Concept)` returns `True`
+### [FEAT-07.3] Business Behavior Elements
+- [ ] [STORY-07.3.1] Define `BusinessProcess(BusinessInternalBehaviorElement, Process)` as a concrete class with `_type_name = "BusinessProcess"`
+- [ ] [STORY-07.3.2] Define `BusinessFunction(BusinessInternalBehaviorElement, Function)` as a concrete class with `_type_name = "BusinessFunction"`
+- [ ] [STORY-07.3.3] Define `BusinessInteraction(BusinessInternalBehaviorElement, Interaction)` as a concrete class with `_type_name = "BusinessInteraction"`
+- [ ] [STORY-07.3.4] Define `BusinessEvent(Event)` as a concrete class with `layer = Layer.BUSINESS`, `aspect = Aspect.BEHAVIOR`, `_type_name = "BusinessEvent"`, `time: datetime | str | None = None`
+- [ ] [STORY-07.3.5] Define `BusinessService(ExternalBehaviorElement)` as a concrete class with `layer = Layer.BUSINESS`, `aspect = Aspect.BEHAVIOR`, `_type_name = "BusinessService"`
+- [ ] [STORY-07.3.6] Wire `layer` and `aspect` ClassVars on all five classes
+- [ ] [STORY-07.3.7] Attach `NotationMetadata` to all five classes
+- [ ] [STORY-07.3.8] Write test: all five classes can be instantiated without error
+- [ ] [STORY-07.3.9] Write test: `BusinessInteraction` with fewer than 2 assigned elements raises `ValidationError`
+- [ ] [STORY-07.3.10] Write test: `BusinessEvent` has `time` attribute defaulting to `None`
 
-### [FEAT-02.4] RelationshipConnector Abstract Base Class
-- [x] [STORY-02.4.1] Define `RelationshipConnector(Concept)` as an ABC that is a sibling of `Relationship`, not a subtype
-- [x] [STORY-02.4.2] Write test asserting `RelationshipConnector()` raises `TypeError`
-- [x] [STORY-02.4.3] Write test asserting `RelationshipConnector` is not a subclass of `Relationship`
+### [FEAT-07.4] Business Passive Structure Elements
+- [ ] [STORY-07.4.1] Define `BusinessObject(BusinessPassiveStructureElement)` as a concrete class with `_type_name = "BusinessObject"`
+- [ ] [STORY-07.4.2] Define `Contract(BusinessObject)` as a concrete class with `_type_name = "Contract"`
+- [ ] [STORY-07.4.3] Define `Representation(BusinessPassiveStructureElement)` as a concrete class with `_type_name = "Representation"`
+- [ ] [STORY-07.4.4] Wire `layer` and `aspect` ClassVars on all three classes
+- [ ] [STORY-07.4.5] Attach `NotationMetadata` to all three classes
+- [ ] [STORY-07.4.6] Write test: all three classes can be instantiated without error
+- [ ] [STORY-07.4.7] Write test: `isinstance(Contract(...), BusinessObject)` is `True`
 
-### [FEAT-02.5] Attribute Mixin
-- [x] [STORY-02.5.1] Define `AttributeMixin` (or shared base) in `src/pyarchi/metamodel/mixins.py` with fields: `name: str`, `description: str | None = None`, `documentation_url: str | None = None`
-- [x] [STORY-02.5.2] Write test confirming the mixin is present on both a concrete element and a concrete relationship instance
-
-### [FEAT-02.6] Model Container
-- [x] [STORY-02.6.1] Define `Model` class in `src/pyarchi/metamodel/model.py` with `concepts: list[Concept]` as the primary container
-- [x] [STORY-02.6.2] Implement `__iter__` on `Model` to iterate over all concepts
-- [x] [STORY-02.6.3] Implement `__getitem__` on `Model` to retrieve concepts by ID
-- [x] [STORY-02.6.4] Add helper properties: `model.elements` (filtered view of Element instances), `model.relationships` (filtered view of Relationship instances)
-- [x] [STORY-02.6.5] Write test asserting `Model` accepts a list of `Concept` instances and `model.concepts` is iterable
+### [FEAT-07.5] Business Composite Element
+- [ ] [STORY-07.5.1] Define `Product(CompositeElement)` as a concrete class with `layer = Layer.BUSINESS`, `aspect = Aspect.COMPOSITE`, `_type_name = "Product"`
+- [ ] [STORY-07.5.2] Wire `layer` and `aspect` ClassVars on `Product`
+- [ ] [STORY-07.5.3] Attach `NotationMetadata` to `Product`
+- [ ] [STORY-07.5.4] Write test: `Product` can be instantiated without error
+- [ ] [STORY-07.5.5] Write test: `Product` accepts cross-layer members (e.g., `ApplicationService`) via aggregation/composition
 
 ---
 
-## [EPIC-003] Language Structure and Classification Framework (Requirement 3)
-**Status:** Complete
+## [EPIC-008] Application Layer Elements (Requirement 7)
+**Status:** To-Do
 **Priority:** High
 
-### [FEAT-03.1] Layer Enum
-- [x] [STORY-03.1.1] Define `Layer` enum in `src/pyarchi/enums.py` with seven members: `STRATEGY`, `MOTIVATION`, `BUSINESS`, `APPLICATION`, `TECHNOLOGY`, `PHYSICAL`, `IMPLEMENTATION_MIGRATION`
-- [x] [STORY-03.1.2] Write test asserting all seven values are present and accessible
+### [FEAT-08.1] Application Abstract Bases
+- [ ] [STORY-08.1.1] Define `ApplicationInternalActiveStructureElement(InternalActiveStructureElement)` as an ABC with `layer = Layer.APPLICATION`, `aspect = Aspect.ACTIVE_STRUCTURE`
+- [ ] [STORY-08.1.2] Define `ApplicationInternalBehaviorElement(InternalBehaviorElement)` as an ABC with `layer = Layer.APPLICATION`, `aspect = Aspect.BEHAVIOR`
+- [ ] [STORY-08.1.3] Write tests asserting direct instantiation of each ABC raises `TypeError`
 
-### [FEAT-03.2] Aspect Enum
-- [x] [STORY-03.2.1] Define `Aspect` enum in `src/pyarchi/enums.py` with five members: `ACTIVE_STRUCTURE`, `BEHAVIOR`, `PASSIVE_STRUCTURE`, `MOTIVATION`, `COMPOSITE`
-- [x] [STORY-03.2.2] Write test asserting all five values are present and accessible
+### [FEAT-08.2] Application Active Structure Elements
+- [ ] [STORY-08.2.1] Define `ApplicationComponent(ApplicationInternalActiveStructureElement)` as a concrete class with `_type_name = "ApplicationComponent"`
+- [ ] [STORY-08.2.2] Define `ApplicationCollaboration(ApplicationInternalActiveStructureElement)` as a concrete class with `_type_name = "ApplicationCollaboration"`
+- [ ] [STORY-08.2.3] Define `ApplicationInterface(ExternalActiveStructureElement)` as a concrete class with `layer = Layer.APPLICATION`, `aspect = Aspect.ACTIVE_STRUCTURE`, `_type_name = "ApplicationInterface"`
+- [ ] [STORY-08.2.4] Wire `layer` and `aspect` ClassVars on all three classes
+- [ ] [STORY-08.2.5] Attach `NotationMetadata` to all three classes (badge_letter="A")
+- [ ] [STORY-08.2.6] Write test: all three classes can be instantiated without error
+- [ ] [STORY-08.2.7] Write test: `ApplicationCollaboration` with fewer than 2 assigned elements raises `ValidationError`
 
-### [FEAT-03.3] NotationMetadata Dataclass
-- [x] [STORY-03.3.1] Define `NotationMetadata` dataclass in `src/pyarchi/metamodel/notation.py` with fields: `corner_shape: str`, `layer_color: str`, `badge_letter: str | None`
-- [x] [STORY-03.3.2] Attach `NotationMetadata` as an optional class-level attribute on concrete element classes (not part of core data model)
-- [x] [STORY-03.3.3] Write test confirming `NotationMetadata` exists for concrete element classes and contains all three fields
+### [FEAT-08.3] Application Behavior Elements
+- [ ] [STORY-08.3.1] Define `ApplicationFunction(ApplicationInternalBehaviorElement, Function)` as a concrete class with `_type_name = "ApplicationFunction"`
+- [ ] [STORY-08.3.2] Define `ApplicationInteraction(ApplicationInternalBehaviorElement, Interaction)` as a concrete class with `_type_name = "ApplicationInteraction"`
+- [ ] [STORY-08.3.3] Define `ApplicationProcess(ApplicationInternalBehaviorElement, Process)` as a concrete class with `_type_name = "ApplicationProcess"`
+- [ ] [STORY-08.3.4] Define `ApplicationEvent(Event)` as a concrete class with `layer = Layer.APPLICATION`, `aspect = Aspect.BEHAVIOR`, `_type_name = "ApplicationEvent"`, `time: datetime | str | None = None`
+- [ ] [STORY-08.3.5] Define `ApplicationService(ExternalBehaviorElement)` as a concrete class with `layer = Layer.APPLICATION`, `aspect = Aspect.BEHAVIOR`, `_type_name = "ApplicationService"`
+- [ ] [STORY-08.3.6] Wire `layer` and `aspect` ClassVars on all five classes
+- [ ] [STORY-08.3.7] Attach `NotationMetadata` to all five classes
+- [ ] [STORY-08.3.8] Write test: all five classes can be instantiated without error
+- [ ] [STORY-08.3.9] Write test: `ApplicationInteraction` with fewer than 2 assigned elements raises `ValidationError`
+- [ ] [STORY-08.3.10] Write test: `ApplicationEvent` has `time` attribute defaulting to `None`
 
-### [FEAT-03.4] Classification Metadata on Elements
-- [x] [STORY-03.4.1] Add `layer: Layer` and `aspect: Aspect` as class-level attributes on each concrete element class
-- [x] [STORY-03.4.2] Write test confirming every concrete element class exposes `.layer` and `.aspect` as enum members
-
-### [FEAT-03.5] Nesting Rendering Hint
-- [x] [STORY-03.5.1] Add `is_nested: bool = False` field on `StructuralRelationship` base class only
-- [x] [STORY-03.5.2] Implement validation that `is_nested = True` raises `ValidationError` on non-structural relationships (dependency, dynamic, other)
-- [x] [STORY-03.5.3] Write test confirming `is_nested = True` on `Composition` does not change any validation outcome
-- [x] [STORY-03.5.4] Write test confirming `is_nested = True` on `Triggering` raises `ValidationError`
+### [FEAT-08.4] Application Passive Structure Element
+- [ ] [STORY-08.4.1] Define `DataObject(PassiveStructureElement)` as a concrete class with `layer = Layer.APPLICATION`, `aspect = Aspect.PASSIVE_STRUCTURE`, `_type_name = "DataObject"`
+- [ ] [STORY-08.4.2] Wire `layer` and `aspect` ClassVars on `DataObject`
+- [ ] [STORY-08.4.3] Attach `NotationMetadata` to `DataObject`
+- [ ] [STORY-08.4.4] Write test: `DataObject` can be instantiated without error
+- [ ] [STORY-08.4.5] Write test: `Realization(source=DataObject(...), target=BusinessObject(...))` is valid (upward cross-layer)
 
 ---
 
-## [EPIC-004] Generic Metamodel -- Abstract Element Hierarchy (Requirement 4)
-**Status:** Complete
+## [EPIC-009] Technology Layer Elements (Requirement 8)
+**Status:** To-Do
 **Priority:** High
 
-### [FEAT-04.1] StructureElement Hierarchy
-- [x] [STORY-04.1.1] Define `StructureElement(Element)` as an ABC
-- [x] [STORY-04.1.2] Define `ActiveStructureElement(StructureElement)` as an ABC
-- [x] [STORY-04.1.3] Define `InternalActiveStructureElement(ActiveStructureElement)` as an ABC
-- [x] [STORY-04.1.4] Define `ExternalActiveStructureElement(ActiveStructureElement)` as an ABC (i.e., Interface)
-- [x] [STORY-04.1.5] Define `PassiveStructureElement(StructureElement)` as an ABC
-- [x] [STORY-04.1.6] Write tests asserting direct instantiation of each ABC raises `TypeError`
+### [FEAT-09.1] Technology Abstract Bases
+- [ ] [STORY-09.1.1] Define `TechnologyInternalActiveStructureElement(InternalActiveStructureElement)` as an ABC with `layer = Layer.TECHNOLOGY`, `aspect = Aspect.ACTIVE_STRUCTURE`
+- [ ] [STORY-09.1.2] Define `TechnologyInternalBehaviorElement(InternalBehaviorElement)` as an ABC with `layer = Layer.TECHNOLOGY`, `aspect = Aspect.BEHAVIOR`
+- [ ] [STORY-09.1.3] Write tests asserting direct instantiation of each ABC raises `TypeError`
 
-### [FEAT-04.2] BehaviorElement Hierarchy
-- [x] [STORY-04.2.1] Define `BehaviorElement(Element)` as an ABC
-- [x] [STORY-04.2.2] Define `InternalBehaviorElement(BehaviorElement)` as an ABC
-- [x] [STORY-04.2.3] Define `Process(InternalBehaviorElement)` as an ABC (sequence-oriented)
-- [x] [STORY-04.2.4] Define `Function(InternalBehaviorElement)` as an ABC (criteria/resource-oriented)
-- [x] [STORY-04.2.5] Define `Interaction(InternalBehaviorElement)` as an ABC with validation requiring >= 2 active structure elements assigned
-- [x] [STORY-04.2.6] Define `ExternalBehaviorElement(BehaviorElement)` as an ABC (i.e., Service)
-- [x] [STORY-04.2.7] Define `Event(BehaviorElement)` as an ABC with optional `time: datetime | str | None = None` attribute
-- [x] [STORY-04.2.8] Write tests asserting direct instantiation of each ABC raises `TypeError`
+### [FEAT-09.2] Technology Active Structure Elements
+- [ ] [STORY-09.2.1] Define `Node(TechnologyInternalActiveStructureElement)` as a concrete class with `_type_name = "Node"`
+- [ ] [STORY-09.2.2] Define `Device(Node)` as a concrete class with `_type_name = "Device"` (specialization of Node)
+- [ ] [STORY-09.2.3] Define `SystemSoftware(Node)` as a concrete class with `_type_name = "SystemSoftware"` (specialization of Node)
+- [ ] [STORY-09.2.4] Define `TechnologyCollaboration(TechnologyInternalActiveStructureElement)` as a concrete class with `_type_name = "TechnologyCollaboration"`
+- [ ] [STORY-09.2.5] Define `TechnologyInterface(ExternalActiveStructureElement)` as a concrete class with `layer = Layer.TECHNOLOGY`, `aspect = Aspect.ACTIVE_STRUCTURE`, `_type_name = "TechnologyInterface"`
+- [ ] [STORY-09.2.6] Define `Path(TechnologyInternalActiveStructureElement)` as a concrete class with `_type_name = "Path"`
+- [ ] [STORY-09.2.7] Define `CommunicationNetwork(TechnologyInternalActiveStructureElement)` as a concrete class with `_type_name = "CommunicationNetwork"`
+- [ ] [STORY-09.2.8] Wire `layer` and `aspect` ClassVars on all seven classes
+- [ ] [STORY-09.2.9] Attach `NotationMetadata` to all seven classes (badge_letter="T")
+- [ ] [STORY-09.2.10] Write test: all seven classes can be instantiated without error
+- [ ] [STORY-09.2.11] Write test: `isinstance(Device(...), Node)` is `True`
+- [ ] [STORY-09.2.12] Write test: `TechnologyCollaboration` with fewer than 2 assigned elements raises `ValidationError`
 
-### [FEAT-04.3] MotivationElement and CompositeElement
-- [x] [STORY-04.3.1] Define `MotivationElement(Element)` as an ABC
-- [x] [STORY-04.3.2] Define `CompositeElement(Element)` as an ABC
-- [x] [STORY-04.3.3] Write tests asserting direct instantiation of each ABC raises `TypeError`
+### [FEAT-09.3] Technology Behavior Elements
+- [ ] [STORY-09.3.1] Define `TechnologyFunction(TechnologyInternalBehaviorElement, Function)` as a concrete class with `_type_name = "TechnologyFunction"`
+- [ ] [STORY-09.3.2] Define `TechnologyProcess(TechnologyInternalBehaviorElement, Process)` as a concrete class with `_type_name = "TechnologyProcess"`
+- [ ] [STORY-09.3.3] Define `TechnologyInteraction(TechnologyInternalBehaviorElement, Interaction)` as a concrete class with `_type_name = "TechnologyInteraction"`
+- [ ] [STORY-09.3.4] Define `TechnologyEvent(Event)` as a concrete class with `layer = Layer.TECHNOLOGY`, `aspect = Aspect.BEHAVIOR`, `_type_name = "TechnologyEvent"`, `time: datetime | str | None = None`
+- [ ] [STORY-09.3.5] Define `TechnologyService(ExternalBehaviorElement)` as a concrete class with `layer = Layer.TECHNOLOGY`, `aspect = Aspect.BEHAVIOR`, `_type_name = "TechnologyService"`
+- [ ] [STORY-09.3.6] Wire `layer` and `aspect` ClassVars on all five classes
+- [ ] [STORY-09.3.7] Attach `NotationMetadata` to all five classes
+- [ ] [STORY-09.3.8] Write test: all five classes can be instantiated without error
+- [ ] [STORY-09.3.9] Write test: `TechnologyInteraction` with fewer than 2 assigned elements raises `ValidationError`
+- [ ] [STORY-09.3.10] Write test: `TechnologyEvent` has `time` attribute defaulting to `None`
 
-### [FEAT-04.4] Grouping (Concrete)
-- [x] [STORY-04.4.1] Define `Grouping(CompositeElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION` and `aspect = Aspect.COMPOSITE`
-- [x] [STORY-04.4.2] Implement `members: list[Concept]` on `Grouping` accepting both `Element` and `Relationship` instances
-- [x] [STORY-04.4.3] Write test confirming `Grouping` can be instantiated
-- [x] [STORY-04.4.4] Write test confirming `isinstance(Grouping(), CompositeElement)` and `isinstance(Grouping(), Element)` are both `True`
-- [x] [STORY-04.4.5] Write test confirming `Grouping` accepts both an `Element` and a `Relationship` as members
-
-### [FEAT-04.5] Location (Concrete)
-- [x] [STORY-04.5.1] Define `Location(CompositeElement)` as a concrete class with `aspect = Aspect.COMPOSITE`
-- [x] [STORY-04.5.2] Implement aggregation of structure elements (active or passive) and behavior elements on `Location`
-- [x] [STORY-04.5.3] Write test confirming `Location` can be instantiated and accepts structure and behavior elements
-
-### [FEAT-04.6] Interaction and Collaboration Validation
-- [x] [STORY-04.6.1] Implement validation rule: `Interaction` subclass requires >= 2 active structure elements assigned at validation time; fewer raises `ValidationError`
-- [x] [STORY-04.6.2] Implement validation rule: `Collaboration` (future layer-specific subclass marker) must aggregate >= 2 internal active structure elements
-- [x] [STORY-04.6.3] Implement validation rule: `PassiveStructureElement` subclasses may not be assigned to perform behavior (wrong-direction Assignment raises `ValidationError`)
-- [x] [STORY-04.6.4] Write test confirming assigning a single active structure element to an `Interaction` subclass raises `ValidationError`
-- [x] [STORY-04.6.5] Write test confirming `Event` subclass instance has `time` attribute defaulting to `None` and accepting `datetime` or `str`
+### [FEAT-09.4] Technology Passive Structure Element
+- [ ] [STORY-09.4.1] Define `Artifact(PassiveStructureElement)` as a concrete class with `layer = Layer.TECHNOLOGY`, `aspect = Aspect.PASSIVE_STRUCTURE`, `_type_name = "Artifact"`
+- [ ] [STORY-09.4.2] Wire `layer` and `aspect` ClassVars on `Artifact`
+- [ ] [STORY-09.4.3] Attach `NotationMetadata` to `Artifact`
+- [ ] [STORY-09.4.4] Write test: `Artifact` can be instantiated without error
+- [ ] [STORY-09.4.5] Write test: `Realization(source=Artifact(...), target=DataObject(...))` is valid (downward cross-layer)
+- [ ] [STORY-09.4.6] Write test: `Realization(source=Artifact(...), target=ApplicationComponent(...))` is valid
 
 ---
 
-## [EPIC-005] Relationships and Relationship Connectors (Requirement 5)
-**Status:** Complete
+## [EPIC-010] Physical Elements (Requirement 9)
+**Status:** To-Do
 **Priority:** High
 
-### [FEAT-05.1] RelationshipCategory Enum
-- [x] [STORY-05.1.1] Define `RelationshipCategory` enum in `src/pyarchi/enums.py` with members: `STRUCTURAL`, `DEPENDENCY`, `DYNAMIC`, `OTHER`
-- [x] [STORY-05.1.2] Write test asserting all four values are present
+### [FEAT-10.1] Physical Abstract Bases
+- [ ] [STORY-10.1.1] Define `PhysicalActiveStructureElement(ActiveStructureElement)` as an ABC with `layer = Layer.PHYSICAL`, `aspect = Aspect.ACTIVE_STRUCTURE`
+- [ ] [STORY-10.1.2] Define `PhysicalPassiveStructureElement(PassiveStructureElement)` as an ABC with `layer = Layer.PHYSICAL`, `aspect = Aspect.PASSIVE_STRUCTURE`
+- [ ] [STORY-10.1.3] Write tests asserting direct instantiation of each ABC raises `TypeError`
 
-### [FEAT-05.2] Structural Relationships
-- [x] [STORY-05.2.1] Define `StructuralRelationship(Relationship)` as an ABC with `category = RelationshipCategory.STRUCTURAL` and `is_nested: bool = False`
-- [x] [STORY-05.2.2] Define `Composition(StructuralRelationship)` as a concrete class
-- [x] [STORY-05.2.3] Define `Aggregation(StructuralRelationship)` as a concrete class
-- [x] [STORY-05.2.4] Define `Assignment(StructuralRelationship)` as a concrete class
-- [x] [STORY-05.2.5] Define `Realization(StructuralRelationship)` as a concrete class
-- [x] [STORY-05.2.6] Implement validation: Composition source is the whole, target is the part; permitted between same-type elements universally
-- [x] [STORY-05.2.7] Implement validation: Aggregation source is the whole, target is the part; permitted between same-type elements universally
-- [x] [STORY-05.2.8] Implement validation: when target of Aggregation or Composition is a `Relationship`, source must be a `CompositeElement`; otherwise raise `ValidationError`
-- [x] [STORY-05.2.9] Implement validation: Assignment enforces directionality (active structure toward behavior, active structure toward passive structure, behavior toward passive structure); wrong direction raises `ValidationError`
-- [x] [STORY-05.2.10] Implement validation: Realization is directed from realizing (lower abstraction) to realized (higher abstraction); wrong direction raises `ValidationError`
-- [x] [STORY-05.2.11] Implement validation: no structural relationship may have a `Relationship` as target unless source is a `CompositeElement`
-- [x] [STORY-05.2.12] Write test: `Composition(source=A, target=B)` where A and B are same-type elements is valid
-- [x] [STORY-05.2.13] Write test: `Assignment(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError`
-- [x] [STORY-05.2.14] Write test: `Aggregation(source=non_composite, target=relationship)` raises `ValidationError`
-- [x] [STORY-05.2.15] Write test: `is_nested = True` on `Composition` does not affect validation outcome
+### [FEAT-10.2] Physical Active Structure Elements
+- [ ] [STORY-10.2.1] Define `Equipment(PhysicalActiveStructureElement)` as a concrete class with `_type_name = "Equipment"`
+- [ ] [STORY-10.2.2] Define `Facility(PhysicalActiveStructureElement)` as a concrete class with `_type_name = "Facility"`
+- [ ] [STORY-10.2.3] Define `DistributionNetwork(PhysicalActiveStructureElement)` as a concrete class with `_type_name = "DistributionNetwork"`
+- [ ] [STORY-10.2.4] Wire `layer` and `aspect` ClassVars on all three classes
+- [ ] [STORY-10.2.5] Attach `NotationMetadata` to all three classes (badge_letter="P")
+- [ ] [STORY-10.2.6] Write test: all three classes can be instantiated without error
+- [ ] [STORY-10.2.7] Write test: `Realization(source=DistributionNetwork(...), target=Path(...))` is valid
 
-### [FEAT-05.3] Dependency Relationships -- Serving
-- [x] [STORY-05.3.1] Define `DependencyRelationship(Relationship)` as an ABC with `category = RelationshipCategory.DEPENDENCY`
-- [x] [STORY-05.3.2] Define `Serving(DependencyRelationship)` as a concrete class
-- [x] [STORY-05.3.3] Implement validation: Serving direction is from provider (source) to consumer (target)
+### [FEAT-10.3] Physical Passive Structure Element
+- [ ] [STORY-10.3.1] Define `Material(PhysicalPassiveStructureElement)` as a concrete class with `_type_name = "Material"`
+- [ ] [STORY-10.3.2] Wire `layer` and `aspect` ClassVars on `Material`
+- [ ] [STORY-10.3.3] Attach `NotationMetadata` to `Material`
+- [ ] [STORY-10.3.4] Write test: `Material` can be instantiated without error
+- [ ] [STORY-10.3.5] Write test: `Assignment(source=Equipment(...), target=Material(...))` is valid (non-standard but permitted)
 
-### [FEAT-05.4] Dependency Relationships -- Access
-- [x] [STORY-05.4.1] Define `AccessMode` enum with members: `READ`, `WRITE`, `READ_WRITE`, `UNSPECIFIED`
-- [x] [STORY-05.4.2] Define `Access(DependencyRelationship)` as a concrete class with `access_mode: AccessMode = AccessMode.UNSPECIFIED`
-- [x] [STORY-05.4.3] Implement validation: Access is directed from behavior or active structure element (accessor) to passive structure element (accessed); reversed direction raises `ValidationError`
-- [x] [STORY-05.4.4] Write test: `Access(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError`
-- [x] [STORY-05.4.5] Write test: `Access` instance accepts all four `AccessMode` enum values
+---
 
-### [FEAT-05.5] Dependency Relationships -- Influence
-- [x] [STORY-05.5.1] Define `InfluenceSign` enum with members: `STRONG_POSITIVE` ("++"), `POSITIVE` ("+"), `NEUTRAL` ("0"), `NEGATIVE` ("-"), `STRONG_NEGATIVE` ("--")
-- [x] [STORY-05.5.2] Define `Influence(DependencyRelationship)` as a concrete class with `sign: InfluenceSign | None = None` and `strength: str | None = None`
-- [x] [STORY-05.5.3] Write test: `Influence` instance `sign` and `strength` both default to `None`
+## [EPIC-011] Motivation Elements (Requirement 11)
+**Status:** To-Do
+**Priority:** High
 
-### [FEAT-05.6] Dependency Relationships -- Association
-- [x] [STORY-05.6.1] Define `AssociationDirection` enum with members: `UNDIRECTED`, `DIRECTED`
-- [x] [STORY-05.6.2] Define `Association(DependencyRelationship)` as a concrete class with `direction: AssociationDirection = AssociationDirection.UNDIRECTED`
-- [x] [STORY-05.6.3] Implement validation: undirected Association is always permitted between any two concepts (elements and/or relationships)
-- [x] [STORY-05.6.4] Write test: `Association(source=any_element, target=some_relationship)` is valid without restriction
-- [x] [STORY-05.6.5] Write test: directed Association is valid between any two element types
+### [FEAT-11.1] Motivation Intentional Elements
+- [ ] [STORY-11.1.1] Define `Stakeholder(MotivationElement)` as a concrete class with `layer = Layer.MOTIVATION`, `aspect = Aspect.MOTIVATION`, `_type_name = "Stakeholder"`
+- [ ] [STORY-11.1.2] Define `Driver(MotivationElement)` as a concrete class with `_type_name = "Driver"`
+- [ ] [STORY-11.1.3] Define `Assessment(MotivationElement)` as a concrete class with `_type_name = "Assessment"`
+- [ ] [STORY-11.1.4] Wire `layer` and `aspect` ClassVars on all three classes
+- [ ] [STORY-11.1.5] Attach `NotationMetadata` to all three classes (badge_letter="M")
+- [ ] [STORY-11.1.6] Write test: all three classes can be instantiated without error
 
-### [FEAT-05.7] Dynamic Relationships
-- [x] [STORY-05.7.1] Define `DynamicRelationship(Relationship)` as an ABC with `category = RelationshipCategory.DYNAMIC`
-- [x] [STORY-05.7.2] Define `Triggering(DynamicRelationship)` as a concrete class
-- [x] [STORY-05.7.3] Define `Flow(DynamicRelationship)` as a concrete class with `flow_type: str | None = None`
-- [x] [STORY-05.7.4] Implement validation: setting `is_nested = True` on `Triggering` or `Flow` raises `ValidationError`
-- [x] [STORY-05.7.5] Write test: `Triggering` and `Flow` have `category == RelationshipCategory.DYNAMIC`
-- [x] [STORY-05.7.6] Write test: `Flow` has `flow_type` attribute defaulting to `None`
-- [x] [STORY-05.7.7] Write test: `is_nested = True` on `Triggering` raises `ValidationError`
+### [FEAT-11.2] Motivation Goal-Oriented Elements
+- [ ] [STORY-11.2.1] Define `Goal(MotivationElement)` as a concrete class with `_type_name = "Goal"`
+- [ ] [STORY-11.2.2] Define `Outcome(MotivationElement)` as a concrete class with `_type_name = "Outcome"`
+- [ ] [STORY-11.2.3] Define `Principle(MotivationElement)` as a concrete class with `_type_name = "Principle"`
+- [ ] [STORY-11.2.4] Define `Requirement(MotivationElement)` as a concrete class with `_type_name = "Requirement"`
+- [ ] [STORY-11.2.5] Define `Constraint(MotivationElement)` as a concrete class with `_type_name = "Constraint"`
+- [ ] [STORY-11.2.6] Wire `layer` and `aspect` ClassVars on all five classes
+- [ ] [STORY-11.2.7] Attach `NotationMetadata` to all five classes
+- [ ] [STORY-11.2.8] Write test: all five classes can be instantiated without error
+- [ ] [STORY-11.2.9] Write test: `Goal` and `Outcome` are distinct types (not subclasses of each other)
+- [ ] [STORY-11.2.10] Write test: `Principle`, `Requirement`, and `Constraint` are distinct types
 
-### [FEAT-05.8] Other Relationships -- Specialization
-- [x] [STORY-05.8.1] Define `OtherRelationship(Relationship)` as an ABC with `category = RelationshipCategory.OTHER`
-- [x] [STORY-05.8.2] Define `Specialization(OtherRelationship)` as a concrete class
-- [x] [STORY-05.8.3] Implement validation: Specialization is only permitted between elements of the same concrete type; different types raise `ValidationError`
-- [x] [STORY-05.8.4] Write test: `Specialization(source=BusinessProcess, target=BusinessProcess)` is valid
-- [x] [STORY-05.8.5] Write test: `Specialization(source=BusinessProcess, target=ApplicationFunction)` raises `ValidationError`
-- [x] [STORY-05.8.6] Write test: `Specialization` has `category == RelationshipCategory.OTHER`
+### [FEAT-11.3] Motivation Meaning and Value
+- [ ] [STORY-11.3.1] Define `Meaning(MotivationElement)` as a concrete class with `_type_name = "Meaning"`
+- [ ] [STORY-11.3.2] Define `Value(MotivationElement)` as a concrete class with `_type_name = "Value"`
+- [ ] [STORY-11.3.3] Wire `layer` and `aspect` ClassVars on both classes
+- [ ] [STORY-11.3.4] Attach `NotationMetadata` to both classes
+- [ ] [STORY-11.3.5] Write test: both classes can be instantiated without error
+- [ ] [STORY-11.3.6] Write test: `Association(source=Meaning(...), target=some_relationship)` is valid (Meaning associates with any Concept)
 
-### [FEAT-05.9] Junction (Relationship Connector)
-- [x] [STORY-05.9.1] Define `JunctionType` enum in `src/pyarchi/enums.py` with members: `AND`, `OR`
-- [x] [STORY-05.9.2] Define `Junction(RelationshipConnector)` as a concrete class with mandatory `junction_type: JunctionType` field
-- [x] [STORY-05.9.3] Implement validation: all relationships connected to a Junction must be of the same concrete relationship type; mixed types raise `ValidationError`
-- [x] [STORY-05.9.4] Implement validation: endpoint elements of a chain through a Junction must permit a direct relationship of the connected type (per Appendix B); otherwise raise `ValidationError`
-- [x] [STORY-05.9.5] Support multiple incoming/one outgoing, one incoming/multiple outgoing, and multiple/multiple connection topologies
-- [x] [STORY-05.9.6] Write test: `Junction` cannot be instantiated without providing `junction_type`
-- [x] [STORY-05.9.7] Write test: connecting `Composition` and `Serving` to the same `Junction` raises `ValidationError`
-- [x] [STORY-05.9.8] Write test: `isinstance(Junction(junction_type=JunctionType.AND), RelationshipConnector)` is `True`
-- [x] [STORY-05.9.9] Write test: `isinstance(Junction(junction_type=JunctionType.AND), Relationship)` is `False`
-- [x] [STORY-05.9.10] Write test: Junction connecting two `Serving` relationships where endpoint elements do not permit direct `Serving` raises `ValidationError`
+### [FEAT-11.4] Motivation Cross-Layer Validation Rules
+- [ ] [STORY-11.4.1] Add permission table entries: only `BusinessActor`, `BusinessRole`, `BusinessCollaboration` may be `Assignment` source targeting `Stakeholder`
+- [ ] [STORY-11.4.2] Add permission table entries: core structure/behavior elements may realize `Requirement`
+- [ ] [STORY-11.4.3] Add permission table entries: `Influence` between motivation elements and core elements is permitted
+- [ ] [STORY-11.4.4] Write test: `Assignment(source=ApplicationComponent(...), target=Stakeholder(...))` raises `ValidationError`
+- [ ] [STORY-11.4.5] Write test: `Assignment(source=BusinessActor(...), target=Stakeholder(...))` is valid
+- [ ] [STORY-11.4.6] Write test: `Influence(source=Assessment(...), target=Goal(...), sign=InfluenceSign.NEGATIVE)` is valid
 
-### [FEAT-05.10] Derivation Engine
-- [x] [STORY-05.10.1] Define `DerivationEngine` class in `src/pyarchi/derivation/engine.py`
-- [x] [STORY-05.10.2] Implement `derive(self, model: Model) -> list[Relationship]` method that computes all derivable relationships from chains in the model
-- [x] [STORY-05.10.3] Implement `is_directly_permitted(self, rel_type: type[Relationship], source: Element, target: Element) -> bool` method that checks the Appendix B permission table
-- [x] [STORY-05.10.4] Implement chain traversal rules: structural relationships propagate through structural chains, dependency through dependency chains
-- [x] [STORY-05.10.5] Mark all derived relationships with `is_derived = True`
-- [x] [STORY-05.10.6] Ensure `derive()` does not modify the source `Model` in-place; it returns new `Relationship` objects
-- [x] [STORY-05.10.7] Implement derivation direction constraint: valid only from more detail to less detail (abstraction direction)
-- [x] [STORY-05.10.8] Write test: three-hop realization chain produces one derived `Realization` between endpoints
-- [x] [STORY-05.10.9] Write test: derived relationships have `is_derived == True`
-- [x] [STORY-05.10.10] Write test: `derive()` returns new objects and source model remains unmodified
-- [x] [STORY-05.10.11] Write test: `is_directly_permitted(Serving, ApplicationService, BusinessProcess)` returns `True`
+---
 
-### [FEAT-05.11] Appendix B Permission Table
-- [x] [STORY-05.11.1] Encode the normative Appendix B relationship permission table as a data structure in `src/pyarchi/validation/permissions.py`
-- [x] [STORY-05.11.2] Implement lookup function: given a relationship type, source element type, and target element type, return whether the relationship is permitted
-- [x] [STORY-05.11.3] Include universal same-type permissions for Composition, Aggregation, and Specialization
-- [x] [STORY-05.11.4] Include universal Association permission between any two concepts
-- [x] [STORY-05.11.5] Write tests verifying representative permitted and forbidden relationship/source/target triplets from the table
+## [EPIC-012] Implementation and Migration Layer Elements (Requirement 13)
+**Status:** To-Do
+**Priority:** High
+
+### [FEAT-12.1] Implementation Behavior and Structure Elements
+- [ ] [STORY-12.1.1] Define `WorkPackage(InternalBehaviorElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.BEHAVIOR`, `_type_name = "WorkPackage"`, extra fields `start: datetime | str | None = None`, `end: datetime | str | None = None`
+- [ ] [STORY-12.1.2] Define `Deliverable(PassiveStructureElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.PASSIVE_STRUCTURE`, `_type_name = "Deliverable"`
+- [ ] [STORY-12.1.3] Define `ImplementationEvent(Event)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.BEHAVIOR`, `_type_name = "ImplementationEvent"`, `time: datetime | str | None = None`
+- [ ] [STORY-12.1.4] Wire `layer` and `aspect` ClassVars on all three classes
+- [ ] [STORY-12.1.5] Attach `NotationMetadata` to all three classes (badge_letter="I")
+- [ ] [STORY-12.1.6] Write test: all three classes can be instantiated without error
+- [ ] [STORY-12.1.7] Write test: `WorkPackage` has `start` and `end` attributes defaulting to `None`
+
+### [FEAT-12.2] Plateau (Composite Element)
+- [ ] [STORY-12.2.1] Define `Plateau(CompositeElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.COMPOSITE`, `_type_name = "Plateau"`
+- [ ] [STORY-12.2.2] Implement `members: list[Concept]` on `Plateau` accepting any core ArchiMate concept via aggregation/composition
+- [ ] [STORY-12.2.3] Wire `layer` and `aspect` ClassVars on `Plateau`
+- [ ] [STORY-12.2.4] Attach `NotationMetadata` to `Plateau`
+- [ ] [STORY-12.2.5] Write test: `Plateau` can be instantiated without error
+- [ ] [STORY-12.2.6] Write test: `Plateau` accepts any core element (e.g., `BusinessProcess`, `Requirement`) as a member
+
+### [FEAT-12.3] Gap (Associative Element)
+- [ ] [STORY-12.3.1] Define `Gap` class with mandatory `plateau_a: Plateau` and `plateau_b: Plateau` fields, `layer = Layer.IMPLEMENTATION_MIGRATION`, `_type_name = "Gap"`
+- [ ] [STORY-12.3.2] Implement validation: `Gap` requires exactly two `Plateau` references; missing either raises `ValidationError`
+- [ ] [STORY-12.3.3] Wire `layer` and `aspect` ClassVars on `Gap`
+- [ ] [STORY-12.3.4] Attach `NotationMetadata` to `Gap`
+- [ ] [STORY-12.3.5] Write test: `Gap(plateau_a=Plateau(...), plateau_b=Plateau(...))` is valid
+- [ ] [STORY-12.3.6] Write test: `Gap` without both plateau references raises `ValidationError`
+
+### [FEAT-12.4] Implementation & Migration Cross-Layer Validation
+- [ ] [STORY-12.4.1] Emit `DeprecationWarning` when `Realization(source=WorkPackage, target=Deliverable)` is detected
+- [ ] [STORY-12.4.2] Add permission table entries: `BusinessInternalActiveStructureElement` may be `Assignment` source targeting `WorkPackage`
+- [ ] [STORY-12.4.3] Add permission table entries: `ImplementationEvent` may trigger/be triggered by `WorkPackage` or `Plateau`
+- [ ] [STORY-12.4.4] Add permission table entries: `ImplementationEvent` may access `Deliverable`
+- [ ] [STORY-12.4.5] Add permission table entries: `Deliverable` may realize any core concept
+- [ ] [STORY-12.4.6] Write test: `Realization(source=WorkPackage(...), target=Deliverable(...))` emits `DeprecationWarning`
+- [ ] [STORY-12.4.7] Write test: `Assignment(source=BusinessRole(...), target=WorkPackage(...))` is valid
+- [ ] [STORY-12.4.8] Write test: `Triggering(source=ImplementationEvent(...), target=WorkPackage(...))` is valid
+
+---
+
+## [EPIC-013] Cross-Layer Relationship Rules (Requirement 10)
+**Status:** To-Do
+**Priority:** High
+
+### [FEAT-13.1] Business -- Application Cross-Layer Serving
+- [ ] [STORY-13.1.1] Add permission table entries: `Serving` from `ApplicationService` to any `BusinessBehaviorElement`
+- [ ] [STORY-13.1.2] Add permission table entries: `Serving` from `ApplicationInterface` to `BusinessRole`
+- [ ] [STORY-13.1.3] Add permission table entries: `Serving` from `BusinessService` to any `ApplicationBehaviorElement`
+- [ ] [STORY-13.1.4] Add permission table entries: `Serving` from `BusinessInterface` to `ApplicationComponent`
+- [ ] [STORY-13.1.5] Write test: `Serving(source=ApplicationService(...), target=BusinessProcess(...))` is valid
+- [ ] [STORY-13.1.6] Write test: `Serving(source=BusinessService(...), target=ApplicationFunction(...))` is valid
+
+### [FEAT-13.2] Application -- Technology Cross-Layer Serving
+- [ ] [STORY-13.2.1] Add permission table entries: `Serving` from `TechnologyService` to any `ApplicationBehaviorElement`
+- [ ] [STORY-13.2.2] Add permission table entries: `Serving` from `TechnologyInterface` to `ApplicationComponent`
+- [ ] [STORY-13.2.3] Write test: `Serving(source=TechnologyService(...), target=ApplicationFunction(...))` is valid
+
+### [FEAT-13.3] Cross-Layer Realization Rules
+- [ ] [STORY-13.3.1] Add permission table entries: `Realization` from `ApplicationProcess`/`ApplicationFunction` to `BusinessProcess`/`BusinessFunction`
+- [ ] [STORY-13.3.2] Add permission table entries: `Realization` from `DataObject` to `BusinessObject`
+- [ ] [STORY-13.3.3] Add permission table entries: `Realization` from `TechnologyProcess`/`TechnologyFunction` to `ApplicationProcess`/`ApplicationFunction`
+- [ ] [STORY-13.3.4] Add permission table entries: `Realization` from `Artifact` to `DataObject` and `Artifact` to `ApplicationComponent`
+- [ ] [STORY-13.3.5] Write test: `Realization(source=ApplicationProcess(...), target=BusinessProcess(...))` is valid
+- [ ] [STORY-13.3.6] Write test: `Realization(source=Artifact(...), target=DataObject(...))` is valid
+
+### [FEAT-13.4] Cross-Layer Realization Prohibitions
+- [ ] [STORY-13.4.1] Add prohibition: `Realization` targeting `BusinessActor`, `BusinessRole`, or `BusinessCollaboration` is forbidden
+- [ ] [STORY-13.4.2] Write test: `Realization(source=ApplicationProcess(...), target=BusinessActor(...))` raises `ValidationError`
+- [ ] [STORY-13.4.3] Write test: `Realization(source=ApplicationComponent(...), target=BusinessRole(...))` raises `ValidationError`
+- [ ] [STORY-13.4.4] Write test: `Realization(source=ApplicationComponent(...), target=BusinessCollaboration(...))` raises `ValidationError`
+
+### [FEAT-13.5] Cross-Layer Derivation
+- [ ] [STORY-13.5.1] Ensure derivation engine supports multi-hop realization chains across layers (e.g., `BusinessObject <- DataObject <- Artifact`)
+- [ ] [STORY-13.5.2] Write test: chained `Realization(Artifact -> DataObject)` and `Realization(DataObject -> BusinessObject)` produces derived `Realization(Artifact, BusinessObject)`
+- [ ] [STORY-13.5.3] Write test: `Product` aggregation of `ApplicationService` does not raise `ValidationError`
+
+---
+
+## [EPIC-014] Public API Exports for Phase 2
+**Status:** To-Do
+**Priority:** Medium
+
+### [FEAT-14.1] Update __init__.py Exports
+- [ ] [STORY-14.1.1] Export all Strategy layer concrete classes from `src/pyarchi/__init__.py`
+- [ ] [STORY-14.1.2] Export all Business layer concrete classes from `src/pyarchi/__init__.py`
+- [ ] [STORY-14.1.3] Export all Application layer concrete classes from `src/pyarchi/__init__.py`
+- [ ] [STORY-14.1.4] Export all Technology layer concrete classes from `src/pyarchi/__init__.py`
+- [ ] [STORY-14.1.5] Export all Physical element concrete classes from `src/pyarchi/__init__.py`
+- [ ] [STORY-14.1.6] Export all Motivation element concrete classes from `src/pyarchi/__init__.py`
+- [ ] [STORY-14.1.7] Export all Implementation & Migration element concrete classes from `src/pyarchi/__init__.py`
+- [ ] [STORY-14.1.8] Export all new layer-specific abstract bases from `src/pyarchi/__init__.py`
+- [ ] [STORY-14.1.9] Update `__all__` list to include all Phase 2 types
+- [ ] [STORY-14.1.10] Write test: every Phase 2 concrete class is importable from `pyarchi` top-level
