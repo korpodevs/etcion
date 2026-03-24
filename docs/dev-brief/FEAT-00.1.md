@@ -1,8 +1,11 @@
 # Technical Brief: FEAT-00.1 Package Configuration
 
 **Status:** Ready for Implementation
+
 **ADR Link:** `docs/adr/ADR-001-package-configuration.md`
+
 **Epic:** EPIC-000 -- Project Scaffold and Build System
+
 **Date:** 2026-03-23
 
 ---
@@ -395,5 +398,4 @@ mypy src/ test/   # Type-check library and tests
 ```bash
 pip install -e ".[dev]"   # Editable install with dev dependencies
 pip install -e .          # Editable install, runtime deps only
-```
 ```

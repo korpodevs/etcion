@@ -90,10 +90,6 @@ class TestShallFeatures:
     exports the types from ``pyarchi.__init__``.
     """
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-003: Language structure enums not yet re-exported",
-    )
     def test_language_structure(self) -> None:
         assert hasattr(pyarchi, "Layer")
         assert hasattr(pyarchi, "Aspect")
@@ -229,10 +225,6 @@ class TestShallFeatures:
     def test_relationship_permission_table(self) -> None:
         assert hasattr(pyarchi, "is_permitted")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-003: Notation metadata not yet implemented",
-    )
     def test_iconography_metadata(self) -> None:
         assert hasattr(pyarchi, "NotationMetadata")
 

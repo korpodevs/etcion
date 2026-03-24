@@ -193,7 +193,11 @@ class TestShallFeaturesMarkers:
     the exclusion list below."""
 
     # Methods promoted to normal PASSED when their implementing epic ships.
-    _PROMOTED: set[str] = {"test_generic_metamodel"}
+    _PROMOTED: set[str] = {
+        "test_generic_metamodel",
+        "test_iconography_metadata",
+        "test_language_structure",
+    }
 
     def test_pending_methods_have_xfail_decorator(self) -> None:
         tree = _parse_tree()
@@ -302,13 +306,12 @@ class TestConformanceFunctionalBehaviour:
     """Run test_conformance.py with pytest and verify the expected summary counts."""
 
     def test_functional_outcome(self) -> None:
-        """11 passed, 13 xfailed, 1 skipped -- no failures or errors.
+        """13 passed, 11 xfailed, 1 skipped -- no failures or errors.
 
-        11 xfail from FEAT-01.2 (TestShallFeatures pending + TestShouldFeatures) +
-        2 xfail from FEAT-01.3 (TestUndefinedTypeGuard) = 13 total.
-        Previously 17 xfailed; 4 removed when EPIC-002 shipped:
-          - test_generic_metamodel (TestShallFeatures)
-          - 3 x TestUndefinedTypeGuard methods
+        9 xfail from FEAT-01.2 (TestShallFeatures pending + TestShouldFeatures) +
+        2 xfail from FEAT-01.3 (TestUndefinedTypeGuard) = 11 total.
+        Previously 12 xfailed; 1 removed when FEAT-03.3 shipped:
+          - test_iconography_metadata (TestShallFeatures)
         """
         result = subprocess.run(
             [
@@ -326,11 +329,11 @@ class TestConformanceFunctionalBehaviour:
         )
         output = result.stdout + result.stderr
 
-        assert "11 passed" in output, (
-            f"Expected '11 passed' in pytest output.\n\nFull output:\n{output}"
+        assert "13 passed" in output, (
+            f"Expected '13 passed' in pytest output.\n\nFull output:\n{output}"
         )
-        assert "13 xfailed" in output, (
-            f"Expected '13 xfailed' in pytest output.\n\nFull output:\n{output}"
+        assert "11 xfailed" in output, (
+            f"Expected '11 xfailed' in pytest output.\n\nFull output:\n{output}"
         )
         assert "1 skipped" in output, (
             f"Expected '1 skipped' in pytest output.\n\nFull output:\n{output}"

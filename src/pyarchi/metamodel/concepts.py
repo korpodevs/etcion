@@ -43,7 +43,7 @@ class Concept(abc.ABC, BaseModel):
     Reference: ArchiMate 3.2 Specification, Section 3.1.
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     """Unique identifier.  Defaults to a UUID4 string.  Any non-empty string

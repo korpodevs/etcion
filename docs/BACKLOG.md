@@ -101,27 +101,27 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 **Priority:** High
 
 ### [FEAT-03.1] Layer Enum
-- [ ] [STORY-03.1.1] Define `Layer` enum in `src/pyarchi/enums.py` with seven members: `STRATEGY`, `MOTIVATION`, `BUSINESS`, `APPLICATION`, `TECHNOLOGY`, `PHYSICAL`, `IMPLEMENTATION_MIGRATION`
-- [ ] [STORY-03.1.2] Write test asserting all seven values are present and accessible
+- [x] [STORY-03.1.1] Define `Layer` enum in `src/pyarchi/enums.py` with seven members: `STRATEGY`, `MOTIVATION`, `BUSINESS`, `APPLICATION`, `TECHNOLOGY`, `PHYSICAL`, `IMPLEMENTATION_MIGRATION`
+- [x] [STORY-03.1.2] Write test asserting all seven values are present and accessible
 
 ### [FEAT-03.2] Aspect Enum
-- [ ] [STORY-03.2.1] Define `Aspect` enum in `src/pyarchi/enums.py` with five members: `ACTIVE_STRUCTURE`, `BEHAVIOR`, `PASSIVE_STRUCTURE`, `MOTIVATION`, `COMPOSITE`
-- [ ] [STORY-03.2.2] Write test asserting all five values are present and accessible
+- [x] [STORY-03.2.1] Define `Aspect` enum in `src/pyarchi/enums.py` with five members: `ACTIVE_STRUCTURE`, `BEHAVIOR`, `PASSIVE_STRUCTURE`, `MOTIVATION`, `COMPOSITE`
+- [x] [STORY-03.2.2] Write test asserting all five values are present and accessible
 
 ### [FEAT-03.3] NotationMetadata Dataclass
-- [ ] [STORY-03.3.1] Define `NotationMetadata` dataclass in `src/pyarchi/metamodel/notation.py` with fields: `corner_shape: str`, `layer_color: str`, `badge_letter: str | None`
-- [ ] [STORY-03.3.2] Attach `NotationMetadata` as an optional class-level attribute on concrete element classes (not part of core data model)
-- [ ] [STORY-03.3.3] Write test confirming `NotationMetadata` exists for concrete element classes and contains all three fields
+- [x] [STORY-03.3.1] Define `NotationMetadata` dataclass in `src/pyarchi/metamodel/notation.py` with fields: `corner_shape: str`, `layer_color: str`, `badge_letter: str | None`
+- [x] [STORY-03.3.2] Attach `NotationMetadata` as an optional class-level attribute on concrete element classes (not part of core data model)
+- [x] [STORY-03.3.3] Write test confirming `NotationMetadata` exists for concrete element classes and contains all three fields
 
 ### [FEAT-03.4] Classification Metadata on Elements
-- [ ] [STORY-03.4.1] Add `layer: Layer` and `aspect: Aspect` as class-level attributes on each concrete element class
-- [ ] [STORY-03.4.2] Write test confirming every concrete element class exposes `.layer` and `.aspect` as enum members
+- [x] [STORY-03.4.1] Add `layer: Layer` and `aspect: Aspect` as class-level attributes on each concrete element class
+- [x] [STORY-03.4.2] Write test confirming every concrete element class exposes `.layer` and `.aspect` as enum members
 
 ### [FEAT-03.5] Nesting Rendering Hint
-- [ ] [STORY-03.5.1] Add `is_nested: bool = False` field on `StructuralRelationship` base class only
-- [ ] [STORY-03.5.2] Implement validation that `is_nested = True` raises `ValidationError` on non-structural relationships (dependency, dynamic, other)
-- [ ] [STORY-03.5.3] Write test confirming `is_nested = True` on `Composition` does not change any validation outcome
-- [ ] [STORY-03.5.4] Write test confirming `is_nested = True` on `Triggering` raises `ValidationError`
+- [x] [STORY-03.5.1] Add `is_nested: bool = False` field on `StructuralRelationship` base class only
+- [x] [STORY-03.5.2] Implement validation that `is_nested = True` raises `ValidationError` on non-structural relationships (dependency, dynamic, other)
+- [x] [STORY-03.5.3] Write test confirming `is_nested = True` on `Composition` does not change any validation outcome
+- [x] [STORY-03.5.4] Write test confirming `is_nested = True` on `Triggering` raises `ValidationError`
 
 ---
 
@@ -130,46 +130,46 @@ Phase 1 covers Requirements 1 through 5 from the PRD: project scaffold, scope an
 **Priority:** High
 
 ### [FEAT-04.1] StructureElement Hierarchy
-- [ ] [STORY-04.1.1] Define `StructureElement(Element)` as an ABC
-- [ ] [STORY-04.1.2] Define `ActiveStructureElement(StructureElement)` as an ABC
-- [ ] [STORY-04.1.3] Define `InternalActiveStructureElement(ActiveStructureElement)` as an ABC
-- [ ] [STORY-04.1.4] Define `ExternalActiveStructureElement(ActiveStructureElement)` as an ABC (i.e., Interface)
-- [ ] [STORY-04.1.5] Define `PassiveStructureElement(StructureElement)` as an ABC
-- [ ] [STORY-04.1.6] Write tests asserting direct instantiation of each ABC raises `TypeError`
+- [x] [STORY-04.1.1] Define `StructureElement(Element)` as an ABC
+- [x] [STORY-04.1.2] Define `ActiveStructureElement(StructureElement)` as an ABC
+- [x] [STORY-04.1.3] Define `InternalActiveStructureElement(ActiveStructureElement)` as an ABC
+- [x] [STORY-04.1.4] Define `ExternalActiveStructureElement(ActiveStructureElement)` as an ABC (i.e., Interface)
+- [x] [STORY-04.1.5] Define `PassiveStructureElement(StructureElement)` as an ABC
+- [x] [STORY-04.1.6] Write tests asserting direct instantiation of each ABC raises `TypeError`
 
 ### [FEAT-04.2] BehaviorElement Hierarchy
-- [ ] [STORY-04.2.1] Define `BehaviorElement(Element)` as an ABC
-- [ ] [STORY-04.2.2] Define `InternalBehaviorElement(BehaviorElement)` as an ABC
-- [ ] [STORY-04.2.3] Define `Process(InternalBehaviorElement)` as an ABC (sequence-oriented)
-- [ ] [STORY-04.2.4] Define `Function(InternalBehaviorElement)` as an ABC (criteria/resource-oriented)
-- [ ] [STORY-04.2.5] Define `Interaction(InternalBehaviorElement)` as an ABC with validation requiring >= 2 active structure elements assigned
-- [ ] [STORY-04.2.6] Define `ExternalBehaviorElement(BehaviorElement)` as an ABC (i.e., Service)
-- [ ] [STORY-04.2.7] Define `Event(BehaviorElement)` as an ABC with optional `time: datetime | str | None = None` attribute
-- [ ] [STORY-04.2.8] Write tests asserting direct instantiation of each ABC raises `TypeError`
+- [x] [STORY-04.2.1] Define `BehaviorElement(Element)` as an ABC
+- [x] [STORY-04.2.2] Define `InternalBehaviorElement(BehaviorElement)` as an ABC
+- [x] [STORY-04.2.3] Define `Process(InternalBehaviorElement)` as an ABC (sequence-oriented)
+- [x] [STORY-04.2.4] Define `Function(InternalBehaviorElement)` as an ABC (criteria/resource-oriented)
+- [x] [STORY-04.2.5] Define `Interaction(InternalBehaviorElement)` as an ABC with validation requiring >= 2 active structure elements assigned
+- [x] [STORY-04.2.6] Define `ExternalBehaviorElement(BehaviorElement)` as an ABC (i.e., Service)
+- [x] [STORY-04.2.7] Define `Event(BehaviorElement)` as an ABC with optional `time: datetime | str | None = None` attribute
+- [x] [STORY-04.2.8] Write tests asserting direct instantiation of each ABC raises `TypeError`
 
 ### [FEAT-04.3] MotivationElement and CompositeElement
-- [ ] [STORY-04.3.1] Define `MotivationElement(Element)` as an ABC
-- [ ] [STORY-04.3.2] Define `CompositeElement(Element)` as an ABC
-- [ ] [STORY-04.3.3] Write tests asserting direct instantiation of each ABC raises `TypeError`
+- [x] [STORY-04.3.1] Define `MotivationElement(Element)` as an ABC
+- [x] [STORY-04.3.2] Define `CompositeElement(Element)` as an ABC
+- [x] [STORY-04.3.3] Write tests asserting direct instantiation of each ABC raises `TypeError`
 
 ### [FEAT-04.4] Grouping (Concrete)
-- [ ] [STORY-04.4.1] Define `Grouping(CompositeElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION` and `aspect = Aspect.COMPOSITE`
-- [ ] [STORY-04.4.2] Implement `members: list[Concept]` on `Grouping` accepting both `Element` and `Relationship` instances
-- [ ] [STORY-04.4.3] Write test confirming `Grouping` can be instantiated
-- [ ] [STORY-04.4.4] Write test confirming `isinstance(Grouping(), CompositeElement)` and `isinstance(Grouping(), Element)` are both `True`
-- [ ] [STORY-04.4.5] Write test confirming `Grouping` accepts both an `Element` and a `Relationship` as members
+- [x] [STORY-04.4.1] Define `Grouping(CompositeElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION` and `aspect = Aspect.COMPOSITE`
+- [x] [STORY-04.4.2] Implement `members: list[Concept]` on `Grouping` accepting both `Element` and `Relationship` instances
+- [x] [STORY-04.4.3] Write test confirming `Grouping` can be instantiated
+- [x] [STORY-04.4.4] Write test confirming `isinstance(Grouping(), CompositeElement)` and `isinstance(Grouping(), Element)` are both `True`
+- [x] [STORY-04.4.5] Write test confirming `Grouping` accepts both an `Element` and a `Relationship` as members
 
 ### [FEAT-04.5] Location (Concrete)
-- [ ] [STORY-04.5.1] Define `Location(CompositeElement)` as a concrete class with `aspect = Aspect.COMPOSITE`
-- [ ] [STORY-04.5.2] Implement aggregation of structure elements (active or passive) and behavior elements on `Location`
-- [ ] [STORY-04.5.3] Write test confirming `Location` can be instantiated and accepts structure and behavior elements
+- [x] [STORY-04.5.1] Define `Location(CompositeElement)` as a concrete class with `aspect = Aspect.COMPOSITE`
+- [x] [STORY-04.5.2] Implement aggregation of structure elements (active or passive) and behavior elements on `Location`
+- [x] [STORY-04.5.3] Write test confirming `Location` can be instantiated and accepts structure and behavior elements
 
 ### [FEAT-04.6] Interaction and Collaboration Validation
-- [ ] [STORY-04.6.1] Implement validation rule: `Interaction` subclass requires >= 2 active structure elements assigned at validation time; fewer raises `ValidationError`
-- [ ] [STORY-04.6.2] Implement validation rule: `Collaboration` (future layer-specific subclass marker) must aggregate >= 2 internal active structure elements
-- [ ] [STORY-04.6.3] Implement validation rule: `PassiveStructureElement` subclasses may not be assigned to perform behavior (wrong-direction Assignment raises `ValidationError`)
-- [ ] [STORY-04.6.4] Write test confirming assigning a single active structure element to an `Interaction` subclass raises `ValidationError`
-- [ ] [STORY-04.6.5] Write test confirming `Event` subclass instance has `time` attribute defaulting to `None` and accepting `datetime` or `str`
+- [x] [STORY-04.6.1] Implement validation rule: `Interaction` subclass requires >= 2 active structure elements assigned at validation time; fewer raises `ValidationError`
+- [x] [STORY-04.6.2] Implement validation rule: `Collaboration` (future layer-specific subclass marker) must aggregate >= 2 internal active structure elements
+- [x] [STORY-04.6.3] Implement validation rule: `PassiveStructureElement` subclasses may not be assigned to perform behavior (wrong-direction Assignment raises `ValidationError`)
+- [x] [STORY-04.6.4] Write test confirming assigning a single active structure element to an `Interaction` subclass raises `ValidationError`
+- [x] [STORY-04.6.5] Write test confirming `Event` subclass instance has `time` attribute defaulting to `None` and accepting `datetime` or `str`
 
 ---
 
