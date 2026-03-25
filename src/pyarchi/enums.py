@@ -93,3 +93,25 @@ class JunctionType(Enum):
 
     AND = "And"
     OR = "Or"
+
+
+class PurposeCategory(Enum):
+    """Viewpoint purpose categories.
+
+    Reference: ArchiMate 3.2 Specification, Section 13.2.
+    """
+
+    DESIGNING = "Designing"
+    DECIDING = "Deciding"
+    INFORMING = "Informing"
+
+
+class ContentCategory(Enum):
+    """Viewpoint content categories.
+
+    Reference: ArchiMate 3.2 Specification, Section 13.2.
+    """
+
+    DETAILS = "Details"
+    COHERENCE = "Coherence"
+    OVERVIEW = "Overview"

@@ -126,36 +126,36 @@ Replaces the current ad-hoc rule-based `is_permitted()` implementation with a de
 ---
 
 ## [EPIC-017] Viewpoint Mechanism (Requirement 14)
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 Implements the mandatory viewpoint mechanism per Section 13 of the ArchiMate 3.2 specification. Resolves the `test_viewpoint_mechanism` conformance xfail.
 
 ### [FEAT-17.1] Viewpoint Enums and Data Types
-- [ ] [STORY-17.1.1] Define `PurposeCategory` enum with members: `DESIGNING`, `DECIDING`, `INFORMING`
-- [ ] [STORY-17.1.2] Define `ContentCategory` enum with members: `DETAILS`, `COHERENCE`, `OVERVIEW`
-- [ ] [STORY-17.1.3] Write test: both enums have exactly 3 members each
+- [x] [STORY-17.1.1] Define `PurposeCategory` enum with members: `DESIGNING`, `DECIDING`, `INFORMING`
+- [x] [STORY-17.1.2] Define `ContentCategory` enum with members: `DETAILS`, `COHERENCE`, `OVERVIEW`
+- [x] [STORY-17.1.3] Write test: both enums have exactly 3 members each
 
 ### [FEAT-17.2] Viewpoint Class
-- [ ] [STORY-17.2.1] Define `Viewpoint` Pydantic model with fields: `name: str`, `purpose: PurposeCategory`, `content: ContentCategory`, `permitted_concept_types: frozenset[type[Concept]]`
-- [ ] [STORY-17.2.2] Add optional field: `representation_description: str | None = None`
-- [ ] [STORY-17.2.3] Add optional field: `concerns: list[Concern] = []`
-- [ ] [STORY-17.2.4] Write test: `Viewpoint` can be instantiated with `purpose`, `content`, and `permitted_concept_types`
-- [ ] [STORY-17.2.5] Write test: `Viewpoint` allows custom (user-defined) viewpoints, not restricted to predefined list
+- [x] [STORY-17.2.1] Define `Viewpoint` Pydantic model with fields: `name: str`, `purpose: PurposeCategory`, `content: ContentCategory`, `permitted_concept_types: frozenset[type[Concept]]`
+- [x] [STORY-17.2.2] Add optional field: `representation_description: str | None = None`
+- [x] [STORY-17.2.3] Add optional field: `concerns: list[Concern] = []`
+- [x] [STORY-17.2.4] Write test: `Viewpoint` can be instantiated with `purpose`, `content`, and `permitted_concept_types`
+- [x] [STORY-17.2.5] Write test: `Viewpoint` allows custom (user-defined) viewpoints, not restricted to predefined list
 
 ### [FEAT-17.3] View Class
-- [ ] [STORY-17.3.1] Define `View` class with fields: `governing_viewpoint: Viewpoint`, `concepts: list[Concept]`, `underlying_model: Model`
-- [ ] [STORY-17.3.2] Implement validation: `View.governing_viewpoint` is required; `None` raises `ValidationError`
-- [ ] [STORY-17.3.3] Implement validation: adding a concept whose type is not in `governing_viewpoint.permitted_concept_types` raises `ValidationError`
-- [ ] [STORY-17.3.4] Implement validation: adding a concept not present in `underlying_model` raises `ValidationError`
-- [ ] [STORY-17.3.5] Write test: adding `BusinessProcess` to a `View` whose viewpoint does not include `BusinessProcess` raises `ValidationError`
-- [ ] [STORY-17.3.6] Write test: `View` with viewpoint permitting `{ApplicationComponent, ApplicationService, Serving}` accepts a `Serving` relationship
-- [ ] [STORY-17.3.7] Write test: `View` is a projection, not a copy; concepts reference the same objects as the underlying model
+- [x] [STORY-17.3.1] Define `View` class with fields: `governing_viewpoint: Viewpoint`, `concepts: list[Concept]`, `underlying_model: Model`
+- [x] [STORY-17.3.2] Implement validation: `View.governing_viewpoint` is required; `None` raises `ValidationError`
+- [x] [STORY-17.3.3] Implement validation: adding a concept whose type is not in `governing_viewpoint.permitted_concept_types` raises `ValidationError`
+- [x] [STORY-17.3.4] Implement validation: adding a concept not present in `underlying_model` raises `ValidationError`
+- [x] [STORY-17.3.5] Write test: adding `BusinessProcess` to a `View` whose viewpoint does not include `BusinessProcess` raises `ValidationError`
+- [x] [STORY-17.3.6] Write test: `View` with viewpoint permitting `{ApplicationComponent, ApplicationService, Serving}` accepts a `Serving` relationship
+- [x] [STORY-17.3.7] Write test: `View` is a projection, not a copy; concepts reference the same objects as the underlying model
 
 ### [FEAT-17.4] Concern Class
-- [ ] [STORY-17.4.1] Define `Concern` class with fields: `description: str`, `stakeholders: list[Stakeholder]`, `viewpoints: list[Viewpoint]`
-- [ ] [STORY-17.4.2] Implement navigable associations: from `Stakeholder` to `Concern`, from `Concern` to `Viewpoint`, from `Viewpoint` to `View`
-- [ ] [STORY-17.4.3] Write test: stakeholder-concern-viewpoint-view navigation chain works end-to-end
+- [x] [STORY-17.4.1] Define `Concern` class with fields: `description: str`, `stakeholders: list[Stakeholder]`, `viewpoints: list[Viewpoint]`
+- [x] [STORY-17.4.2] Implement navigable associations: from `Stakeholder` to `Concern`, from `Concern` to `Viewpoint`, from `Viewpoint` to `View`
+- [x] [STORY-17.4.3] Write test: stakeholder-concern-viewpoint-view navigation chain works end-to-end
 
 ---
 
