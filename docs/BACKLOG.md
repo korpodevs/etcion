@@ -160,30 +160,30 @@ Implements the mandatory viewpoint mechanism per Section 13 of the ArchiMate 3.2
 ---
 
 ## [EPIC-018] Language Customization Mechanism
-**Status:** To-Do
+**Status:** Complete
 **Priority:** Medium
 
 Implements the language customization mechanism (Chapter 14 of the ArchiMate 3.2 specification). Resolves the `test_language_customization` conformance xfail.
 
 ### [FEAT-18.1] Profile Class
-- [ ] [STORY-18.1.1] Define `Profile` class that represents a named customization of the ArchiMate language
-- [ ] [STORY-18.1.2] Implement `Profile.specializations: dict[type[Element], list[str]]` mapping base element types to custom specialization names
-- [ ] [STORY-18.1.3] Implement `Profile.attribute_extensions: dict[type[Element], dict[str, type]]` mapping element types to additional custom attributes
-- [ ] [STORY-18.1.4] Write ADR documenting the language customization design
-- [ ] [STORY-18.1.5] Write test: `Profile` can be instantiated with custom specializations
-- [ ] [STORY-18.1.6] Write test: `Profile` can extend an element type with additional attributes
+- [x] [STORY-18.1.1] Define `Profile` class that represents a named customization of the ArchiMate language
+- [x] [STORY-18.1.2] Implement `Profile.specializations: dict[type[Element], list[str]]` mapping base element types to custom specialization names
+- [x] [STORY-18.1.3] Implement `Profile.attribute_extensions: dict[type[Element], dict[str, type]]` mapping element types to additional custom attributes
+- [x] [STORY-18.1.4] Write ADR documenting the language customization design
+- [x] [STORY-18.1.5] Write test: `Profile` can be instantiated with custom specializations
+- [x] [STORY-18.1.6] Write test: `Profile` can extend an element type with additional attributes
 
 ### [FEAT-18.2] Profile Validation
-- [ ] [STORY-18.2.1] Implement validation: profile specializations must reference valid ArchiMate element types
-- [ ] [STORY-18.2.2] Implement validation: profile attribute extensions must not conflict with existing element attributes
-- [ ] [STORY-18.2.3] Write test: specialization referencing a non-existent base type raises `ValidationError`
-- [ ] [STORY-18.2.4] Write test: attribute extension conflicting with existing field raises `ValidationError`
+- [x] [STORY-18.2.1] Implement validation: profile specializations must reference valid ArchiMate element types
+- [x] [STORY-18.2.2] Implement validation: profile attribute extensions must not conflict with existing element attributes
+- [x] [STORY-18.2.3] Write test: specialization referencing a non-existent base type raises `ValidationError`
+- [x] [STORY-18.2.4] Write test: attribute extension conflicting with existing field raises `ValidationError`
 
 ### [FEAT-18.3] Profile Application to Model
-- [ ] [STORY-18.3.1] Implement `Model.apply_profile(profile: Profile)` to register a customization profile with a model
-- [ ] [STORY-18.3.2] Implement runtime element creation from profile specializations (e.g., dynamically creating a `CloudService` as a specialization of `TechnologyService`)
-- [ ] [STORY-18.3.3] Write test: applying a profile to a model allows creation of specialized elements
-- [ ] [STORY-18.3.4] Write test: serialized model preserves profile metadata
+- [x] [STORY-18.3.1] Implement `Model.apply_profile(profile: Profile)` to register a customization profile with a model
+- [x] [STORY-18.3.2] Implement runtime element creation from profile specializations (e.g., dynamically creating a `CloudService` as a specialization of `TechnologyService`)
+- [x] [STORY-18.3.3] Write test: applying a profile to a model allows creation of specialized elements
+- [x] [STORY-18.3.4] Write test: serialized model preserves profile metadata
 
 ---
 

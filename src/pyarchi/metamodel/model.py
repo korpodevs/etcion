@@ -13,6 +13,7 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 from pyarchi.metamodel.concepts import Concept, Element, Relationship
+from pyarchi.metamodel.profiles import Profile
 
 if TYPE_CHECKING:
     from pyarchi.exceptions import ValidationError
@@ -37,6 +38,8 @@ class Model:
 
     def __init__(self, concepts: list[Concept] | None = None) -> None:
         self._concepts: dict[str, Concept] = {}
+        self._profiles: list[Profile] = []
+        self._specialization_registry: dict[str, type[Element]] = {}
         if concepts is not None:
             for concept in concepts:
                 self.add(concept)
@@ -61,6 +64,26 @@ class Model:
 
     def __len__(self) -> int:
         return len(self._concepts)
+
+    def apply_profile(self, profile: Profile) -> None:
+        """Register a Profile with this model.
+
+        :raises TypeError: if *profile* is not a Profile instance.
+        :raises ValueError: if a specialization name is already registered.
+        """
+        if not isinstance(profile, Profile):
+            raise TypeError(f"Expected a Profile, got {type(profile).__name__}")
+        for base_type, names in profile.specializations.items():
+            for name in names:
+                if name in self._specialization_registry:
+                    raise ValueError(f"Duplicate specialization name: '{name}'")
+                self._specialization_registry[name] = base_type
+        self._profiles.append(profile)
+
+    @property
+    def profiles(self) -> list[Profile]:
+        """Read-only list of applied profiles."""
+        return list(self._profiles)
 
     @property
     def concepts(self) -> list[Concept]:
@@ -150,6 +173,58 @@ class Model:
                         err = ValidationError(
                             f"Junction '{jid}': {rel_type.__name__} from "
                             f"{src.__name__} to {tgt.__name__} is not permitted"
+                        )
+                        if strict:
+                            raise err
+                        errors.append(err)
+
+        # FEAT-18.3: Profile validation.
+        for elem in self.elements:
+            # Check specialization string
+            if elem.specialization is not None:
+                if elem.specialization not in self._specialization_registry:
+                    err = ValidationError(
+                        f"Element '{elem.id}': specialization "
+                        f"'{elem.specialization}' is not declared in any profile"
+                    )
+                    if strict:
+                        raise err
+                    errors.append(err)
+                else:
+                    expected_base = self._specialization_registry[elem.specialization]
+                    if not isinstance(elem, expected_base):
+                        err = ValidationError(
+                            f"Element '{elem.id}': specialization "
+                            f"'{elem.specialization}' requires base type "
+                            f"{expected_base.__name__}, got {type(elem).__name__}"
+                        )
+                        if strict:
+                            raise err
+                        errors.append(err)
+
+            # Check extended_attributes against profile declarations
+            if elem.extended_attributes:
+                # Build allowed attrs for this element's type from all profiles
+                allowed: dict[str, type] = {}
+                for prof in self._profiles:
+                    for prof_type, attrs in prof.attribute_extensions.items():
+                        if isinstance(elem, prof_type):
+                            allowed.update(attrs)
+                for attr_name, attr_value in elem.extended_attributes.items():
+                    if attr_name not in allowed:
+                        err = ValidationError(
+                            f"Element '{elem.id}': extended attribute "
+                            f"'{attr_name}' is not declared in any profile"
+                        )
+                        if strict:
+                            raise err
+                        errors.append(err)
+                    elif not isinstance(attr_value, allowed[attr_name]):
+                        err = ValidationError(
+                            f"Element '{elem.id}': extended attribute "
+                            f"'{attr_name}' expected type "
+                            f"{allowed[attr_name].__name__}, "
+                            f"got {type(attr_value).__name__}"
                         )
                         if strict:
                             raise err

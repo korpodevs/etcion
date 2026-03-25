@@ -18,7 +18,7 @@ from __future__ import annotations
 import abc
 import uuid
 from abc import abstractmethod
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -73,6 +73,24 @@ class Element(AttributeMixin, Concept):
     are defined in EPIC-004.
 
     Reference: ArchiMate 3.2 Specification, Section 3.1.
+    """
+
+    specialization: str | None = None
+    """Optional tag-based specialization name (e.g. ``'Microservice'``).
+
+    When set, indicates this element is a named specialization of its base
+    type, as declared by a :class:`~pyarchi.metamodel.profiles.Profile`.
+    Validation against a registered profile is performed by
+    ``Model.validate()``.
+    """
+
+    extended_attributes: dict[str, Any] = Field(default_factory=dict)
+    """Arbitrary extended attributes declared by a
+    :class:`~pyarchi.metamodel.profiles.Profile`.
+
+    Keys are attribute names; values are profile-declared data of any type.
+    Type checking against the profile's ``attribute_extensions`` schema is
+    performed by ``Model.validate()``.
     """
 
 
