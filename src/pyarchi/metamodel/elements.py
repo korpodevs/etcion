@@ -86,7 +86,9 @@ class Event(BehaviorElement):
     time: datetime | str | None = None
 
 
-class MotivationElement(Element): ...
+class MotivationElement(Element):
+    layer: ClassVar[Layer] = Layer.MOTIVATION
+    aspect: ClassVar[Aspect] = Aspect.MOTIVATION
 
 
 class CompositeElement(Element): ...
