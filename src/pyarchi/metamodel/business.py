@@ -7,8 +7,11 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from pydantic import Field, model_validator
+
 from pyarchi.enums import Aspect, Layer
 from pyarchi.metamodel.elements import (
+    ActiveStructureElement,
     CompositeElement,
     Event,
     ExternalActiveStructureElement,
@@ -63,11 +66,22 @@ class BusinessRole(BusinessInternalActiveStructureElement):
 
 
 class BusinessCollaboration(BusinessInternalActiveStructureElement):
+    assigned_elements: list[ActiveStructureElement] = Field(default_factory=list)
     notation: ClassVar[NotationMetadata] = NotationMetadata(
         corner_shape="square",
         layer_color="#FFFFB5",
         badge_letter="B",
     )
+
+    @model_validator(mode="after")
+    def _validate_assigned_elements(self) -> BusinessCollaboration:
+        if len(self.assigned_elements) < 2:
+            msg = (
+                f"{type(self).__name__} requires >= 2 assigned "
+                f"ActiveStructureElement instances, got {len(self.assigned_elements)}"
+            )
+            raise ValueError(msg)
+        return self
 
     @property
     def _type_name(self) -> str:

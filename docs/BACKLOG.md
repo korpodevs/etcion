@@ -57,47 +57,47 @@ Phase 3 covers the remaining specification requirements not addressed in Phases 
 ---
 
 ## [EPIC-015] Model-Level Validation Engine
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 Resolves all deferred model-level validation xfails (ADR-017 ss5/ss6). Adds construction-time and model-time enforcement of relationship direction, source/target type constraints, and Junction homogeneity.
 
 ### [FEAT-15.1] Relationship Direction Enforcement
-- [ ] [STORY-15.1.1] Implement `Assignment` direction validation: source must be active structure or behavior, target must be behavior or passive structure; raise `ValidationError` on wrong direction
-- [ ] [STORY-15.1.2] Implement `Access` direction validation: source must be behavior or active structure, target must be passive structure; raise `ValidationError` on wrong direction
-- [ ] [STORY-15.1.3] Implement `Serving` direction validation: source is provider, target is consumer; raise `ValidationError` on wrong direction
-- [ ] [STORY-15.1.4] Implement `Realization` direction validation: source is lower abstraction (realizer), target is higher abstraction (realized); raise `ValidationError` on wrong direction
-- [ ] [STORY-15.1.5] Write test: `Assignment(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError` (resolve xfail in `test_feat052_structural.py`)
-- [ ] [STORY-15.1.6] Write test: `Access(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError` (resolve xfail in `test_feat054_access.py`)
-- [ ] [STORY-15.1.7] Write test: `Serving` wrong direction raises `ValidationError` (resolve xfail in `test_feat053_serving.py`)
+- [x] [STORY-15.1.1] Implement `Assignment` direction validation: source must be active structure or behavior, target must be behavior or passive structure; raise `ValidationError` on wrong direction
+- [x] [STORY-15.1.2] Implement `Access` direction validation: source must be behavior or active structure, target must be passive structure; raise `ValidationError` on wrong direction
+- [x] [STORY-15.1.3] Implement `Serving` direction validation: source is provider, target is consumer; raise `ValidationError` on wrong direction
+- [x] [STORY-15.1.4] Implement `Realization` direction validation: source is lower abstraction (realizer), target is higher abstraction (realized); raise `ValidationError` on wrong direction
+- [x] [STORY-15.1.5] Write test: `Assignment(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError` (resolve xfail in `test_feat052_structural.py`)
+- [x] [STORY-15.1.6] Write test: `Access(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError` (resolve xfail in `test_feat054_access.py`)
+- [x] [STORY-15.1.7] Write test: `Serving` wrong direction raises `ValidationError` (resolve xfail in `test_feat053_serving.py`)
 
 ### [FEAT-15.2] Aggregation/Composition Target Validation
-- [ ] [STORY-15.2.1] Implement rule: when target of `Aggregation` or `Composition` is a `Relationship`, source must be a `CompositeElement`; raise `ValidationError` otherwise
-- [ ] [STORY-15.2.2] Write test: `Aggregation(source=NonComposite, target=some_relationship)` raises `ValidationError` (resolve xfail in `test_feat052_structural.py`)
+- [x] [STORY-15.2.1] Implement rule: when target of `Aggregation` or `Composition` is a `Relationship`, source must be a `CompositeElement`; raise `ValidationError` otherwise
+- [x] [STORY-15.2.2] Write test: `Aggregation(source=NonComposite, target=some_relationship)` raises `ValidationError` (resolve xfail in `test_feat052_structural.py`)
 
 ### [FEAT-15.3] Specialization Same-Type Enforcement
-- [ ] [STORY-15.3.1] Implement construction-time or model-time check: `Specialization` only permitted between same concrete type; raise `ValidationError` for cross-type
-- [ ] [STORY-15.3.2] Write test: `Specialization(source=BusinessProcess, target=ApplicationFunction)` raises `ValidationError` (resolve xfail in `test_feat058_specialization.py`)
+- [x] [STORY-15.3.1] Implement construction-time or model-time check: `Specialization` only permitted between same concrete type; raise `ValidationError` for cross-type
+- [x] [STORY-15.3.2] Write test: `Specialization(source=BusinessProcess, target=ApplicationFunction)` raises `ValidationError` (resolve xfail in `test_feat058_specialization.py`)
 
 ### [FEAT-15.4] Junction Validation
-- [ ] [STORY-15.4.1] Implement validation: all relationships connected to a `Junction` must be of the same concrete relationship type; raise `ValidationError` otherwise
-- [ ] [STORY-15.4.2] Implement validation: endpoint elements connected via a `Junction` chain must permit the relationship type per Appendix B
-- [ ] [STORY-15.4.3] Write test: connecting `Composition` and `Serving` to the same `Junction` raises `ValidationError` (resolve xfail in `test_feat059_junction.py`)
-- [ ] [STORY-15.4.4] Write test: endpoint permission violation through `Junction` raises `ValidationError` (resolve xfail in `test_feat059_junction.py`)
+- [x] [STORY-15.4.1] Implement validation: all relationships connected to a `Junction` must be of the same concrete relationship type; raise `ValidationError` otherwise
+- [x] [STORY-15.4.2] Implement validation: endpoint elements connected via a `Junction` chain must permit the relationship type per Appendix B
+- [x] [STORY-15.4.3] Write test: connecting `Composition` and `Serving` to the same `Junction` raises `ValidationError` (resolve xfail in `test_feat059_junction.py`)
+- [x] [STORY-15.4.4] Write test: endpoint permission violation through `Junction` raises `ValidationError` (resolve xfail in `test_feat059_junction.py`)
 
 ### [FEAT-15.5] Collaboration Minimum-Two Constraint Enforcement
-- [ ] [STORY-15.5.1] Implement model-level validation: `Collaboration` subclasses (Business, Application, Technology) must have at least 2 internal active structure elements assigned; raise `ValidationError` otherwise
-- [ ] [STORY-15.5.2] Write test: `BusinessCollaboration` with only 1 assigned element raises `ValidationError` (resolve xfail in `test_feat046_validation.py`)
+- [x] [STORY-15.5.1] Implement model-level validation: `Collaboration` subclasses (Business, Application, Technology) must have at least 2 internal active structure elements assigned; raise `ValidationError` otherwise
+- [x] [STORY-15.5.2] Write test: `BusinessCollaboration` with only 1 assigned element raises `ValidationError` (resolve xfail in `test_feat046_validation.py`)
 
 ### [FEAT-15.6] Passive Structure Cannot Perform Behavior
-- [ ] [STORY-15.6.1] Implement model-level rule: `PassiveStructureElement` subclasses may not be `Assignment` source targeting `BehaviorElement`; raise `ValidationError`
-- [ ] [STORY-15.6.2] Write test: `Assignment(source=BusinessObject, target=BusinessProcess)` raises `ValidationError` (resolve xfail in `test_feat046_validation.py`)
+- [x] [STORY-15.6.1] Implement model-level rule: `PassiveStructureElement` subclasses may not be `Assignment` source targeting `BehaviorElement`; raise `ValidationError`
+- [x] [STORY-15.6.2] Write test: `Assignment(source=BusinessObject, target=BusinessProcess)` raises `ValidationError` (resolve xfail in `test_feat046_validation.py`)
 
 ### [FEAT-15.7] Model.validate() Method
-- [ ] [STORY-15.7.1] Add `Model.validate() -> list[ValidationError]` method that runs all model-level validation rules against all concepts in the model
-- [ ] [STORY-15.7.2] Add `Model.validate(strict=True)` mode that raises on first error instead of collecting
-- [ ] [STORY-15.7.3] Write test: `Model.validate()` on a model with mixed valid and invalid relationships returns the correct error list
-- [ ] [STORY-15.7.4] Write test: `Model.validate(strict=True)` raises `ValidationError` on first invalid relationship
+- [x] [STORY-15.7.1] Add `Model.validate() -> list[ValidationError]` method that runs all model-level validation rules against all concepts in the model
+- [x] [STORY-15.7.2] Add `Model.validate(strict=True)` mode that raises on first error instead of collecting
+- [x] [STORY-15.7.3] Write test: `Model.validate()` on a model with mixed valid and invalid relationships returns the correct error list
+- [x] [STORY-15.7.4] Write test: `Model.validate(strict=True)` raises `ValidationError` on first invalid relationship
 
 ---
 

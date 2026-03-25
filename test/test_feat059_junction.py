@@ -81,16 +81,34 @@ class TestJunctionInheritance:
 
 
 class TestDeferredValidation:
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Homogeneous-type constraint deferred to model-level (ADR-017 ss5/ss6)",
-    )
     def test_mixed_relationship_types_raises(self) -> None:
-        pytest.fail("Model-level validation not yet implemented")
+        from pyarchi.enums import JunctionType
+        from pyarchi.exceptions import ValidationError
+        from pyarchi.metamodel.business import BusinessActor, BusinessProcess
+        from pyarchi.metamodel.model import Model
+        from pyarchi.metamodel.relationships import Assignment, Junction, Serving
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Endpoint permission checking deferred to model-level (ADR-017 ss5/ss6)",
-    )
+        j = Junction(junction_type=JunctionType.AND)
+        a1 = BusinessActor(name="a1")
+        bp = BusinessProcess(name="bp")
+        r1 = Assignment(name="r1", source=a1, target=j)
+        r2 = Serving(name="r2", source=j, target=bp)
+        model = Model(concepts=[j, a1, bp, r1, r2])
+        errors = model.validate()
+        assert any(isinstance(e, ValidationError) for e in errors)
+
     def test_endpoint_permission_violation_raises(self) -> None:
-        pytest.fail("Model-level validation not yet implemented")
+        from pyarchi.enums import JunctionType
+        from pyarchi.exceptions import ValidationError
+        from pyarchi.metamodel.business import BusinessActor, BusinessProcess
+        from pyarchi.metamodel.model import Model
+        from pyarchi.metamodel.relationships import Composition, Junction
+
+        j = Junction(junction_type=JunctionType.AND)
+        a1 = BusinessActor(name="a1")
+        bp = BusinessProcess(name="bp")
+        r1 = Composition(name="r1", source=a1, target=j)
+        r2 = Composition(name="r2", source=j, target=bp)
+        model = Model(concepts=[j, a1, bp, r1, r2])
+        errors = model.validate()
+        assert any(isinstance(e, ValidationError) for e in errors)

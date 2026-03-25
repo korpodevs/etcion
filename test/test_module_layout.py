@@ -323,7 +323,11 @@ class TestDependencyGraph:
 
     def test_metamodel_does_not_import_validation(self) -> None:
         forbidden = ["pyarchi.validation", "pyarchi.validation.permissions"]
+        # model.py is allowed to import validation for Model.validate() (ADR-027).
+        allowed = {"model.py"}
         for f in self._py_files(METAMODEL_PKG):
+            if f.name in allowed:
+                continue
             assert not _imports_any(f, forbidden), (
                 f"{f.name} must not import from pyarchi.validation"
             )

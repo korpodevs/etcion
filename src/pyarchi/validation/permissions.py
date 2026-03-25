@@ -12,7 +12,9 @@ from __future__ import annotations
 from pyarchi.metamodel.concepts import Element, Relationship
 from pyarchi.metamodel.elements import (
     BehaviorElement,
+    CompositeElement,
     MotivationElement,
+    PassiveStructureElement,
     StructureElement,
 )
 from pyarchi.metamodel.relationships import (
@@ -66,9 +68,16 @@ def is_permitted(
     :param target_type: The type of the target element.
     :returns: ``True`` if the relationship is permitted; ``False`` otherwise.
     """
-    # Universal rule: Composition and Aggregation are permitted same-type.
+    # Universal rule: Composition and Aggregation are permitted same-type,
+    # or when target is a Relationship and source is CompositeElement (FEAT-15.2).
     if rel_type in _UNIVERSAL_SAME_TYPE:
-        return source_type == target_type
+        if source_type == target_type:
+            return True
+        if issubclass(target_type, Relationship) and issubclass(  # type: ignore[unreachable]
+            source_type, CompositeElement
+        ):
+            return True  # type: ignore[unreachable]
+        return False
 
     # Universal rule: Specialization is permitted same concrete type only.
     if rel_type is Specialization:
@@ -77,6 +86,13 @@ def is_permitted(
     # Universal rule: Association is always permitted between any two concepts.
     if rel_type is Association:
         return True
+
+    # FEAT-15.6: Passive cannot perform behavior (prohibition before permissions).
+    if rel_type is Assignment:
+        if issubclass(source_type, PassiveStructureElement) and issubclass(
+            target_type, BehaviorElement
+        ):
+            return False
 
     # Rule-based checks for cross-layer Motivation relationships (ADR-023 Decision 7).
     if rel_type is Assignment and issubclass(target_type, MotivationElement):
@@ -180,10 +196,20 @@ def is_permitted(
         ):
             return True
 
+    # FEAT-15.1: Access direction -- passive source prohibited.
+    if rel_type is Access:
+        if issubclass(source_type, PassiveStructureElement):
+            return False
+
     # Access: ImplementationEvent -> Deliverable.
     if rel_type is Access and issubclass(source_type, ImplementationEvent):
         if issubclass(target_type, Deliverable):
             return True
+
+    # FEAT-15.1: Serving direction -- passive source prohibited.
+    if rel_type is Serving:
+        if issubclass(source_type, PassiveStructureElement):
+            return False
 
     # FEAT-13.1: Business-Application cross-layer Serving (bidirectional).
     if rel_type is Serving:

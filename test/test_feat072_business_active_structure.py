@@ -21,10 +21,16 @@ from pyarchi.metamodel.elements import (
 class TestInstantiation:
     @pytest.mark.parametrize(
         "cls",
-        [BusinessActor, BusinessRole, BusinessCollaboration, BusinessInterface],
+        [BusinessActor, BusinessRole, BusinessInterface],
     )
     def test_can_instantiate(self, cls: type) -> None:
         obj = cls(name="test")
+        assert obj.name == "test"
+
+    def test_can_instantiate_business_collaboration(self) -> None:
+        a1 = BusinessActor(name="a1")
+        a2 = BusinessActor(name="a2")
+        obj = BusinessCollaboration(name="test", assigned_elements=[a1, a2])
         assert obj.name == "test"
 
 
@@ -36,7 +42,10 @@ class TestTypeNames:
         assert BusinessRole(name="x")._type_name == "BusinessRole"
 
     def test_business_collaboration(self) -> None:
-        assert BusinessCollaboration(name="x")._type_name == "BusinessCollaboration"
+        a1 = BusinessActor(name="a")
+        a2 = BusinessActor(name="b")
+        bc = BusinessCollaboration(name="x", assigned_elements=[a1, a2])
+        assert bc._type_name == "BusinessCollaboration"
 
     def test_business_interface(self) -> None:
         assert BusinessInterface(name="x")._type_name == "BusinessInterface"
@@ -45,17 +54,23 @@ class TestTypeNames:
 class TestInheritance:
     @pytest.mark.parametrize(
         "cls",
-        [BusinessActor, BusinessRole, BusinessCollaboration],
+        [BusinessActor, BusinessRole],
     )
     def test_internal_types_are_business_internal_active(self, cls: type) -> None:
         assert isinstance(cls(name="x"), BusinessInternalActiveStructureElement)
 
+    def test_business_collaboration_is_business_internal_active(self) -> None:
+        assert issubclass(BusinessCollaboration, BusinessInternalActiveStructureElement)
+
     @pytest.mark.parametrize(
         "cls",
-        [BusinessActor, BusinessRole, BusinessCollaboration],
+        [BusinessActor, BusinessRole],
     )
     def test_internal_types_are_internal_active_structure(self, cls: type) -> None:
         assert isinstance(cls(name="x"), InternalActiveStructureElement)
+
+    def test_business_collaboration_is_internal_active_structure(self) -> None:
+        assert issubclass(BusinessCollaboration, InternalActiveStructureElement)
 
     def test_business_interface_is_external_active_structure(self) -> None:
         assert isinstance(BusinessInterface(name="x"), ExternalActiveStructureElement)

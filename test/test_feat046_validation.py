@@ -79,15 +79,14 @@ class TestInteractionValidation:
 
 
 class TestCollaborationValidation:
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Collaboration is a layer-specific type, not yet defined",
-    )
     def test_collaboration_requires_two_internal_active(self) -> None:
-        # Placeholder -- Collaboration does not exist yet.
-        from pyarchi.metamodel.elements import Collaboration  # type: ignore[attr-defined]
+        from pydantic import ValidationError as PydanticValidationError
 
-        pytest.fail("Collaboration class not yet implemented")
+        from pyarchi.metamodel.business import BusinessActor, BusinessCollaboration
+
+        a = BusinessActor(name="a")
+        with pytest.raises(PydanticValidationError):
+            BusinessCollaboration(name="collab", assigned_elements=[a])
 
 
 # ---------------------------------------------------------------------------
