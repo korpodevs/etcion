@@ -106,4 +106,3 @@ class TestIsNested:
         a, b = _ConcreteElement(name="a"), _ConcreteElement(name="b")
         c = Composition(name="c", source=a, target=b, is_nested=True)
         assert c.is_nested is True
-

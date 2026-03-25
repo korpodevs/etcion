@@ -274,30 +274,30 @@ Prepare the library for PyPI publication, set up CI/CD pipelines, and configure 
 ---
 
 ## [EPIC-028] Archi Tool Interoperability Testing
-**Status:** To-Do
+**Status:** In Progress
 **Priority:** High (upgraded — blocks real-world usage)
 
 Validate that pyarchi-generated Exchange Format files are compatible with the Archi modeling tool and other ArchiMate-compliant tools. Ensure round-trip fidelity. Addresses issues documented in `docs/dev-brief/ARCHI-COMPAT-ISSUES.md`.
 
 ### [FEAT-28.1] Exchange Format Compliance Fixes (blocks Archi import)
-- [ ] [STORY-28.1.1] Add `<name xml:lang="en">` sub-element on `<model>` root — **likely root cause of Archi import failure** (XSD `ModelType` requires `NameGroup`). Accept optional `model_name: str` parameter in `serialize_model()`, default `"Untitled Model"`
-- [ ] [STORY-28.1.2] Add `xml:lang="en"` attribute to all `<name>` and `<documentation>` sub-elements in `serialize_element()` and `serialize_relationship()` — XSD `LangStringType` supports it; Archi always emits it
-- [ ] [STORY-28.1.3] Add `xsi:schemaLocation` attribute on `<model>` root: `"http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd"`
-- [ ] [STORY-28.1.4] Bundle the 3 XSD files (`archimate3_Model.xsd`, `archimate3_View.xsd`, `archimate3_Diagram.xsd`) from `examples/` into `src/pyarchi/serialization/schema/`
-- [ ] [STORY-28.1.5] Update `_deserialize_element()` to handle `xml:lang` attribute on `<name>` during import (currently ignores it — should still work but be explicit)
-- [ ] [STORY-28.1.6] Validate our output against the bundled XSD — run `validate_exchange_format()` on the pet_shop model and fix any remaining XSD errors
-- [ ] [STORY-28.1.7] Write test: exported XML has `<name xml:lang="en">` on model root
-- [ ] [STORY-28.1.8] Write test: all `<name>` sub-elements have `xml:lang` attribute
-- [ ] [STORY-28.1.9] Write test: exported XML passes XSD validation against bundled schema
-- [ ] VERIFIED: `xsi:type` values match XSD `ElementTypeEnum`/`RelationshipTypeEnum` exactly — no suffix needed
-- [ ] VERIFIED: `accessType`, `modifier` attribute names match XSD — no changes needed
+- [x] [STORY-28.1.1] Add `<name xml:lang="en">` sub-element on `<model>` root — **likely root cause of Archi import failure** (XSD `ModelType` requires `NameGroup`). Accept optional `model_name: str` parameter in `serialize_model()`, default `"Untitled Model"`
+- [x] [STORY-28.1.2] Add `xml:lang="en"` attribute to all `<name>` and `<documentation>` sub-elements in `serialize_element()` and `serialize_relationship()` — XSD `LangStringType` supports it; Archi always emits it
+- [x] [STORY-28.1.3] Add `xsi:schemaLocation` attribute on `<model>` root: `"http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd"`
+- [x] [STORY-28.1.4] Bundle the 3 XSD files (`archimate3_Model.xsd`, `archimate3_View.xsd`, `archimate3_Diagram.xsd`) from `examples/` into `src/pyarchi/serialization/schema/`
+- [x] [STORY-28.1.5] Update `_deserialize_element()` to handle `xml:lang` attribute on `<name>` during import (currently ignores it — should still work but be explicit)
+- [x] [STORY-28.1.6] Validate our output against the bundled XSD — run `validate_exchange_format()` on the pet_shop model and fix any remaining XSD errors
+- [x] [STORY-28.1.7] Write test: exported XML has `<name xml:lang="en">` on model root
+- [x] [STORY-28.1.8] Write test: all `<name>` sub-elements have `xml:lang` attribute
+- [x] [STORY-28.1.9] Write test: exported XML passes XSD validation against bundled schema
+- [x] VERIFIED: `xsi:type` values match XSD `ElementTypeEnum`/`RelationshipTypeEnum` exactly — no suffix needed
+- [x] VERIFIED: `accessType`, `modifier` attribute names match XSD — no changes needed
 
 ### [FEAT-28.2] Archi Import/Export Validation
-- [ ] [STORY-28.2.1] Create a reference Archi model (`.archimate` format) with representative elements from all layers
-- [ ] [STORY-28.2.2] Export reference model to Exchange Format from Archi; import into pyarchi; verify all elements and relationships load correctly
-- [ ] [STORY-28.2.3] Create a pyarchi model programmatically; export to Exchange Format; import into Archi; verify correct rendering
-- [ ] [STORY-28.2.4] Write test: round-trip through Archi preserves element identifiers and names
-- [ ] [STORY-28.2.5] Document the Archi import workflow for pyarchi users (which menu, expected behavior)
+- [x] [STORY-28.2.1] Create a reference Archi model with representative elements — `examples/pet_shop-from_archi.xml` (53 elements, 49 relationships incl. Archi-added Security Monitoring Service + Association)
+- [x] [STORY-28.2.2] Export from Archi; import into pyarchi — **CONFIRMED**: all 53 elements, 49 relationships, 31 types loaded; organizations + views preserved as opaque XML
+- [x] [STORY-28.2.3] Export from pyarchi; import into Archi — **CONFIRMED**: `examples/pet_shop.xml` imported via `File > Import > Open Exchange XML Model`
+- [x] [STORY-28.2.4] Round-trip through Archi preserves elements — `examples/test_archi_roundtrip.py` verifies all elements, relationships, types, Archi-added content, and opaque XML survive
+- [x] [STORY-28.2.5] Document the Archi import workflow for pyarchi users — added "Archi Compatibility" section to README.md with step-by-step import/export instructions
 
 ### [FEAT-28.3] Visual Data Preservation
 - [ ] [STORY-28.3.1] Parse view/diagram coordinates (x, y, width, height) from Exchange Format XML during deserialization
@@ -305,11 +305,11 @@ Validate that pyarchi-generated Exchange Format files are compatible with the Ar
 - [ ] [STORY-28.3.3] Preserve view metadata (name, documentation, viewpoint reference) during round-trip
 - [ ] [STORY-28.3.4] Write test: loading an Exchange Format file with diagram data and re-serializing produces byte-equivalent view sections
 
-### [FEAT-28.4] XSD Schema Bundling
-- [ ] [STORY-28.4.1] Bundle the official ArchiMate Exchange Format XSD schema within the package (`etc/` or `data/`)
-- [ ] [STORY-28.4.2] Implement `validate_xml(path: Path) -> list[str]` utility that validates an XML file against the bundled XSD
-- [ ] [STORY-28.4.3] Write test: a known-valid Exchange Format file passes XSD validation
-- [ ] [STORY-28.4.4] Write test: an intentionally malformed XML file fails XSD validation with descriptive errors
+### [FEAT-28.4] XSD Schema Bundling — Completed (delivered in FEAT-28.1)
+- [x] [STORY-28.4.1] Bundle the official ArchiMate Exchange Format XSD schema within the package — delivered in STORY-28.1.4 (`src/pyarchi/serialization/schema/`)
+- [x] [STORY-28.4.2] Implement `validate_xml(path: Path) -> list[str]` utility — `validate_exchange_format()` already existed (FEAT-19.6), now functional with bundled XSD
+- [x] [STORY-28.4.3] Write test: a known-valid Exchange Format file passes XSD validation — covered in `test_feat281_exchange_compliance.py`
+- [x] [STORY-28.4.4] Write test: an intentionally malformed XML file fails XSD validation with descriptive errors — covered in `test_feat281_exchange_compliance.py`
 
 ### [FEAT-28.5] Archi Native Format Support (Optional)
 - [ ] [STORY-28.5.1] Investigate feasibility of reading/writing Archi's proprietary `.archimate` format (namespace `http://www.archimatetool.com/archimate`)

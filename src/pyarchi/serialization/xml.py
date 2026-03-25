@@ -18,7 +18,15 @@ except ImportError as exc:
 
 from pyarchi.metamodel.concepts import Concept, Element, Relationship
 from pyarchi.metamodel.model import Model
-from pyarchi.serialization.registry import ARCHIMATE_NS, NSMAP, TYPE_REGISTRY, XSI_NS
+from pyarchi.serialization.registry import (
+    ARCHIMATE_NS,
+    ARCHIMATE_SCHEMA_LOCATION,
+    DEFAULT_LANG,
+    NSMAP,
+    TYPE_REGISTRY,
+    XML_NS,
+    XSI_NS,
+)
 
 # Reverse registry: xml_tag -> concrete Concept subclass.
 # Built once at module load from TYPE_REGISTRY.
@@ -38,10 +46,12 @@ def serialize_element(elem: Element) -> etree._Element:
     el.set(f"{{{XSI_NS}}}type", desc.xml_tag)
 
     name_el = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}name")
+    name_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
     name_el.text = elem.name
 
     if elem.description:
         doc_el = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}documentation")
+        doc_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
         doc_el.text = elem.description
 
     return el
@@ -58,6 +68,7 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
 
     if rel.name:
         name_el = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}name")
+        name_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
         name_el.text = rel.name
 
     for attr_name, extractor in desc.extra_attrs.items():
@@ -68,10 +79,15 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
     return el
 
 
-def serialize_model(model: Model) -> etree._ElementTree:
+def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etree._ElementTree:
     """Serialize a Model to a complete Exchange Format ElementTree."""
     root = etree.Element(f"{{{ARCHIMATE_NS}}}model", nsmap=NSMAP)
     root.set("identifier", "id-model-root")
+    root.set(f"{{{XSI_NS}}}schemaLocation", ARCHIMATE_SCHEMA_LOCATION)
+
+    name_el = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}name")
+    name_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
+    name_el.text = model_name
 
     elements_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}elements")
     for elem in model.elements:
@@ -88,9 +104,9 @@ def serialize_model(model: Model) -> etree._ElementTree:
     return etree.ElementTree(root)
 
 
-def write_model(model: Model, path: str | Path) -> None:
+def write_model(model: Model, path: str | Path, *, model_name: str = "Untitled Model") -> None:
     """Write a Model to an XML file in Exchange Format."""
-    tree = serialize_model(model)
+    tree = serialize_model(model, model_name=model_name)
     etree.indent(tree, space="  ")
     tree.write(
         str(path),

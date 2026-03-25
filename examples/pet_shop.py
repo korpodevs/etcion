@@ -333,8 +333,8 @@ def main() -> None:
         print(f"Model valid: {len(model.elements)} elements, {len(model.relationships)} relationships")
 
     # Export
-    output = Path(__file__).parent / "pet_shop.archimate"
-    write_model(model, output)
+    output = Path(__file__).parent / "pet_shop.xml"
+    write_model(model, output, model_name="Pet Shop Architecture")
     print(f"Exported to {output}")
 
 

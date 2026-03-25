@@ -86,4 +86,3 @@ class TestServing:
         a, b = pair
         with pytest.raises(ValidationError):
             Serving(name="s", source=a, target=b, is_nested=True)  # type: ignore[call-arg]
-

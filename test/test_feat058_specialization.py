@@ -93,4 +93,3 @@ class TestSpecialization:
         r = Specialization(name="spec", source=a, target=b)
         assert r.source is a
         assert r.target is b
-

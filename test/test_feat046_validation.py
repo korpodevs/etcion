@@ -89,7 +89,6 @@ class TestCollaborationValidation:
             BusinessCollaboration(name="collab", assigned_elements=[a])
 
 
-
 # ---------------------------------------------------------------------------
 # STORY-04.6.5: Event.time attribute
 # ---------------------------------------------------------------------------

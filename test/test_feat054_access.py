@@ -90,4 +90,3 @@ class TestAccess:
         a, b = pair
         with pytest.raises(Exception):  # noqa: B017
             Access(name="acc", source=a, target=b, access_mode="invalid")  # type: ignore[call-arg]
-

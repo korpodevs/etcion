@@ -13,6 +13,8 @@ from pyarchi.metamodel.concepts import Concept
 # -- Exchange Format namespace constants (Decision 1) --
 ARCHIMATE_NS = "http://www.opengroup.org/xsd/archimate/3.0/"
 XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
+XML_NS = "http://www.w3.org/XML/1998/namespace"
+DEFAULT_LANG = "en"
 ARCHIMATE_SCHEMA_LOCATION = (
     "http://www.opengroup.org/xsd/archimate/3.0/ "
     "http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd"
