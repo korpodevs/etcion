@@ -267,96 +267,96 @@ Phase 2 covers Requirements 6 through 13: concrete element classes for all Archi
 ---
 
 ## [EPIC-012] Implementation and Migration Layer Elements (Requirement 13)
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 ### [FEAT-12.1] Implementation Behavior and Structure Elements
-- [ ] [STORY-12.1.1] Define `WorkPackage(InternalBehaviorElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.BEHAVIOR`, `_type_name = "WorkPackage"`, extra fields `start: datetime | str | None = None`, `end: datetime | str | None = None`
-- [ ] [STORY-12.1.2] Define `Deliverable(PassiveStructureElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.PASSIVE_STRUCTURE`, `_type_name = "Deliverable"`
-- [ ] [STORY-12.1.3] Define `ImplementationEvent(Event)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.BEHAVIOR`, `_type_name = "ImplementationEvent"`, `time: datetime | str | None = None`
-- [ ] [STORY-12.1.4] Wire `layer` and `aspect` ClassVars on all three classes
-- [ ] [STORY-12.1.5] Attach `NotationMetadata` to all three classes (badge_letter="I")
-- [ ] [STORY-12.1.6] Write test: all three classes can be instantiated without error
-- [ ] [STORY-12.1.7] Write test: `WorkPackage` has `start` and `end` attributes defaulting to `None`
+- [x] [STORY-12.1.1] Define `WorkPackage(InternalBehaviorElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.BEHAVIOR`, `_type_name = "WorkPackage"`, extra fields `start: datetime | str | None = None`, `end: datetime | str | None = None`
+- [x] [STORY-12.1.2] Define `Deliverable(PassiveStructureElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.PASSIVE_STRUCTURE`, `_type_name = "Deliverable"`
+- [x] [STORY-12.1.3] Define `ImplementationEvent(Event)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.BEHAVIOR`, `_type_name = "ImplementationEvent"`, `time: datetime | str | None = None`
+- [x] [STORY-12.1.4] Wire `layer` and `aspect` ClassVars on all three classes
+- [x] [STORY-12.1.5] Attach `NotationMetadata` to all three classes (badge_letter="I")
+- [x] [STORY-12.1.6] Write test: all three classes can be instantiated without error
+- [x] [STORY-12.1.7] Write test: `WorkPackage` has `start` and `end` attributes defaulting to `None`
 
 ### [FEAT-12.2] Plateau (Composite Element)
-- [ ] [STORY-12.2.1] Define `Plateau(CompositeElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.COMPOSITE`, `_type_name = "Plateau"`
-- [ ] [STORY-12.2.2] Implement `members: list[Concept]` on `Plateau` accepting any core ArchiMate concept via aggregation/composition
-- [ ] [STORY-12.2.3] Wire `layer` and `aspect` ClassVars on `Plateau`
-- [ ] [STORY-12.2.4] Attach `NotationMetadata` to `Plateau`
-- [ ] [STORY-12.2.5] Write test: `Plateau` can be instantiated without error
-- [ ] [STORY-12.2.6] Write test: `Plateau` accepts any core element (e.g., `BusinessProcess`, `Requirement`) as a member
+- [x] [STORY-12.2.1] Define `Plateau(CompositeElement)` as a concrete class with `layer = Layer.IMPLEMENTATION_MIGRATION`, `aspect = Aspect.COMPOSITE`, `_type_name = "Plateau"`
+- [x] [STORY-12.2.2] Implement `members: list[Concept]` on `Plateau` accepting any core ArchiMate concept via aggregation/composition
+- [x] [STORY-12.2.3] Wire `layer` and `aspect` ClassVars on `Plateau`
+- [x] [STORY-12.2.4] Attach `NotationMetadata` to `Plateau`
+- [x] [STORY-12.2.5] Write test: `Plateau` can be instantiated without error
+- [x] [STORY-12.2.6] Write test: `Plateau` accepts any core element (e.g., `BusinessProcess`, `Requirement`) as a member
 
 ### [FEAT-12.3] Gap (Associative Element)
-- [ ] [STORY-12.3.1] Define `Gap` class with mandatory `plateau_a: Plateau` and `plateau_b: Plateau` fields, `layer = Layer.IMPLEMENTATION_MIGRATION`, `_type_name = "Gap"`
-- [ ] [STORY-12.3.2] Implement validation: `Gap` requires exactly two `Plateau` references; missing either raises `ValidationError`
-- [ ] [STORY-12.3.3] Wire `layer` and `aspect` ClassVars on `Gap`
-- [ ] [STORY-12.3.4] Attach `NotationMetadata` to `Gap`
-- [ ] [STORY-12.3.5] Write test: `Gap(plateau_a=Plateau(...), plateau_b=Plateau(...))` is valid
-- [ ] [STORY-12.3.6] Write test: `Gap` without both plateau references raises `ValidationError`
+- [x] [STORY-12.3.1] Define `Gap` class with mandatory `plateau_a: Plateau` and `plateau_b: Plateau` fields, `layer = Layer.IMPLEMENTATION_MIGRATION`, `_type_name = "Gap"`
+- [x] [STORY-12.3.2] Implement validation: `Gap` requires exactly two `Plateau` references; missing either raises `ValidationError`
+- [x] [STORY-12.3.3] Wire `layer` and `aspect` ClassVars on `Gap`
+- [x] [STORY-12.3.4] Attach `NotationMetadata` to `Gap`
+- [x] [STORY-12.3.5] Write test: `Gap(plateau_a=Plateau(...), plateau_b=Plateau(...))` is valid
+- [x] [STORY-12.3.6] Write test: `Gap` without both plateau references raises `ValidationError`
 
 ### [FEAT-12.4] Implementation & Migration Cross-Layer Validation
-- [ ] [STORY-12.4.1] Emit `DeprecationWarning` when `Realization(source=WorkPackage, target=Deliverable)` is detected
-- [ ] [STORY-12.4.2] Add permission table entries: `BusinessInternalActiveStructureElement` may be `Assignment` source targeting `WorkPackage`
-- [ ] [STORY-12.4.3] Add permission table entries: `ImplementationEvent` may trigger/be triggered by `WorkPackage` or `Plateau`
-- [ ] [STORY-12.4.4] Add permission table entries: `ImplementationEvent` may access `Deliverable`
-- [ ] [STORY-12.4.5] Add permission table entries: `Deliverable` may realize any core concept
-- [ ] [STORY-12.4.6] Write test: `Realization(source=WorkPackage(...), target=Deliverable(...))` emits `DeprecationWarning`
-- [ ] [STORY-12.4.7] Write test: `Assignment(source=BusinessRole(...), target=WorkPackage(...))` is valid
-- [ ] [STORY-12.4.8] Write test: `Triggering(source=ImplementationEvent(...), target=WorkPackage(...))` is valid
+- [x] [STORY-12.4.1] Emit `DeprecationWarning` when `Realization(source=WorkPackage, target=Deliverable)` is detected
+- [x] [STORY-12.4.2] Add permission table entries: `BusinessInternalActiveStructureElement` may be `Assignment` source targeting `WorkPackage`
+- [x] [STORY-12.4.3] Add permission table entries: `ImplementationEvent` may trigger/be triggered by `WorkPackage` or `Plateau`
+- [x] [STORY-12.4.4] Add permission table entries: `ImplementationEvent` may access `Deliverable`
+- [x] [STORY-12.4.5] Add permission table entries: `Deliverable` may realize any core concept
+- [x] [STORY-12.4.6] Write test: `Realization(source=WorkPackage(...), target=Deliverable(...))` emits `DeprecationWarning`
+- [x] [STORY-12.4.7] Write test: `Assignment(source=BusinessRole(...), target=WorkPackage(...))` is valid
+- [x] [STORY-12.4.8] Write test: `Triggering(source=ImplementationEvent(...), target=WorkPackage(...))` is valid
 
 ---
 
 ## [EPIC-013] Cross-Layer Relationship Rules (Requirement 10)
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 ### [FEAT-13.1] Business -- Application Cross-Layer Serving
-- [ ] [STORY-13.1.1] Add permission table entries: `Serving` from `ApplicationService` to any `BusinessBehaviorElement`
-- [ ] [STORY-13.1.2] Add permission table entries: `Serving` from `ApplicationInterface` to `BusinessRole`
-- [ ] [STORY-13.1.3] Add permission table entries: `Serving` from `BusinessService` to any `ApplicationBehaviorElement`
-- [ ] [STORY-13.1.4] Add permission table entries: `Serving` from `BusinessInterface` to `ApplicationComponent`
-- [ ] [STORY-13.1.5] Write test: `Serving(source=ApplicationService(...), target=BusinessProcess(...))` is valid
-- [ ] [STORY-13.1.6] Write test: `Serving(source=BusinessService(...), target=ApplicationFunction(...))` is valid
+- [x] [STORY-13.1.1] Add permission table entries: `Serving` from `ApplicationService` to any `BusinessBehaviorElement`
+- [x] [STORY-13.1.2] Add permission table entries: `Serving` from `ApplicationInterface` to `BusinessRole`
+- [x] [STORY-13.1.3] Add permission table entries: `Serving` from `BusinessService` to any `ApplicationBehaviorElement`
+- [x] [STORY-13.1.4] Add permission table entries: `Serving` from `BusinessInterface` to `ApplicationComponent`
+- [x] [STORY-13.1.5] Write test: `Serving(source=ApplicationService(...), target=BusinessProcess(...))` is valid
+- [x] [STORY-13.1.6] Write test: `Serving(source=BusinessService(...), target=ApplicationFunction(...))` is valid
 
 ### [FEAT-13.2] Application -- Technology Cross-Layer Serving
-- [ ] [STORY-13.2.1] Add permission table entries: `Serving` from `TechnologyService` to any `ApplicationBehaviorElement`
-- [ ] [STORY-13.2.2] Add permission table entries: `Serving` from `TechnologyInterface` to `ApplicationComponent`
-- [ ] [STORY-13.2.3] Write test: `Serving(source=TechnologyService(...), target=ApplicationFunction(...))` is valid
+- [x] [STORY-13.2.1] Add permission table entries: `Serving` from `TechnologyService` to any `ApplicationBehaviorElement`
+- [x] [STORY-13.2.2] Add permission table entries: `Serving` from `TechnologyInterface` to `ApplicationComponent`
+- [x] [STORY-13.2.3] Write test: `Serving(source=TechnologyService(...), target=ApplicationFunction(...))` is valid
 
 ### [FEAT-13.3] Cross-Layer Realization Rules
-- [ ] [STORY-13.3.1] Add permission table entries: `Realization` from `ApplicationProcess`/`ApplicationFunction` to `BusinessProcess`/`BusinessFunction`
-- [ ] [STORY-13.3.2] Add permission table entries: `Realization` from `DataObject` to `BusinessObject`
-- [ ] [STORY-13.3.3] Add permission table entries: `Realization` from `TechnologyProcess`/`TechnologyFunction` to `ApplicationProcess`/`ApplicationFunction`
-- [ ] [STORY-13.3.4] Add permission table entries: `Realization` from `Artifact` to `DataObject` and `Artifact` to `ApplicationComponent`
-- [ ] [STORY-13.3.5] Write test: `Realization(source=ApplicationProcess(...), target=BusinessProcess(...))` is valid
-- [ ] [STORY-13.3.6] Write test: `Realization(source=Artifact(...), target=DataObject(...))` is valid
+- [x] [STORY-13.3.1] Add permission table entries: `Realization` from `ApplicationProcess`/`ApplicationFunction` to `BusinessProcess`/`BusinessFunction`
+- [x] [STORY-13.3.2] Add permission table entries: `Realization` from `DataObject` to `BusinessObject`
+- [x] [STORY-13.3.3] Add permission table entries: `Realization` from `TechnologyProcess`/`TechnologyFunction` to `ApplicationProcess`/`ApplicationFunction`
+- [x] [STORY-13.3.4] Add permission table entries: `Realization` from `Artifact` to `DataObject` and `Artifact` to `ApplicationComponent`
+- [x] [STORY-13.3.5] Write test: `Realization(source=ApplicationProcess(...), target=BusinessProcess(...))` is valid
+- [x] [STORY-13.3.6] Write test: `Realization(source=Artifact(...), target=DataObject(...))` is valid
 
 ### [FEAT-13.4] Cross-Layer Realization Prohibitions
-- [ ] [STORY-13.4.1] Add prohibition: `Realization` targeting `BusinessActor`, `BusinessRole`, or `BusinessCollaboration` is forbidden
-- [ ] [STORY-13.4.2] Write test: `Realization(source=ApplicationProcess(...), target=BusinessActor(...))` raises `ValidationError`
-- [ ] [STORY-13.4.3] Write test: `Realization(source=ApplicationComponent(...), target=BusinessRole(...))` raises `ValidationError`
-- [ ] [STORY-13.4.4] Write test: `Realization(source=ApplicationComponent(...), target=BusinessCollaboration(...))` raises `ValidationError`
+- [x] [STORY-13.4.1] Add prohibition: `Realization` targeting `BusinessActor`, `BusinessRole`, or `BusinessCollaboration` is forbidden
+- [x] [STORY-13.4.2] Write test: `Realization(source=ApplicationProcess(...), target=BusinessActor(...))` raises `ValidationError`
+- [x] [STORY-13.4.3] Write test: `Realization(source=ApplicationComponent(...), target=BusinessRole(...))` raises `ValidationError`
+- [x] [STORY-13.4.4] Write test: `Realization(source=ApplicationComponent(...), target=BusinessCollaboration(...))` raises `ValidationError`
 
 ### [FEAT-13.5] Cross-Layer Derivation
-- [ ] [STORY-13.5.1] Ensure derivation engine supports multi-hop realization chains across layers (e.g., `BusinessObject <- DataObject <- Artifact`)
-- [ ] [STORY-13.5.2] Write test: chained `Realization(Artifact -> DataObject)` and `Realization(DataObject -> BusinessObject)` produces derived `Realization(Artifact, BusinessObject)`
-- [ ] [STORY-13.5.3] Write test: `Product` aggregation of `ApplicationService` does not raise `ValidationError`
+- [x] [STORY-13.5.1] Ensure derivation engine supports multi-hop realization chains across layers (e.g., `BusinessObject <- DataObject <- Artifact`)
+- [x] [STORY-13.5.2] Write test: chained `Realization(Artifact -> DataObject)` and `Realization(DataObject -> BusinessObject)` produces derived `Realization(Artifact, BusinessObject)`
+- [x] [STORY-13.5.3] Write test: `Product` aggregation of `ApplicationService` does not raise `ValidationError`
 
 ---
 
 ## [EPIC-014] Public API Exports for Phase 2
-**Status:** To-Do
+**Status:** Complete
 **Priority:** Medium
 
 ### [FEAT-14.1] Update __init__.py Exports
-- [ ] [STORY-14.1.1] Export all Strategy layer concrete classes from `src/pyarchi/__init__.py`
-- [ ] [STORY-14.1.2] Export all Business layer concrete classes from `src/pyarchi/__init__.py`
-- [ ] [STORY-14.1.3] Export all Application layer concrete classes from `src/pyarchi/__init__.py`
-- [ ] [STORY-14.1.4] Export all Technology layer concrete classes from `src/pyarchi/__init__.py`
-- [ ] [STORY-14.1.5] Export all Physical element concrete classes from `src/pyarchi/__init__.py`
-- [ ] [STORY-14.1.6] Export all Motivation element concrete classes from `src/pyarchi/__init__.py`
-- [ ] [STORY-14.1.7] Export all Implementation & Migration element concrete classes from `src/pyarchi/__init__.py`
-- [ ] [STORY-14.1.8] Export all new layer-specific abstract bases from `src/pyarchi/__init__.py`
-- [ ] [STORY-14.1.9] Update `__all__` list to include all Phase 2 types
-- [ ] [STORY-14.1.10] Write test: every Phase 2 concrete class is importable from `pyarchi` top-level
+- [x] [STORY-14.1.1] Export all Strategy layer concrete classes from `src/pyarchi/__init__.py`
+- [x] [STORY-14.1.2] Export all Business layer concrete classes from `src/pyarchi/__init__.py`
+- [x] [STORY-14.1.3] Export all Application layer concrete classes from `src/pyarchi/__init__.py`
+- [x] [STORY-14.1.4] Export all Technology layer concrete classes from `src/pyarchi/__init__.py`
+- [x] [STORY-14.1.5] Export all Physical element concrete classes from `src/pyarchi/__init__.py`
+- [x] [STORY-14.1.6] Export all Motivation element concrete classes from `src/pyarchi/__init__.py`
+- [x] [STORY-14.1.7] Export all Implementation & Migration element concrete classes from `src/pyarchi/__init__.py`
+- [x] [STORY-14.1.8] Export all new layer-specific abstract bases from `src/pyarchi/__init__.py`
+- [x] [STORY-14.1.9] Update `__all__` list to include all Phase 2 types
+- [x] [STORY-14.1.10] Write test: every Phase 2 concrete class is importable from `pyarchi` top-level

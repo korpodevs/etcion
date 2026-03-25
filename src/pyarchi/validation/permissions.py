@@ -16,13 +16,16 @@ from pyarchi.metamodel.elements import (
     StructureElement,
 )
 from pyarchi.metamodel.relationships import (
+    Access,
     Aggregation,
     Assignment,
     Association,
     Composition,
     Influence,
     Realization,
+    Serving,
     Specialization,
+    Triggering,
 )
 
 # Universal same-type structural relationships: Composition and Aggregation are
@@ -92,6 +95,139 @@ def is_permitted(
         source_is_motivation = issubclass(source_type, MotivationElement)
         target_is_motivation = issubclass(target_type, MotivationElement)
         if source_is_motivation or target_is_motivation:
+            return True
+
+    # Rule-based checks for I&M cross-layer relationships (ADR-024 Decision 9).
+    from pyarchi.metamodel.implementation_migration import (
+        Deliverable,
+        ImplementationEvent,
+        Plateau,
+        WorkPackage,
+    )
+
+    # DeprecationWarning on Realization(WorkPackage, Deliverable).
+    if rel_type is Realization:
+        if issubclass(source_type, WorkPackage) and issubclass(target_type, Deliverable):
+            import warnings
+
+            warnings.warn(
+                "Realization from WorkPackage to Deliverable is deprecated in "
+                "ArchiMate 3.2. Use Assignment instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return True
+        # Deliverable realizes any core structure/behavior element.
+        if issubclass(source_type, Deliverable):
+            if issubclass(target_type, (StructureElement, BehaviorElement)):
+                return True
+
+        # FEAT-13.4: Realization targeting Business active structure is forbidden.
+        from pyarchi.metamodel.business import (
+            BusinessInternalActiveStructureElement,
+            BusinessInternalBehaviorElement,
+            BusinessObject,
+        )
+
+        if issubclass(target_type, BusinessInternalActiveStructureElement):
+            return False
+
+        # FEAT-13.3: Cross-layer Realization permissions.
+        from pyarchi.metamodel.application import (
+            ApplicationComponent,
+            ApplicationInternalBehaviorElement,
+            DataObject,
+        )
+        from pyarchi.metamodel.technology import (
+            Artifact,
+            TechnologyInternalBehaviorElement,
+        )
+
+        # App behavior -> Business behavior
+        if issubclass(source_type, ApplicationInternalBehaviorElement) and issubclass(
+            target_type, BusinessInternalBehaviorElement
+        ):
+            return True
+        # DataObject -> BusinessObject
+        if issubclass(source_type, DataObject) and issubclass(target_type, BusinessObject):
+            return True
+        # Tech behavior -> App behavior
+        if issubclass(source_type, TechnologyInternalBehaviorElement) and issubclass(
+            target_type, ApplicationInternalBehaviorElement
+        ):
+            return True
+        # Artifact -> DataObject
+        if issubclass(source_type, Artifact) and issubclass(target_type, DataObject):
+            return True
+        # Artifact -> ApplicationComponent
+        if issubclass(source_type, Artifact) and issubclass(target_type, ApplicationComponent):
+            return True
+
+    # Assignment to WorkPackage -- Business internal active structure sources.
+    if rel_type is Assignment and issubclass(target_type, WorkPackage):
+        from pyarchi.metamodel.business import BusinessInternalActiveStructureElement
+
+        return issubclass(source_type, BusinessInternalActiveStructureElement)
+
+    # Triggering: ImplementationEvent <-> WorkPackage, Plateau.
+    if rel_type is Triggering:
+        if issubclass(source_type, ImplementationEvent) and issubclass(
+            target_type, (WorkPackage, Plateau)
+        ):
+            return True
+        if issubclass(source_type, (WorkPackage, Plateau)) and issubclass(
+            target_type, ImplementationEvent
+        ):
+            return True
+
+    # Access: ImplementationEvent -> Deliverable.
+    if rel_type is Access and issubclass(source_type, ImplementationEvent):
+        if issubclass(target_type, Deliverable):
+            return True
+
+    # FEAT-13.1: Business-Application cross-layer Serving (bidirectional).
+    if rel_type is Serving:
+        from pyarchi.metamodel.application import (
+            ApplicationInterface,
+            ApplicationInternalActiveStructureElement,
+            ApplicationInternalBehaviorElement,
+            ApplicationService,
+        )
+        from pyarchi.metamodel.business import (
+            BusinessInterface,
+            BusinessInternalActiveStructureElement,
+            BusinessInternalBehaviorElement,
+            BusinessService,
+        )
+
+        # App -> Business
+        if issubclass(source_type, ApplicationService) and issubclass(
+            target_type, BusinessInternalBehaviorElement
+        ):
+            return True
+        if issubclass(source_type, ApplicationInterface) and issubclass(
+            target_type, BusinessInternalActiveStructureElement
+        ):
+            return True
+        # Business -> App
+        if issubclass(source_type, BusinessService) and issubclass(
+            target_type, ApplicationInternalBehaviorElement
+        ):
+            return True
+        if issubclass(source_type, BusinessInterface) and issubclass(
+            target_type, ApplicationInternalActiveStructureElement
+        ):
+            return True
+        # FEAT-13.2: Technology -> Application
+        from pyarchi.metamodel.technology import TechnologyInterface, TechnologyService
+
+        if issubclass(source_type, TechnologyService) and issubclass(
+            target_type, ApplicationInternalBehaviorElement
+        ):
+            return True
+        if issubclass(source_type, TechnologyInterface) and issubclass(
+            target_type, ApplicationInternalActiveStructureElement
+        ):
             return True
 
     # Specific triple lookup for all other relationship types.

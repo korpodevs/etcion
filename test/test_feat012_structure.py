@@ -200,6 +200,14 @@ class TestShallFeaturesMarkers:
         # EPIC-005 (FEAT-05.11): Relationships and permission table shipped.
         "test_cross_layer_relationships",
         "test_relationship_permission_table",
+        # EPIC-014 (FEAT-14.1): All layer elements exported.
+        "test_strategy_elements",
+        "test_motivation_elements",
+        "test_business_elements",
+        "test_application_elements",
+        "test_technology_elements",
+        "test_physical_elements",
+        "test_implementation_migration_elements",
     }
 
     def test_pending_methods_have_xfail_decorator(self) -> None:
@@ -335,11 +343,11 @@ class TestConformanceFunctionalBehaviour:
         )
         output = result.stdout + result.stderr
 
-        assert "15 passed" in output, (
-            f"Expected '15 passed' in pytest output.\n\nFull output:\n{output}"
+        assert "22 passed" in output, (
+            f"Expected '22 passed' in pytest output.\n\nFull output:\n{output}"
         )
-        assert "9 xfailed" in output, (
-            f"Expected '9 xfailed' in pytest output.\n\nFull output:\n{output}"
+        assert "2 xfailed" in output, (
+            f"Expected '2 xfailed' in pytest output.\n\nFull output:\n{output}"
         )
         assert "1 skipped" in output, (
             f"Expected '1 skipped' in pytest output.\n\nFull output:\n{output}"

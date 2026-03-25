@@ -17,6 +17,41 @@ from pyarchi.exceptions import (
     PyArchiError,
     ValidationError,
 )
+
+# Phase 2: Application layer (EPIC-008)
+from pyarchi.metamodel.application import (
+    ApplicationCollaboration,
+    ApplicationComponent,
+    ApplicationEvent,
+    ApplicationFunction,
+    ApplicationInteraction,
+    ApplicationInterface,
+    ApplicationInternalActiveStructureElement,
+    ApplicationInternalBehaviorElement,
+    ApplicationProcess,
+    ApplicationService,
+    DataObject,
+)
+
+# Phase 2: Business layer (EPIC-007)
+from pyarchi.metamodel.business import (
+    BusinessActor,
+    BusinessCollaboration,
+    BusinessEvent,
+    BusinessFunction,
+    BusinessInteraction,
+    BusinessInterface,
+    BusinessInternalActiveStructureElement,
+    BusinessInternalBehaviorElement,
+    BusinessObject,
+    BusinessPassiveStructureElement,
+    BusinessProcess,
+    BusinessRole,
+    BusinessService,
+    Contract,
+    Product,
+    Representation,
+)
 from pyarchi.metamodel.concepts import (
     Concept,
     Element,
@@ -41,8 +76,41 @@ from pyarchi.metamodel.elements import (
     Process,
     StructureElement,
 )
+
+# Phase 2: Implementation & Migration layer (EPIC-012)
+from pyarchi.metamodel.implementation_migration import (
+    Deliverable,
+    Gap,
+    ImplementationEvent,
+    Plateau,
+    WorkPackage,
+)
 from pyarchi.metamodel.model import Model
+
+# Phase 2: Motivation layer (EPIC-011)
+from pyarchi.metamodel.motivation import (
+    Assessment,
+    Constraint,
+    Driver,
+    Goal,
+    Meaning,
+    Outcome,
+    Principle,
+    Requirement,
+    Stakeholder,
+    Value,
+)
 from pyarchi.metamodel.notation import NotationMetadata
+
+# Phase 2: Physical layer (EPIC-010)
+from pyarchi.metamodel.physical import (
+    DistributionNetwork,
+    Equipment,
+    Facility,
+    Material,
+    PhysicalActiveStructureElement,
+    PhysicalPassiveStructureElement,
+)
 from pyarchi.metamodel.relationships import (
     Access,
     Aggregation,
@@ -60,6 +128,35 @@ from pyarchi.metamodel.relationships import (
     Specialization,
     StructuralRelationship,
     Triggering,
+)
+
+# Phase 2: Strategy layer (EPIC-006)
+from pyarchi.metamodel.strategy import (
+    Capability,
+    CourseOfAction,
+    Resource,
+    StrategyBehaviorElement,
+    StrategyStructureElement,
+    ValueStream,
+)
+
+# Phase 2: Technology layer (EPIC-009)
+from pyarchi.metamodel.technology import (
+    Artifact,
+    CommunicationNetwork,
+    Device,
+    Node,
+    Path,
+    SystemSoftware,
+    TechnologyCollaboration,
+    TechnologyEvent,
+    TechnologyFunction,
+    TechnologyInteraction,
+    TechnologyInterface,
+    TechnologyInternalActiveStructureElement,
+    TechnologyInternalBehaviorElement,
+    TechnologyProcess,
+    TechnologyService,
 )
 from pyarchi.validation.permissions import is_permitted
 
@@ -127,4 +224,80 @@ __all__: list[str] = [
     "Junction",
     "DerivationEngine",
     "is_permitted",
+    # Strategy layer (EPIC-006)
+    "StrategyStructureElement",
+    "StrategyBehaviorElement",
+    "Resource",
+    "Capability",
+    "ValueStream",
+    "CourseOfAction",
+    # Business layer (EPIC-007)
+    "BusinessInternalActiveStructureElement",
+    "BusinessInternalBehaviorElement",
+    "BusinessPassiveStructureElement",
+    "BusinessActor",
+    "BusinessRole",
+    "BusinessCollaboration",
+    "BusinessInterface",
+    "BusinessProcess",
+    "BusinessFunction",
+    "BusinessInteraction",
+    "BusinessEvent",
+    "BusinessService",
+    "BusinessObject",
+    "Contract",
+    "Representation",
+    "Product",
+    # Application layer (EPIC-008)
+    "ApplicationInternalActiveStructureElement",
+    "ApplicationInternalBehaviorElement",
+    "ApplicationComponent",
+    "ApplicationCollaboration",
+    "ApplicationInterface",
+    "ApplicationFunction",
+    "ApplicationInteraction",
+    "ApplicationProcess",
+    "ApplicationEvent",
+    "ApplicationService",
+    "DataObject",
+    # Technology layer (EPIC-009)
+    "TechnologyInternalActiveStructureElement",
+    "TechnologyInternalBehaviorElement",
+    "Node",
+    "Device",
+    "SystemSoftware",
+    "TechnologyCollaboration",
+    "TechnologyInterface",
+    "Path",
+    "CommunicationNetwork",
+    "TechnologyFunction",
+    "TechnologyProcess",
+    "TechnologyInteraction",
+    "TechnologyEvent",
+    "TechnologyService",
+    "Artifact",
+    # Physical layer (EPIC-010)
+    "PhysicalActiveStructureElement",
+    "PhysicalPassiveStructureElement",
+    "Equipment",
+    "Facility",
+    "DistributionNetwork",
+    "Material",
+    # Motivation layer (EPIC-011)
+    "Stakeholder",
+    "Driver",
+    "Assessment",
+    "Goal",
+    "Outcome",
+    "Principle",
+    "Requirement",
+    "Constraint",
+    "Meaning",
+    "Value",
+    # Implementation & Migration layer (EPIC-012)
+    "WorkPackage",
+    "Deliverable",
+    "ImplementationEvent",
+    "Plateau",
+    "Gap",
 ]

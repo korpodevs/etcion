@@ -100,20 +100,12 @@ class TestShallFeatures:
         assert hasattr(pyarchi, "Relationship")
         assert hasattr(pyarchi, "RelationshipConnector")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-004: Strategy layer elements not yet implemented",
-    )
     def test_strategy_elements(self) -> None:
         assert hasattr(pyarchi, "Resource")
         assert hasattr(pyarchi, "Capability")
         assert hasattr(pyarchi, "ValueStream")
         assert hasattr(pyarchi, "CourseOfAction")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-004: Motivation layer elements not yet implemented",
-    )
     def test_motivation_elements(self) -> None:
         assert hasattr(pyarchi, "Stakeholder")
         assert hasattr(pyarchi, "Driver")
@@ -126,10 +118,6 @@ class TestShallFeatures:
         assert hasattr(pyarchi, "Meaning")
         assert hasattr(pyarchi, "Value")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-004: Business layer elements not yet implemented",
-    )
     def test_business_elements(self) -> None:
         assert hasattr(pyarchi, "BusinessActor")
         assert hasattr(pyarchi, "BusinessRole")
@@ -145,10 +133,6 @@ class TestShallFeatures:
         assert hasattr(pyarchi, "Representation")
         assert hasattr(pyarchi, "Product")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-004: Application layer elements not yet implemented",
-    )
     def test_application_elements(self) -> None:
         assert hasattr(pyarchi, "ApplicationComponent")
         assert hasattr(pyarchi, "ApplicationCollaboration")
@@ -160,10 +144,6 @@ class TestShallFeatures:
         assert hasattr(pyarchi, "ApplicationService")
         assert hasattr(pyarchi, "DataObject")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-004: Technology layer elements not yet implemented",
-    )
     def test_technology_elements(self) -> None:
         assert hasattr(pyarchi, "Node")
         assert hasattr(pyarchi, "Device")
@@ -179,20 +159,12 @@ class TestShallFeatures:
         assert hasattr(pyarchi, "TechnologyService")
         assert hasattr(pyarchi, "Artifact")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-004: Physical layer elements not yet implemented",
-    )
     def test_physical_elements(self) -> None:
         assert hasattr(pyarchi, "Equipment")
         assert hasattr(pyarchi, "Facility")
         assert hasattr(pyarchi, "DistributionNetwork")
         assert hasattr(pyarchi, "Material")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="EPIC-004: Implementation & Migration elements not yet implemented",
-    )
     def test_implementation_migration_elements(self) -> None:
         assert hasattr(pyarchi, "WorkPackage")
         assert hasattr(pyarchi, "Deliverable")
