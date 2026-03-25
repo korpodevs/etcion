@@ -24,11 +24,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+xml = ["lxml>=5.0,<6.0"]
 dev = [
     "pytest>=8.0",
     "mypy>=1.10",
     "pydantic>=2.0,<3.0",
     "ruff>=0.4",
+    "lxml>=5.0,<6.0",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -69,3 +71,11 @@ warn_unreachable = true
 module = "test.*"
 disallow_untyped_defs = false
 disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = "lxml.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pyarchi.serialization.xml"
+disable_error_code = ["import-untyped"]

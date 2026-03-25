@@ -188,56 +188,56 @@ Implements the language customization mechanism (Chapter 14 of the ArchiMate 3.2
 ---
 
 ## [EPIC-019] Open Group Exchange Format Serialization
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 Implements XML serialization and deserialization for the Open Group ArchiMate Model Exchange File Format, enabling cross-tool interoperability. This is the primary persistence layer.
 
 ### [FEAT-19.1] XML Namespace and Schema Setup
-- [ ] [STORY-19.1.1] Define XML namespace constants for the ArchiMate Exchange Format (namespace URI, schema location)
-- [ ] [STORY-19.1.2] Embed or reference the Exchange Format XSD for validation
-- [ ] [STORY-19.1.3] Write ADR documenting the serialization strategy (`lxml` for parsing, Pydantic for validation)
-- [ ] [STORY-19.1.4] Write test: namespace constants match the Open Group Exchange Format specification
+- [x] [STORY-19.1.1] Define XML namespace constants for the ArchiMate Exchange Format (namespace URI, schema location)
+- [x] [STORY-19.1.2] Embed or reference the Exchange Format XSD for validation
+- [x] [STORY-19.1.3] Write ADR documenting the serialization strategy (`lxml` for parsing, Pydantic for validation)
+- [x] [STORY-19.1.4] Write test: namespace constants match the Open Group Exchange Format specification
 
 ### [FEAT-19.2] Element Serialization
-- [ ] [STORY-19.2.1] Implement `to_xml()` method on `Element` base class returning an `lxml.etree.Element`
-- [ ] [STORY-19.2.2] Map each concrete element type to its Exchange Format XML tag name
-- [ ] [STORY-19.2.3] Serialize element attributes: `identifier`, `name`, `documentation`, custom properties
-- [ ] [STORY-19.2.4] Write test: `BusinessActor(name="Alice").to_xml()` produces correct XML element with namespace
-- [ ] [STORY-19.2.5] Write test: round-trip serialization preserves element identity (`id`) and attributes
+- [x] [STORY-19.2.1] Implement `to_xml()` method on `Element` base class returning an `lxml.etree.Element`
+- [x] [STORY-19.2.2] Map each concrete element type to its Exchange Format XML tag name
+- [x] [STORY-19.2.3] Serialize element attributes: `identifier`, `name`, `documentation`, custom properties
+- [x] [STORY-19.2.4] Write test: `BusinessActor(name="Alice").to_xml()` produces correct XML element with namespace
+- [x] [STORY-19.2.5] Write test: round-trip serialization preserves element identity (`id`) and attributes
 
 ### [FEAT-19.3] Relationship Serialization
-- [ ] [STORY-19.3.1] Implement `to_xml()` method on `Relationship` base class
-- [ ] [STORY-19.3.2] Serialize relationship attributes: `identifier`, `source`, `target`, `name`, type-specific fields (`access_mode`, `sign`, `direction`, etc.)
-- [ ] [STORY-19.3.3] Write test: `Serving(source=a, target=b).to_xml()` produces correct XML with source/target references
-- [ ] [STORY-19.3.4] Write test: `Influence` serialization includes `sign` and `strength` attributes when present
+- [x] [STORY-19.3.1] Implement `to_xml()` method on `Relationship` base class
+- [x] [STORY-19.3.2] Serialize relationship attributes: `identifier`, `source`, `target`, `name`, type-specific fields (`access_mode`, `sign`, `direction`, etc.)
+- [x] [STORY-19.3.3] Write test: `Serving(source=a, target=b).to_xml()` produces correct XML with source/target references
+- [x] [STORY-19.3.4] Write test: `Influence` serialization includes `sign` and `strength` attributes when present
 
 ### [FEAT-19.4] Model Serialization (Write)
-- [ ] [STORY-19.4.1] Implement `Model.to_xml() -> lxml.etree.ElementTree` producing a complete Exchange Format document
-- [ ] [STORY-19.4.2] Implement `Model.to_file(path: Path)` writing the XML tree to disk with proper encoding and declaration
-- [ ] [STORY-19.4.3] Include model metadata: name, documentation, property definitions
-- [ ] [STORY-19.4.4] Write test: `Model.to_xml()` produces a valid XML document with correct root element and namespace
-- [ ] [STORY-19.4.5] Write test: `Model.to_file()` writes a file that can be read back
+- [x] [STORY-19.4.1] Implement `Model.to_xml() -> lxml.etree.ElementTree` producing a complete Exchange Format document
+- [x] [STORY-19.4.2] Implement `Model.to_file(path: Path)` writing the XML tree to disk with proper encoding and declaration
+- [x] [STORY-19.4.3] Include model metadata: name, documentation, property definitions
+- [x] [STORY-19.4.4] Write test: `Model.to_xml()` produces a valid XML document with correct root element and namespace
+- [x] [STORY-19.4.5] Write test: `Model.to_file()` writes a file that can be read back
 
 ### [FEAT-19.5] Model Deserialization (Read)
-- [ ] [STORY-19.5.1] Implement `Model.from_xml(tree: lxml.etree.ElementTree) -> Model` class method
-- [ ] [STORY-19.5.2] Implement `Model.from_file(path: Path) -> Model` class method with stream parsing for large files
-- [ ] [STORY-19.5.3] Resolve element cross-references: relationship source/target IDs to element instances
-- [ ] [STORY-19.5.4] Handle unknown element types gracefully: log warning, skip or store as generic `Element`
-- [ ] [STORY-19.5.5] Write test: round-trip `Model -> XML -> Model` preserves all elements and relationships
-- [ ] [STORY-19.5.6] Write test: loading a file with 1000+ elements completes in under 5 seconds
+- [x] [STORY-19.5.1] Implement `Model.from_xml(tree: lxml.etree.ElementTree) -> Model` class method
+- [x] [STORY-19.5.2] Implement `Model.from_file(path: Path) -> Model` class method with stream parsing for large files
+- [x] [STORY-19.5.3] Resolve element cross-references: relationship source/target IDs to element instances
+- [x] [STORY-19.5.4] Handle unknown element types gracefully: log warning, skip or store as generic `Element`
+- [x] [STORY-19.5.5] Write test: round-trip `Model -> XML -> Model` preserves all elements and relationships
+- [x] [STORY-19.5.6] Write test: loading a file with 1000+ elements completes in under 5 seconds
 
 ### [FEAT-19.6] Exchange Format Compliance
-- [ ] [STORY-19.6.1] Validate serialized XML against the Exchange Format XSD schema
-- [ ] [STORY-19.6.2] Ensure ID format compliance: identifiers use the `id-` prefix format compatible with Archi tooling
-- [ ] [STORY-19.6.3] Preserve visual/diagrammatic data (view coordinates, bendpoints) during round-trip even if not interpreted
-- [ ] [STORY-19.6.4] Write test: serialized XML passes XSD validation
-- [ ] [STORY-19.6.5] Write test: visual data present in input XML is preserved in output XML (no data loss)
+- [x] [STORY-19.6.1] Validate serialized XML against the Exchange Format XSD schema
+- [x] [STORY-19.6.2] Ensure ID format compliance: identifiers use the `id-` prefix format compatible with Archi tooling
+- [x] [STORY-19.6.3] Preserve visual/diagrammatic data (view coordinates, bendpoints) during round-trip even if not interpreted
+- [x] [STORY-19.6.4] Write test: serialized XML passes XSD validation
+- [x] [STORY-19.6.5] Write test: visual data present in input XML is preserved in output XML (no data loss)
 
 ### [FEAT-19.7] JSON Serialization (Optional / Secondary)
-- [ ] [STORY-19.7.1] Implement `Model.to_dict() -> dict` for JSON-compatible dictionary output
-- [ ] [STORY-19.7.2] Implement `Model.from_dict(data: dict) -> Model` for JSON-compatible input
-- [ ] [STORY-19.7.3] Write test: round-trip `Model -> dict -> Model` preserves all concepts
+- [x] [STORY-19.7.1] Implement `Model.to_dict() -> dict` for JSON-compatible dictionary output
+- [x] [STORY-19.7.2] Implement `Model.from_dict(data: dict) -> Model` for JSON-compatible input
+- [x] [STORY-19.7.3] Write test: round-trip `Model -> dict -> Model` preserves all concepts
 
 ---
 

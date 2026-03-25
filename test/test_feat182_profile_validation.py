@@ -8,10 +8,10 @@ from pydantic import ValidationError
 from pyarchi.metamodel.concepts import Element, Relationship
 from pyarchi.metamodel.profiles import Profile
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 class _StubElement(Element):
     @property
@@ -66,7 +66,9 @@ class TestAttributeExtensionKeyValidation:
     """STORY-18.2.1: attribute_extensions keys must be Element subclasses."""
 
     def test_non_element_key_rejected(self) -> None:
-        with pytest.raises(ValidationError, match="attribute_extensions.*not a subclass of Element"):
+        with pytest.raises(
+            ValidationError, match="attribute_extensions.*not a subclass of Element"
+        ):
             Profile(
                 name="Bad",
                 attribute_extensions={int: {"x": str}},  # type: ignore[dict-item]
