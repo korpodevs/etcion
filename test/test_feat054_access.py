@@ -91,16 +91,3 @@ class TestAccess:
         with pytest.raises(Exception):  # noqa: B017
             Access(name="acc", source=a, target=b, access_mode="invalid")  # type: ignore[call-arg]
 
-
-# ---------------------------------------------------------------------------
-# Validation xfails
-# ---------------------------------------------------------------------------
-
-
-class TestDeferredValidation:
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Access direction validation deferred to model-level (ADR-017 ss6)",
-    )
-    def test_access_wrong_direction_raises(self) -> None:
-        pytest.fail("Model-level validation not yet implemented")

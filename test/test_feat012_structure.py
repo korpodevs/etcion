@@ -241,21 +241,39 @@ class TestShallFeaturesMarkers:
 
 
 class TestShouldFeaturesMarkers:
-    """Every method in TestShouldFeatures must carry @pytest.mark.xfail(strict=False)."""
+    """Methods in TestShouldFeatures that are still pending must carry
+    @pytest.mark.xfail(strict=False).  Methods whose implementing epic is
+    complete may have their xfail decorator removed; they are tracked in
+    the exclusion list below."""
 
-    def test_all_methods_have_xfail_decorator(self) -> None:
+    _PROMOTED: set[str] = {
+        "test_viewpoint_mechanism",
+        "test_language_customization",
+    }
+
+    def test_pending_methods_have_xfail_decorator(self) -> None:
         tree = _parse_tree()
         classes = _get_classes(tree)
         methods = _get_methods(classes["TestShouldFeatures"])
-        missing = [m.name for m in methods if not _has_decorator(m, "xfail")]
+        pending = [m for m in methods if m.name not in self._PROMOTED]
+        missing = [m.name for m in pending if not _has_decorator(m, "xfail")]
         assert missing == [], f"Methods in TestShouldFeatures missing @pytest.mark.xfail: {missing}"
 
-    def test_all_xfail_decorators_have_strict_false(self) -> None:
+    def test_pending_xfail_decorators_have_strict_false(self) -> None:
         tree = _parse_tree()
         classes = _get_classes(tree)
         methods = _get_methods(classes["TestShouldFeatures"])
-        wrong = [m.name for m in methods if _get_xfail_strict_value(m) is not False]
+        pending = [m for m in methods if m.name not in self._PROMOTED]
+        wrong = [m.name for m in pending if _get_xfail_strict_value(m) is not False]
         assert wrong == [], f"Methods in TestShouldFeatures where strict != False: {wrong}"
+
+    def test_promoted_methods_have_no_xfail_decorator(self) -> None:
+        tree = _parse_tree()
+        classes = _get_classes(tree)
+        methods = _get_methods(classes["TestShouldFeatures"])
+        promoted = [m for m in methods if m.name in self._PROMOTED]
+        wrong = [m.name for m in promoted if _has_decorator(m, "xfail")]
+        assert wrong == [], f"Promoted methods in TestShouldFeatures still have xfail: {wrong}"
 
 
 # ---------------------------------------------------------------------------
@@ -317,7 +335,7 @@ class TestConformanceFunctionalBehaviour:
     """Run test_conformance.py with pytest and verify the expected summary counts."""
 
     def test_functional_outcome(self) -> None:
-        """15 passed, 9 xfailed, 1 skipped -- no failures or errors.
+        """24 passed, 1 skipped -- no xfails remain.
 
         9 xfail from FEAT-01.2 (TestShallFeatures pending + TestShouldFeatures) +
         2 xfail from FEAT-01.3 (TestUndefinedTypeGuard) = 11 total.
@@ -326,6 +344,12 @@ class TestConformanceFunctionalBehaviour:
         Previously 11 xfailed; 2 removed when FEAT-05.11 shipped:
           - test_cross_layer_relationships (TestShallFeatures)
           - test_relationship_permission_table (TestShallFeatures)
+        Previously 9 xfailed; 2 flipped to xpassed when FEAT-20.3 shipped
+        (Phase 3 exports satisfied the viewpoint/customization conformance tests):
+          - test_viewpoint_mechanism (TestShouldFeatures)
+          - test_language_customization (TestShouldFeatures)
+        FEAT-20.1: xfail decorators removed from the two promoted methods;
+        they now appear as normal PASSED results.
         """
         result = subprocess.run(
             [
@@ -343,15 +367,12 @@ class TestConformanceFunctionalBehaviour:
         )
         output = result.stdout + result.stderr
 
-        assert "22 passed" in output, (
-            f"Expected '22 passed' in pytest output.\n\nFull output:\n{output}"
-        )
-        assert "2 xfailed" in output, (
-            f"Expected '2 xfailed' in pytest output.\n\nFull output:\n{output}"
+        assert "24 passed" in output, (
+            f"Expected '24 passed' in pytest output.\n\nFull output:\n{output}"
         )
         assert "1 skipped" in output, (
             f"Expected '1 skipped' in pytest output.\n\nFull output:\n{output}"
         )
-        assert "failed" not in output.lower().split("passed")[0] or "xfailed" in output, (
+        assert "failed" not in output.lower().split("passed")[0], (
             f"Unexpected test failures in output.\n\nFull output:\n{output}"
         )

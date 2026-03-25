@@ -205,17 +205,9 @@ class TestShouldFeatures:
     ``xfail(strict=False)`` pattern as shall-level tests.
     """
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Phase 2: Viewpoint mechanism not yet implemented",
-    )
     def test_viewpoint_mechanism(self) -> None:
         assert hasattr(pyarchi, "Viewpoint")
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Phase 2: Language customization not yet implemented",
-    )
     def test_language_customization(self) -> None:
         assert hasattr(pyarchi, "Profile")
 

@@ -87,16 +87,3 @@ class TestServing:
         with pytest.raises(ValidationError):
             Serving(name="s", source=a, target=b, is_nested=True)  # type: ignore[call-arg]
 
-
-# ---------------------------------------------------------------------------
-# Validation xfails
-# ---------------------------------------------------------------------------
-
-
-class TestDeferredValidation:
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Serving direction validation deferred to model-level (ADR-017 ss6)",
-    )
-    def test_serving_wrong_direction_raises(self) -> None:
-        pytest.fail("Model-level validation not yet implemented")

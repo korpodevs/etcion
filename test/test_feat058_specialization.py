@@ -94,16 +94,3 @@ class TestSpecialization:
         assert r.source is a
         assert r.target is b
 
-
-# ---------------------------------------------------------------------------
-# Validation xfails (model-level, deferred per ADR-017 ss6)
-# ---------------------------------------------------------------------------
-
-
-class TestDeferredValidation:
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Same-type constraint deferred to model-level validation (ADR-017 ss6)",
-    )
-    def test_cross_type_specialization_raises(self) -> None:
-        pytest.fail("Model-level validation not yet implemented")

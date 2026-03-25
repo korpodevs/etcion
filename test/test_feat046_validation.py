@@ -89,20 +89,6 @@ class TestCollaborationValidation:
             BusinessCollaboration(name="collab", assigned_elements=[a])
 
 
-# ---------------------------------------------------------------------------
-# STORY-04.6.3: PassiveStructureElement cannot perform behavior (xfail)
-# ---------------------------------------------------------------------------
-
-
-class TestPassiveCannotPerformBehavior:
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Assignment relationship not yet defined (EPIC-005)",
-    )
-    def test_passive_assigned_to_behavior_raises(self) -> None:
-        # Placeholder -- requires Assignment relationship from EPIC-005.
-        pytest.fail("Assignment relationship not yet implemented")
-
 
 # ---------------------------------------------------------------------------
 # STORY-04.6.5: Event.time attribute

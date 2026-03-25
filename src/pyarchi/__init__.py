@@ -6,9 +6,11 @@ from pyarchi.enums import (
     AccessMode,
     Aspect,
     AssociationDirection,
+    ContentCategory,
     InfluenceSign,
     JunctionType,
     Layer,
+    PurposeCategory,
     RelationshipCategory,
 )
 from pyarchi.exceptions import (
@@ -111,6 +113,9 @@ from pyarchi.metamodel.physical import (
     PhysicalActiveStructureElement,
     PhysicalPassiveStructureElement,
 )
+
+# Phase 3: Language customization (EPIC-018)
+from pyarchi.metamodel.profiles import Profile
 from pyarchi.metamodel.relationships import (
     Access,
     Aggregation,
@@ -158,6 +163,9 @@ from pyarchi.metamodel.technology import (
     TechnologyProcess,
     TechnologyService,
 )
+
+# Phase 3: Viewpoints (EPIC-017)
+from pyarchi.metamodel.viewpoints import Concern, View, Viewpoint
 from pyarchi.validation.permissions import is_permitted
 
 SPEC_VERSION: str = "3.2"
@@ -300,4 +308,11 @@ __all__: list[str] = [
     "ImplementationEvent",
     "Plateau",
     "Gap",
+    # Viewpoints & Language Customization (Phase 3)
+    "Viewpoint",
+    "View",
+    "Concern",
+    "Profile",
+    "PurposeCategory",
+    "ContentCategory",
 ]

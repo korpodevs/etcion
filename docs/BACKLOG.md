@@ -242,28 +242,28 @@ Implements XML serialization and deserialization for the Open Group ArchiMate Mo
 ---
 
 ## [EPIC-020] Conformance Cleanup and Phase 3 Public API
-**Status:** To-Do
+**Status:** Complete
 **Priority:** Medium
 
 Resolves all remaining conformance xfails, exports Phase 3 types from the public API, and ensures the conformance test suite passes fully.
 
 ### [FEAT-20.1] Resolve Conformance xfails
-- [ ] [STORY-20.1.1] Remove `xfail` from `TestShouldFeatures.test_viewpoint_mechanism` after EPIC-017 ships
-- [ ] [STORY-20.1.2] Remove `xfail` from `TestShouldFeatures.test_language_customization` after EPIC-018 ships
-- [ ] [STORY-20.1.3] Verify all `TestShallFeatures` tests continue to pass
-- [ ] [STORY-20.1.4] Write test: every Phase 3 concrete class is importable from `pyarchi` top-level
+- [x] [STORY-20.1.1] Remove `xfail` from `TestShouldFeatures.test_viewpoint_mechanism` after EPIC-017 ships
+- [x] [STORY-20.1.2] Remove `xfail` from `TestShouldFeatures.test_language_customization` after EPIC-018 ships
+- [x] [STORY-20.1.3] Verify all `TestShallFeatures` tests continue to pass
+- [x] [STORY-20.1.4] Write test: every Phase 3 concrete class is importable from `pyarchi` top-level
 
 ### [FEAT-20.2] Resolve Deferred Validation xfails
-- [ ] [STORY-20.2.1] Remove `xfail` from `test_feat052_structural.py::TestDeferredValidation` after FEAT-15.1 and FEAT-15.2 ship
-- [ ] [STORY-20.2.2] Remove `xfail` from `test_feat053_serving.py::TestDeferredValidation` after FEAT-15.1 ships
-- [ ] [STORY-20.2.3] Remove `xfail` from `test_feat054_access.py::TestDeferredValidation` after FEAT-15.1 ships
-- [ ] [STORY-20.2.4] Remove `xfail` from `test_feat058_specialization.py::TestDeferredValidation` after FEAT-15.3 ships
-- [ ] [STORY-20.2.5] Remove `xfail` from `test_feat059_junction.py::TestDeferredValidation` after FEAT-15.4 ships
-- [ ] [STORY-20.2.6] Remove `xfail` from `test_feat046_validation.py::TestCollaborationValidation` after FEAT-15.5 ships
-- [ ] [STORY-20.2.7] Remove `xfail` from `test_feat046_validation.py::TestPassiveCannotPerformBehavior` after FEAT-15.6 ships
+- [x] [STORY-20.2.1] Remove `xfail` from `test_feat052_structural.py::TestDeferredValidation` after FEAT-15.1 and FEAT-15.2 ship
+- [x] [STORY-20.2.2] Remove `xfail` from `test_feat053_serving.py::TestDeferredValidation` after FEAT-15.1 ships
+- [x] [STORY-20.2.3] Remove `xfail` from `test_feat054_access.py::TestDeferredValidation` after FEAT-15.1 ships
+- [x] [STORY-20.2.4] Remove `xfail` from `test_feat058_specialization.py::TestDeferredValidation` after FEAT-15.3 ships
+- [x] [STORY-20.2.5] Remove `xfail` from `test_feat059_junction.py::TestDeferredValidation` after FEAT-15.4 ships
+- [x] [STORY-20.2.6] Remove `xfail` from `test_feat046_validation.py::TestCollaborationValidation` after FEAT-15.5 ships
+- [x] [STORY-20.2.7] Remove `xfail` from `test_feat046_validation.py::TestPassiveCannotPerformBehavior` after FEAT-15.6 ships
 
 ### [FEAT-20.3] Update __init__.py Exports
-- [ ] [STORY-20.3.1] Export `Viewpoint`, `View`, `Concern`, `PurposeCategory`, `ContentCategory` from `pyarchi`
-- [ ] [STORY-20.3.2] Export `Profile` from `pyarchi`
-- [ ] [STORY-20.3.3] Update `__all__` list to include all Phase 3 public types
-- [ ] [STORY-20.3.4] Write test: `__all__` list matches the actual public API surface
+- [x] [STORY-20.3.1] Export `Viewpoint`, `View`, `Concern`, `PurposeCategory`, `ContentCategory` from `pyarchi`
+- [x] [STORY-20.3.2] Export `Profile` from `pyarchi`
+- [x] [STORY-20.3.3] Update `__all__` list to include all Phase 3 public types
+- [x] [STORY-20.3.4] Write test: `__all__` list matches the actual public API surface

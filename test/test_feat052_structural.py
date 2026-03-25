@@ -107,23 +107,3 @@ class TestIsNested:
         c = Composition(name="c", source=a, target=b, is_nested=True)
         assert c.is_nested is True
 
-
-# ---------------------------------------------------------------------------
-# Validation xfails (model-level, deferred per ADR-017 ss6)
-# ---------------------------------------------------------------------------
-
-
-class TestDeferredValidation:
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Model-level validation deferred (ADR-017 ss6 / FEAT-05.10/11)",
-    )
-    def test_assignment_wrong_direction_raises(self) -> None:
-        pytest.fail("Model-level validation not yet implemented")
-
-    @pytest.mark.xfail(
-        strict=False,
-        reason="Model-level validation deferred (ADR-017 ss6 / FEAT-05.10/11)",
-    )
-    def test_aggregation_relationship_target_non_composite_source_raises(self) -> None:
-        pytest.fail("Model-level validation not yet implemented")
