@@ -102,26 +102,26 @@ Resolves all deferred model-level validation xfails (ADR-017 ss5/ss6). Adds cons
 ---
 
 ## [EPIC-016] Declarative Relationship Permission Table
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 Replaces the current ad-hoc rule-based `is_permitted()` implementation with a declarative, machine-readable Appendix B table. Enables spec revision updates without code changes.
 
 ### [FEAT-16.1] Permission Table Data Structure
-- [ ] [STORY-16.1.1] Design the permission table data format: `frozenset[tuple[type[Relationship], type[Element], type[Element]]]` loaded from a CSV or embedded data structure
-- [ ] [STORY-16.1.2] Encode all explicit triples from Appendix B of the ArchiMate 3.2 specification (beyond the universal rules already implemented)
-- [ ] [STORY-16.1.3] Write ADR documenting the declarative table approach and migration from rule-based to data-driven
-- [ ] [STORY-16.1.4] Write test: every Appendix B triple is present in the loaded table
+- [x] [STORY-16.1.1] Design the permission table data format: `frozenset[tuple[type[Relationship], type[Element], type[Element]]]` loaded from a CSV or embedded data structure
+- [x] [STORY-16.1.2] Encode all explicit triples from Appendix B of the ArchiMate 3.2 specification (beyond the universal rules already implemented)
+- [x] [STORY-16.1.3] Write ADR documenting the declarative table approach and migration from rule-based to data-driven
+- [x] [STORY-16.1.4] Write test: every Appendix B triple is present in the loaded table
 
 ### [FEAT-16.2] Hierarchical Type Matching
-- [ ] [STORY-16.2.1] Implement type-hierarchy-aware lookup: a permission for `InternalBehaviorElement` as source covers all its subclasses (Business, Application, Technology)
-- [ ] [STORY-16.2.2] Ensure universal rules (Composition, Aggregation, Specialization same-type; Association any-pair) remain as fast-path short-circuits
-- [ ] [STORY-16.2.3] Write test: permission granted for abstract base type also covers concrete subclass queries
+- [x] [STORY-16.2.1] Implement type-hierarchy-aware lookup: a permission for `InternalBehaviorElement` as source covers all its subclasses (Business, Application, Technology)
+- [x] [STORY-16.2.2] Ensure universal rules (Composition, Aggregation, Specialization same-type; Association any-pair) remain as fast-path short-circuits
+- [x] [STORY-16.2.3] Write test: permission granted for abstract base type also covers concrete subclass queries
 
 ### [FEAT-16.3] Permission Table Completeness Audit
-- [ ] [STORY-16.3.1] Add a parametrized test that checks every concrete element type pair against Appendix B expected results
-- [ ] [STORY-16.3.2] Add a parametrized test for all explicitly prohibited triples (e.g., `Realization` targeting `BusinessActor`)
-- [ ] [STORY-16.3.3] Write test: `is_permitted` returns `False` for triples not in the table and not covered by universal rules
+- [x] [STORY-16.3.1] Add a parametrized test that checks every concrete element type pair against Appendix B expected results
+- [x] [STORY-16.3.2] Add a parametrized test for all explicitly prohibited triples (e.g., `Realization` targeting `BusinessActor`)
+- [x] [STORY-16.3.3] Write test: `is_permitted` returns `False` for triples not in the table and not covered by universal rules
 
 ---
 
