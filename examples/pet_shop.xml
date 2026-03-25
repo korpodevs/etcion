@@ -1,0 +1,307 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="id-model-root">
+  <elements>
+    <element identifier="id-b8d64e3e-c1b3-48c9-9dce-6d64cfdbc4ce" xsi:type="Stakeholder">
+      <name>Pet Shop Owner</name>
+    </element>
+    <element identifier="id-82ff0210-81e2-4d6b-a9ba-efcdefc1b5a7" xsi:type="Stakeholder">
+      <name>Customer</name>
+    </element>
+    <element identifier="id-194b7718-602c-469c-944d-82ce9ca30ea1" xsi:type="Driver">
+      <name>Market Growth in Pet Industry</name>
+    </element>
+    <element identifier="id-99964d9a-8456-4806-b3e5-cf6cd850122a" xsi:type="Goal">
+      <name>Increase Annual Revenue by 20%</name>
+    </element>
+    <element identifier="id-2f522b9d-4d44-498f-9cf6-982aebdde474" xsi:type="Goal">
+      <name>Achieve 95% Customer Satisfaction</name>
+    </element>
+    <element identifier="id-8a794969-c029-4e96-96bd-b59d2440a339" xsi:type="Principle">
+      <name>Online-First Sales Channel</name>
+    </element>
+    <element identifier="id-cfb3be23-c836-47e2-ba8c-09f7bd3ec653" xsi:type="Requirement">
+      <name>Real-time Inventory Tracking</name>
+    </element>
+    <element identifier="id-447b513d-cce0-4cc3-b68b-44bba3e12832" xsi:type="Requirement">
+      <name>Secure Payment Processing</name>
+    </element>
+    <element identifier="id-52c24545-022b-4abf-8676-65969632103a" xsi:type="Capability">
+      <name>Pet Sales Capability</name>
+    </element>
+    <element identifier="id-0af28a03-74d6-4b8d-97f8-ddc1cda6fce6" xsi:type="Capability">
+      <name>Pet Care Advisory</name>
+    </element>
+    <element identifier="id-4b957dce-c88c-4329-b044-c2fdd364b0d2" xsi:type="Resource">
+      <name>Trained Staff</name>
+    </element>
+    <element identifier="id-8133d27d-4115-4a7b-b938-3c6c91f33aee" xsi:type="ValueStream">
+      <name>Pet Purchase Journey</name>
+    </element>
+    <element identifier="id-7fdcfcc2-fa0d-4d0c-a0ed-e57131cba3d7" xsi:type="BusinessActor">
+      <name>Store Manager</name>
+    </element>
+    <element identifier="id-151af103-d6cd-4579-be5e-27365394e671" xsi:type="BusinessRole">
+      <name>Sales Clerk</name>
+    </element>
+    <element identifier="id-5b12039f-4f77-4511-9245-67e74f73ce66" xsi:type="BusinessRole">
+      <name>Pet Care Advisor</name>
+    </element>
+    <element identifier="id-9e938a32-aa9f-4861-8687-373e4c66ad7b" xsi:type="BusinessInterface">
+      <name>Storefront</name>
+    </element>
+    <element identifier="id-0c23c3ec-ac39-45da-9bb2-368a462ef89b" xsi:type="BusinessInterface">
+      <name>Website</name>
+    </element>
+    <element identifier="id-13c9ed9b-cb85-465c-ab0c-f6c8b55ea1a1" xsi:type="BusinessProcess">
+      <name>Sell Pet</name>
+    </element>
+    <element identifier="id-2d81a133-80ba-4607-9cfb-4696974dcc09" xsi:type="BusinessProcess">
+      <name>Provide Pet Care Advice</name>
+    </element>
+    <element identifier="id-129cb6b1-cc8b-4879-99a0-ebccceb7366d" xsi:type="BusinessProcess">
+      <name>Restock Inventory</name>
+    </element>
+    <element identifier="id-380d1d51-f911-42d3-95d7-7d5027a0a35d" xsi:type="BusinessFunction">
+      <name>Process Payment</name>
+    </element>
+    <element identifier="id-947c28e0-93f2-4843-8f65-c1a95a1b680a" xsi:type="BusinessService">
+      <name>Pet Sales Service</name>
+    </element>
+    <element identifier="id-ec672718-bdf5-43d1-8efe-01b5d2c50013" xsi:type="BusinessService">
+      <name>Pet Advisory Service</name>
+    </element>
+    <element identifier="id-5a7532a2-116d-49f5-9445-e19ae0444b7e" xsi:type="BusinessObject">
+      <name>Pet</name>
+    </element>
+    <element identifier="id-23e74703-967b-4397-aa23-c4e317753e78" xsi:type="BusinessObject">
+      <name>Sales Order</name>
+    </element>
+    <element identifier="id-0a449e15-6c2d-472e-9cb4-09e630798fef" xsi:type="Contract">
+      <name>Pet Health Warranty</name>
+    </element>
+    <element identifier="id-057bb6fc-e9c8-4cb5-8ba9-19cd79a2c643" xsi:type="Product">
+      <name>Pet Starter Package</name>
+    </element>
+    <element identifier="id-571e48dd-9eff-4d29-84c6-a91678591398" xsi:type="ApplicationComponent">
+      <name>POS System</name>
+    </element>
+    <element identifier="id-352ccdae-1576-4ef2-9d0e-7152bf68fbdf" xsi:type="ApplicationComponent">
+      <name>Inventory Management System</name>
+    </element>
+    <element identifier="id-76e93e24-e408-45b0-88a2-d857f2e31c8b" xsi:type="ApplicationComponent">
+      <name>E-Commerce Platform</name>
+    </element>
+    <element identifier="id-8b202b1d-ac2a-4d4f-93fb-0ac38e6590d0" xsi:type="ApplicationInterface">
+      <name>REST API</name>
+    </element>
+    <element identifier="id-bc859730-ffd4-4adf-8e43-995bd50e55a2" xsi:type="ApplicationService">
+      <name>Checkout Service</name>
+    </element>
+    <element identifier="id-c6ee9d61-a7bf-4bcb-a2e7-2c7207aa09e5" xsi:type="ApplicationService">
+      <name>Product Catalog Service</name>
+    </element>
+    <element identifier="id-9f2ff9bd-8f4d-41d0-8acf-75a3c7d818ef" xsi:type="ApplicationService">
+      <name>Stock Query Service</name>
+    </element>
+    <element identifier="id-d2c1784c-cef9-4bbd-a872-7a8e0016b30c" xsi:type="DataObject">
+      <name>Pet Record</name>
+    </element>
+    <element identifier="id-333b92f6-88fe-4ea9-9f99-f1ba8777d6a5" xsi:type="DataObject">
+      <name>Order Record</name>
+    </element>
+    <element identifier="id-7eac5ab8-b17c-4bf3-a881-32eef5926137" xsi:type="DataObject">
+      <name>Inventory Record</name>
+    </element>
+    <element identifier="id-5d0f9768-b0e4-40e9-a002-3858c5b19755" xsi:type="Node">
+      <name>Application Server</name>
+    </element>
+    <element identifier="id-957cf063-6953-452a-90b1-4d2d18d04589" xsi:type="Device">
+      <name>POS Terminal</name>
+    </element>
+    <element identifier="id-865e3e8f-04fe-43f8-aecf-6066f0a989c4" xsi:type="SystemSoftware">
+      <name>PostgreSQL</name>
+    </element>
+    <element identifier="id-316a9971-995a-4c4b-8211-a7d534765024" xsi:type="SystemSoftware">
+      <name>Nginx</name>
+    </element>
+    <element identifier="id-b43d6462-d85f-4f34-a736-e94d5278b3ca" xsi:type="TechnologyService">
+      <name>Database Service</name>
+    </element>
+    <element identifier="id-ff2343c3-2725-4acb-a6d3-3dca6c97e093" xsi:type="TechnologyService">
+      <name>Web Hosting Service</name>
+    </element>
+    <element identifier="id-ee85a80c-d480-4058-b6e5-604ff2d08767" xsi:type="Artifact">
+      <name>petshop.war</name>
+    </element>
+    <element identifier="id-47ad4820-9f69-4419-a894-401cfb0e55da" xsi:type="Artifact">
+      <name>db-schema.sql</name>
+    </element>
+    <element identifier="id-f83aee7f-86d3-4d9c-b36f-c415709dd7ca" xsi:type="Facility">
+      <name>Main Street Pet Shop</name>
+    </element>
+    <element identifier="id-44a4e1e3-3eb5-4611-a274-1d89b924c12d" xsi:type="Equipment">
+      <name>Cash Register</name>
+    </element>
+    <element identifier="id-983a6bff-f74b-475e-9771-a0da7bd0d525" xsi:type="WorkPackage">
+      <name>Phase 1: Launch E-Commerce</name>
+    </element>
+    <element identifier="id-3de1618a-598d-4eeb-9be4-8ea8ed74165f" xsi:type="WorkPackage">
+      <name>Phase 2: Mobile App</name>
+    </element>
+    <element identifier="id-796fd18d-f09e-40be-814f-0a1d2a74250d" xsi:type="Deliverable">
+      <name>Live E-Commerce Website</name>
+    </element>
+    <element identifier="id-7d872f6f-9348-4e5d-acce-09ee28b6735c" xsi:type="Plateau">
+      <name>Current State</name>
+    </element>
+    <element identifier="id-07bc07fc-c2bc-48d5-baad-cc6134bb002c" xsi:type="Plateau">
+      <name>Target State: Omnichannel</name>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="id-08629b1a-2180-43da-a1d5-8cfd054bc2ae" source="id-194b7718-602c-469c-944d-82ce9ca30ea1" target="id-99964d9a-8456-4806-b3e5-cf6cd850122a" xsi:type="Influence" modifier="+">
+      <name>drives</name>
+    </relationship>
+    <relationship identifier="id-f36733f4-098f-48cd-8520-b1dac914f4a9" source="id-194b7718-602c-469c-944d-82ce9ca30ea1" target="id-2f522b9d-4d44-498f-9cf6-982aebdde474" xsi:type="Influence" modifier="+">
+      <name>drives</name>
+    </relationship>
+    <relationship identifier="id-a96a99cb-86c0-4b2d-8c08-477255a0d5c8" source="id-b8d64e3e-c1b3-48c9-9dce-6d64cfdbc4ce" target="id-99964d9a-8456-4806-b3e5-cf6cd850122a" xsi:type="Association" isDirected="false">
+      <name>concerned with</name>
+    </relationship>
+    <relationship identifier="id-6cd3b9a0-effd-4a96-9a3f-67b5a83c4022" source="id-82ff0210-81e2-4d6b-a9ba-efcdefc1b5a7" target="id-2f522b9d-4d44-498f-9cf6-982aebdde474" xsi:type="Association" isDirected="false">
+      <name>concerned with</name>
+    </relationship>
+    <relationship identifier="id-f74904fa-8a4b-46f8-9447-caab0efd1902" source="id-8a794969-c029-4e96-96bd-b59d2440a339" target="id-99964d9a-8456-4806-b3e5-cf6cd850122a" xsi:type="Association" isDirected="false">
+      <name>supports</name>
+    </relationship>
+    <relationship identifier="id-8af4bbfc-bdc7-43a3-a2ce-8a4d59cb2fef" source="id-52c24545-022b-4abf-8676-65969632103a" target="id-99964d9a-8456-4806-b3e5-cf6cd850122a" xsi:type="Realization">
+      <name>realizes</name>
+    </relationship>
+    <relationship identifier="id-c37cddf5-9e90-4ee7-be39-773bf437a90d" source="id-0af28a03-74d6-4b8d-97f8-ddc1cda6fce6" target="id-2f522b9d-4d44-498f-9cf6-982aebdde474" xsi:type="Realization">
+      <name>realizes</name>
+    </relationship>
+    <relationship identifier="id-024960fd-19c4-4947-b420-854d4ded8eef" source="id-4b957dce-c88c-4329-b044-c2fdd364b0d2" target="id-52c24545-022b-4abf-8676-65969632103a" xsi:type="Assignment">
+      <name>assigned</name>
+    </relationship>
+    <relationship identifier="id-ec35c78e-5aee-458f-a12d-1b6896340a44" source="id-4b957dce-c88c-4329-b044-c2fdd364b0d2" target="id-0af28a03-74d6-4b8d-97f8-ddc1cda6fce6" xsi:type="Assignment">
+      <name>assigned</name>
+    </relationship>
+    <relationship identifier="id-5de80fd1-7567-409c-8103-0f747de7f2ff" source="id-7fdcfcc2-fa0d-4d0c-a0ed-e57131cba3d7" target="id-129cb6b1-cc8b-4879-99a0-ebccceb7366d" xsi:type="Assignment">
+      <name>manages</name>
+    </relationship>
+    <relationship identifier="id-f9cc1dae-9d2f-46b4-8186-00fa663232b5" source="id-151af103-d6cd-4579-be5e-27365394e671" target="id-13c9ed9b-cb85-465c-ab0c-f6c8b55ea1a1" xsi:type="Assignment">
+      <name>sells</name>
+    </relationship>
+    <relationship identifier="id-27d13f5d-ef85-4b15-b5c1-ee9b987ae1c6" source="id-5b12039f-4f77-4511-9245-67e74f73ce66" target="id-2d81a133-80ba-4607-9cfb-4696974dcc09" xsi:type="Assignment">
+      <name>advises</name>
+    </relationship>
+    <relationship identifier="id-20cb78b9-3234-4472-b9f4-f70f09bab7e8" source="id-151af103-d6cd-4579-be5e-27365394e671" target="id-380d1d51-f911-42d3-95d7-7d5027a0a35d" xsi:type="Assignment">
+      <name>processes</name>
+    </relationship>
+    <relationship identifier="id-9aa0474c-142c-44aa-a601-9915956fa4db" source="id-947c28e0-93f2-4843-8f65-c1a95a1b680a" target="id-13c9ed9b-cb85-465c-ab0c-f6c8b55ea1a1" xsi:type="Serving">
+      <name>enables</name>
+    </relationship>
+    <relationship identifier="id-4a4acc59-48c8-4003-9ab7-91e8e770019b" source="id-ec672718-bdf5-43d1-8efe-01b5d2c50013" target="id-2d81a133-80ba-4607-9cfb-4696974dcc09" xsi:type="Serving">
+      <name>enables</name>
+    </relationship>
+    <relationship identifier="id-a3079966-cce3-450d-acc6-095b95b4f1c7" source="id-13c9ed9b-cb85-465c-ab0c-f6c8b55ea1a1" target="id-23e74703-967b-4397-aa23-c4e317753e78" xsi:type="Access" accessType="ReadWrite">
+      <name>reads/writes</name>
+    </relationship>
+    <relationship identifier="id-fa9c3d22-438c-42d5-820b-04a35a8da7a4" source="id-13c9ed9b-cb85-465c-ab0c-f6c8b55ea1a1" target="id-5a7532a2-116d-49f5-9445-e19ae0444b7e" xsi:type="Access" accessType="Read">
+      <name>reads</name>
+    </relationship>
+    <relationship identifier="id-c5b72a1d-8e0a-450d-804d-1603157fac17" source="id-129cb6b1-cc8b-4879-99a0-ebccceb7366d" target="id-5a7532a2-116d-49f5-9445-e19ae0444b7e" xsi:type="Access" accessType="Write">
+      <name>writes</name>
+    </relationship>
+    <relationship identifier="id-7db449ec-3bf8-43df-a877-bea4807cc71e" source="id-057bb6fc-e9c8-4cb5-8ba9-19cd79a2c643" target="id-057bb6fc-e9c8-4cb5-8ba9-19cd79a2c643" xsi:type="Aggregation">
+      <name>includes</name>
+    </relationship>
+    <relationship identifier="id-8bf08fbd-2bfc-4aa8-815d-0d0f20895760" source="id-13c9ed9b-cb85-465c-ab0c-f6c8b55ea1a1" target="id-380d1d51-f911-42d3-95d7-7d5027a0a35d" xsi:type="Flow">
+      <name>order flow</name>
+    </relationship>
+    <relationship identifier="id-f43597ad-6ce0-4f98-8370-63b29e4d32b6" source="id-380d1d51-f911-42d3-95d7-7d5027a0a35d" target="id-129cb6b1-cc8b-4879-99a0-ebccceb7366d" xsi:type="Triggering">
+      <name>triggers</name>
+    </relationship>
+    <relationship identifier="id-7ab22958-d2fa-469e-9a9e-2b0f492c6d3d" source="id-9e938a32-aa9f-4861-8687-373e4c66ad7b" target="id-947c28e0-93f2-4843-8f65-c1a95a1b680a" xsi:type="Assignment">
+      <name>exposes</name>
+    </relationship>
+    <relationship identifier="id-8a7ab03e-522b-4dd4-8fe3-601e655a6f85" source="id-0c23c3ec-ac39-45da-9bb2-368a462ef89b" target="id-947c28e0-93f2-4843-8f65-c1a95a1b680a" xsi:type="Assignment">
+      <name>exposes</name>
+    </relationship>
+    <relationship identifier="id-9e59caa0-a1a5-4ad8-90ea-1d551eda1cca" source="id-571e48dd-9eff-4d29-84c6-a91678591398" target="id-bc859730-ffd4-4adf-8e43-995bd50e55a2" xsi:type="Assignment">
+      <name>runs</name>
+    </relationship>
+    <relationship identifier="id-ef4b7ccd-da04-45cd-a5c0-0ee08d20955e" source="id-352ccdae-1576-4ef2-9d0e-7152bf68fbdf" target="id-9f2ff9bd-8f4d-41d0-8acf-75a3c7d818ef" xsi:type="Assignment">
+      <name>runs</name>
+    </relationship>
+    <relationship identifier="id-be082ec3-bab4-4f16-9e09-d7c22d6f122a" source="id-76e93e24-e408-45b0-88a2-d857f2e31c8b" target="id-c6ee9d61-a7bf-4bcb-a2e7-2c7207aa09e5" xsi:type="Assignment">
+      <name>runs</name>
+    </relationship>
+    <relationship identifier="id-e622de81-9744-485f-8b55-ee8ce8cb19f5" source="id-bc859730-ffd4-4adf-8e43-995bd50e55a2" target="id-333b92f6-88fe-4ea9-9f99-f1ba8777d6a5" xsi:type="Access" accessType="Write">
+      <name>writes</name>
+    </relationship>
+    <relationship identifier="id-9036f7c6-2ec7-40bd-a3c5-d49e8e2dc9ef" source="id-9f2ff9bd-8f4d-41d0-8acf-75a3c7d818ef" target="id-7eac5ab8-b17c-4bf3-a881-32eef5926137" xsi:type="Access" accessType="Read">
+      <name>reads</name>
+    </relationship>
+    <relationship identifier="id-f3a64c20-f24a-41a1-b13d-422627a277ac" source="id-c6ee9d61-a7bf-4bcb-a2e7-2c7207aa09e5" target="id-d2c1784c-cef9-4bbd-a872-7a8e0016b30c" xsi:type="Access" accessType="Read">
+      <name>reads</name>
+    </relationship>
+    <relationship identifier="id-192bc939-252f-4bfa-9fb7-7403bf1762f9" source="id-8b202b1d-ac2a-4d4f-93fb-0ac38e6590d0" target="id-76e93e24-e408-45b0-88a2-d857f2e31c8b" xsi:type="Serving">
+      <name>exposes</name>
+    </relationship>
+    <relationship identifier="id-c75e3384-087c-49c3-ac36-e10c86073d4d" source="id-bc859730-ffd4-4adf-8e43-995bd50e55a2" target="id-13c9ed9b-cb85-465c-ab0c-f6c8b55ea1a1" xsi:type="Serving">
+      <name>supports</name>
+    </relationship>
+    <relationship identifier="id-5fa52aeb-b20b-49cb-8dbf-518fa493a2e9" source="id-c6ee9d61-a7bf-4bcb-a2e7-2c7207aa09e5" target="id-13c9ed9b-cb85-465c-ab0c-f6c8b55ea1a1" xsi:type="Serving">
+      <name>supports</name>
+    </relationship>
+    <relationship identifier="id-0e7cb40a-4f0b-4404-a43f-575c35b49b44" source="id-9f2ff9bd-8f4d-41d0-8acf-75a3c7d818ef" target="id-129cb6b1-cc8b-4879-99a0-ebccceb7366d" xsi:type="Serving">
+      <name>supports</name>
+    </relationship>
+    <relationship identifier="id-73750ce9-f082-4831-9837-0b1c1f3e8ad3" source="id-d2c1784c-cef9-4bbd-a872-7a8e0016b30c" target="id-5a7532a2-116d-49f5-9445-e19ae0444b7e" xsi:type="Realization">
+      <name>realizes</name>
+    </relationship>
+    <relationship identifier="id-11c850eb-3d9d-459a-a85d-c9eaf11f1703" source="id-333b92f6-88fe-4ea9-9f99-f1ba8777d6a5" target="id-23e74703-967b-4397-aa23-c4e317753e78" xsi:type="Realization">
+      <name>realizes</name>
+    </relationship>
+    <relationship identifier="id-b9024273-53cd-4a4d-ab24-cff5133f8920" source="id-5d0f9768-b0e4-40e9-a002-3858c5b19755" target="id-b43d6462-d85f-4f34-a736-e94d5278b3ca" xsi:type="Assignment">
+      <name>hosts</name>
+    </relationship>
+    <relationship identifier="id-12c93593-5465-4a17-94ea-7da1ba02ffa7" source="id-5d0f9768-b0e4-40e9-a002-3858c5b19755" target="id-ff2343c3-2725-4acb-a6d3-3dca6c97e093" xsi:type="Assignment">
+      <name>hosts</name>
+    </relationship>
+    <relationship identifier="id-9571fc3f-2ddb-4222-bf52-32d3e1928bd3" source="id-b43d6462-d85f-4f34-a736-e94d5278b3ca" target="id-352ccdae-1576-4ef2-9d0e-7152bf68fbdf" xsi:type="Association" isDirected="false">
+      <name>supports</name>
+    </relationship>
+    <relationship identifier="id-698f749e-2eb6-4d8d-9302-acd85d398d17" source="id-ff2343c3-2725-4acb-a6d3-3dca6c97e093" target="id-76e93e24-e408-45b0-88a2-d857f2e31c8b" xsi:type="Association" isDirected="false">
+      <name>supports</name>
+    </relationship>
+    <relationship identifier="id-0067c626-b0bd-4163-93db-3898fe84d48b" source="id-ee85a80c-d480-4058-b6e5-604ff2d08767" target="id-76e93e24-e408-45b0-88a2-d857f2e31c8b" xsi:type="Realization">
+      <name>deploys</name>
+    </relationship>
+    <relationship identifier="id-9f383684-a530-4106-8b34-6ef41886f9a7" source="id-47ad4820-9f69-4419-a894-401cfb0e55da" target="id-d2c1784c-cef9-4bbd-a872-7a8e0016b30c" xsi:type="Realization">
+      <name>deploys</name>
+    </relationship>
+    <relationship identifier="id-20a37f9a-8876-4db5-a788-d9badee527f1" source="id-f83aee7f-86d3-4d9c-b36f-c415709dd7ca" target="id-ff2343c3-2725-4acb-a6d3-3dca6c97e093" xsi:type="Assignment">
+      <name>houses</name>
+    </relationship>
+    <relationship identifier="id-8e76501d-52b5-469c-a91d-fce565d9fe63" source="id-44a4e1e3-3eb5-4611-a274-1d89b924c12d" target="id-b43d6462-d85f-4f34-a736-e94d5278b3ca" xsi:type="Assignment">
+      <name>powers</name>
+    </relationship>
+    <relationship identifier="id-58c3b58f-4df6-4c3c-a3bd-844e4dcbaf3a" source="id-7fdcfcc2-fa0d-4d0c-a0ed-e57131cba3d7" target="id-983a6bff-f74b-475e-9771-a0da7bd0d525" xsi:type="Assignment">
+      <name>delivers</name>
+    </relationship>
+    <relationship identifier="id-b1862db5-492f-4fb8-8a3e-ca3b8402fe72" source="id-796fd18d-f09e-40be-814f-0a1d2a74250d" target="id-76e93e24-e408-45b0-88a2-d857f2e31c8b" xsi:type="Realization">
+      <name>produces</name>
+    </relationship>
+    <relationship identifier="id-87d2fb70-3c7c-4161-963c-4c4d69eba44a" source="id-0a449e15-6c2d-472e-9cb4-09e630798fef" target="id-0a449e15-6c2d-472e-9cb4-09e630798fef" xsi:type="Specialization">
+      <name>specializes</name>
+    </relationship>
+    <relationship identifier="id-e6f4644c-8026-493c-8504-c3b99d08a7cc" source="id-352ccdae-1576-4ef2-9d0e-7152bf68fbdf" target="id-cfb3be23-c836-47e2-ba8c-09f7bd3ec653" xsi:type="Realization">
+      <name>satisfies</name>
+    </relationship>
+    <relationship identifier="id-1e71c0b8-aa65-4fba-b2a3-ff3dcbfb6ef4" source="id-380d1d51-f911-42d3-95d7-7d5027a0a35d" target="id-447b513d-cce0-4cc3-b68b-44bba3e12832" xsi:type="Realization">
+      <name>satisfies</name>
+    </relationship>
+  </relationships>
+</model>

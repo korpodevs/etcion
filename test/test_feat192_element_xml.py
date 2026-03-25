@@ -12,7 +12,7 @@ from lxml import etree  # noqa: E402
 from pyarchi.metamodel.application import DataObject  # noqa: E402
 from pyarchi.metamodel.business import BusinessActor  # noqa: E402
 from pyarchi.metamodel.motivation import Goal  # noqa: E402
-from pyarchi.serialization.registry import ARCHIMATE_NS  # noqa: E402
+from pyarchi.serialization.registry import ARCHIMATE_NS, XSI_NS  # noqa: E402
 from pyarchi.serialization.xml import _to_exchange_id, serialize_element  # noqa: E402
 
 
@@ -39,7 +39,7 @@ class TestSerializeElement:
     def test_business_actor_type_attr(self):
         actor = BusinessActor(name="Alice")
         el = serialize_element(actor)
-        assert el.get(f"{{{ARCHIMATE_NS}}}type") == "BusinessActor"
+        assert el.get(f"{{{XSI_NS}}}type") == "BusinessActor"
 
     def test_name_sub_element(self):
         actor = BusinessActor(name="Alice")
@@ -64,12 +64,12 @@ class TestSerializeElement:
     def test_data_object_type(self):
         obj = DataObject(name="Customer Record")
         el = serialize_element(obj)
-        assert el.get(f"{{{ARCHIMATE_NS}}}type") == "DataObject"
+        assert el.get(f"{{{XSI_NS}}}type") == "DataObject"
 
     def test_goal_type(self):
         g = Goal(name="Increase Revenue")
         el = serialize_element(g)
-        assert el.get(f"{{{ARCHIMATE_NS}}}type") == "Goal"
+        assert el.get(f"{{{XSI_NS}}}type") == "Goal"
 
     def test_unregistered_type_raises_key_error(self):
         """A type not in the registry should raise KeyError."""

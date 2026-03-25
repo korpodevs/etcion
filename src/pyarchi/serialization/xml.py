@@ -18,7 +18,7 @@ except ImportError as exc:
 
 from pyarchi.metamodel.concepts import Concept, Element, Relationship
 from pyarchi.metamodel.model import Model
-from pyarchi.serialization.registry import ARCHIMATE_NS, NSMAP, TYPE_REGISTRY
+from pyarchi.serialization.registry import ARCHIMATE_NS, NSMAP, TYPE_REGISTRY, XSI_NS
 
 # Reverse registry: xml_tag -> concrete Concept subclass.
 # Built once at module load from TYPE_REGISTRY.
@@ -35,7 +35,7 @@ def serialize_element(elem: Element) -> etree._Element:
     desc = TYPE_REGISTRY[type(elem)]
     el = etree.Element(f"{{{ARCHIMATE_NS}}}element", nsmap=NSMAP)
     el.set("identifier", _to_exchange_id(elem.id))
-    el.set(f"{{{ARCHIMATE_NS}}}type", desc.xml_tag)
+    el.set(f"{{{XSI_NS}}}type", desc.xml_tag)
 
     name_el = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}name")
     name_el.text = elem.name
@@ -54,7 +54,7 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
     el.set("identifier", _to_exchange_id(rel.id))
     el.set("source", _to_exchange_id(rel.source.id))
     el.set("target", _to_exchange_id(rel.target.id))
-    el.set(f"{{{ARCHIMATE_NS}}}type", desc.xml_tag)
+    el.set(f"{{{XSI_NS}}}type", desc.xml_tag)
 
     if rel.name:
         name_el = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}name")
@@ -116,7 +116,7 @@ def _deserialize_element(node: etree._Element) -> Element | None:
     Returns ``None`` and emits a :func:`warnings.warn` when the ArchiMate
     type attribute is not registered in ``_TAG_TO_TYPE``.
     """
-    type_attr = node.get(f"{{{ARCHIMATE_NS}}}type")
+    type_attr = node.get(f"{{{XSI_NS}}}type")
     if type_attr not in _TAG_TO_TYPE:
         warnings.warn(f"Unknown element type: {type_attr}", stacklevel=2)
         return None
@@ -139,7 +139,7 @@ def _deserialize_relationship(
     IDs, e.g. ``id-<uuid>``).  Returns ``None`` and emits a warning when the
     type is unknown or a reference cannot be resolved.
     """
-    type_attr = node.get(f"{{{ARCHIMATE_NS}}}type")
+    type_attr = node.get(f"{{{XSI_NS}}}type")
     if type_attr not in _TAG_TO_TYPE:
         warnings.warn(f"Unknown relationship type: {type_attr}", stacklevel=2)
         return None

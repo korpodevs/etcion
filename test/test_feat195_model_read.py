@@ -93,13 +93,13 @@ class TestReadModel:
 class TestUnknownElements:
     def test_unknown_type_warns(self):
         """Manually build XML with an unknown element type."""
-        from pyarchi.serialization.registry import ARCHIMATE_NS, NSMAP
+        from pyarchi.serialization.registry import ARCHIMATE_NS, NSMAP, XSI_NS
 
         root = etree.Element(f"{{{ARCHIMATE_NS}}}model", nsmap=NSMAP)
         elems = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}elements")
         fake = etree.SubElement(elems, f"{{{ARCHIMATE_NS}}}element")
         fake.set("identifier", "id-fake-001")
-        fake.set(f"{{{ARCHIMATE_NS}}}type", "FutureElementType")
+        fake.set(f"{{{XSI_NS}}}type", "FutureElementType")
         name_el = etree.SubElement(fake, f"{{{ARCHIMATE_NS}}}name")
         name_el.text = "Unknown"
         tree = etree.ElementTree(root)

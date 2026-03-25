@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="id-9793a012ae264f4a9c51e3f837c24b26">
+  <name xml:lang="en">(new model)</name>
+  <elements>
+    <element identifier="id-c0a3935c8bf84e28a76f335aa2898024" xsi:type="BusinessActor">
+      <name xml:lang="en">python-package-architect</name>
+    </element>
+    <element identifier="id-b9fcaa0430444fcf807487e8b8e740ec" xsi:type="BusinessRole">
+      <name xml:lang="en">Architect</name>
+    </element>
+    <element identifier="id-3a2a11cada6046faa52db825b557b9ee" xsi:type="Driver">
+      <name xml:lang="en">Market Growth in Pet Industry</name>
+    </element>
+    <element identifier="id-297e36e1afdf4ed1af296fcbfba28ce6" xsi:type="Goal">
+      <name xml:lang="en">Increase Annual Revenue by 20%</name>
+    </element>
+    <element identifier="id-85138f0fe43749078afd0d74f77985f0" xsi:type="Goal">
+      <name xml:lang="en">Achieve 95% Customer Satisfaction</name>
+    </element>
+    <element identifier="id-0742c8baa4464c4a90548071a2c51169" xsi:type="Principle">
+      <name xml:lang="en">Online-First Sales Channel</name>
+    </element>
+    <element identifier="id-7ee6a1e8c9cd4c639e38f952896b9174" xsi:type="Requirement">
+      <name xml:lang="en">Real-Time Inventory Tracking</name>
+    </element>
+    <element identifier="id-6607980c2df7408a8b8371ac2f734087" xsi:type="Requirement">
+      <name xml:lang="en">Secure Payment Processing</name>
+    </element>
+    <element identifier="id-79bc19f5870345e9b5aa1aac4d761b24" xsi:type="Stakeholder">
+      <name xml:lang="en">Pet Shop Owner</name>
+    </element>
+    <element identifier="id-0f6a4e15f5384be18ef9d461b1ff5c88" xsi:type="Stakeholder">
+      <name xml:lang="en">Customer</name>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="id-94e9d8c9d0184d6891869dcb9b7af6db" source="id-3a2a11cada6046faa52db825b557b9ee" target="id-297e36e1afdf4ed1af296fcbfba28ce6" xsi:type="Influence" modifier="+" />
+    <relationship identifier="id-2ef12713283f4e519beb3738a2f48ae8" source="id-3a2a11cada6046faa52db825b557b9ee" target="id-85138f0fe43749078afd0d74f77985f0" xsi:type="Influence" modifier="+">
+      <name xml:lang="en">Drives</name>
+    </relationship>
+  </relationships>
+  <organizations>
+    <item>
+      <label xml:lang="en">Business</label>
+      <item identifierRef="id-c0a3935c8bf84e28a76f335aa2898024" />
+      <item identifierRef="id-b9fcaa0430444fcf807487e8b8e740ec" />
+    </item>
+    <item>
+      <label xml:lang="en">Motivation</label>
+      <item identifierRef="id-3a2a11cada6046faa52db825b557b9ee" />
+      <item identifierRef="id-297e36e1afdf4ed1af296fcbfba28ce6" />
+      <item identifierRef="id-85138f0fe43749078afd0d74f77985f0" />
+      <item identifierRef="id-0742c8baa4464c4a90548071a2c51169" />
+      <item identifierRef="id-7ee6a1e8c9cd4c639e38f952896b9174" />
+      <item identifierRef="id-6607980c2df7408a8b8371ac2f734087" />
+      <item identifierRef="id-79bc19f5870345e9b5aa1aac4d761b24" />
+      <item identifierRef="id-0f6a4e15f5384be18ef9d461b1ff5c88" />
+    </item>
+    <item>
+      <label xml:lang="en">Relations</label>
+      <item identifierRef="id-94e9d8c9d0184d6891869dcb9b7af6db" />
+      <item identifierRef="id-2ef12713283f4e519beb3738a2f48ae8" />
+    </item>
+    <item>
+      <label xml:lang="en">Views</label>
+      <item identifierRef="id-bb9e0e0e14114864b22c3fda4d3c6b26" />
+    </item>
+  </organizations>
+  <views>
+    <diagrams>
+      <view identifier="id-bb9e0e0e14114864b22c3fda4d3c6b26" xsi:type="Diagram">
+        <name xml:lang="en">Default View</name>
+        <node identifier="id-83a1bd2503884bda9f77b2a02b022e16" elementRef="id-3a2a11cada6046faa52db825b557b9ee" xsi:type="Element" x="480" y="84" w="120" h="55">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Sans" size="9">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-491049f33a6b402fae779e4bce132752" elementRef="id-297e36e1afdf4ed1af296fcbfba28ce6" xsi:type="Element" x="564" y="252" w="159" h="57">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Sans" size="9">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-20223fbfcc2c471989c9b91de36deef1" elementRef="id-85138f0fe43749078afd0d74f77985f0" xsi:type="Element" x="348" y="253" w="159" h="55">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Sans" size="9">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-a9bed02136f84d30881765aa4c1839b1" elementRef="id-0742c8baa4464c4a90548071a2c51169" xsi:type="Element" x="436" y="394" w="120" h="55">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Sans" size="9">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-e6be413230f343f493ebbc6d0b3e8ac2" elementRef="id-7ee6a1e8c9cd4c639e38f952896b9174" xsi:type="Element" x="744" y="441" w="120" h="55">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Sans" size="9">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-8fc671abca63447ea6b6e6cf9132b96d" elementRef="id-6607980c2df7408a8b8371ac2f734087" xsi:type="Element" x="782" y="540" w="120" h="55">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Sans" size="9">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-b5dcd7aebf7341fd8dcb7485510e19fa" elementRef="id-79bc19f5870345e9b5aa1aac4d761b24" xsi:type="Element" x="192" y="258" w="120" h="55">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Sans" size="9">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-80c7a421f9e8456ebf2a9d725646a21a" elementRef="id-0f6a4e15f5384be18ef9d461b1ff5c88" xsi:type="Element" x="192" y="394" w="120" h="55">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Sans" size="9">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <connection identifier="id-62d86bbcaee346119e4001cfafe772cf" relationshipRef="id-2ef12713283f4e519beb3738a2f48ae8" xsi:type="Relationship" source="id-83a1bd2503884bda9f77b2a02b022e16" target="id-20223fbfcc2c471989c9b91de36deef1">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Sans" size="9">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+      </view>
+    </diagrams>
+  </views>
+</model>

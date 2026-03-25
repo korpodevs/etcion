@@ -18,7 +18,7 @@ from pyarchi.metamodel.relationships import (  # noqa: E402
     Influence,
     Serving,
 )
-from pyarchi.serialization.registry import ARCHIMATE_NS  # noqa: E402
+from pyarchi.serialization.registry import ARCHIMATE_NS, XSI_NS  # noqa: E402
 from pyarchi.serialization.xml import _to_exchange_id, serialize_relationship  # noqa: E402
 
 
@@ -43,7 +43,7 @@ class TestSerializeSimpleRelationship:
         b = ApplicationComponent(name="App")
         rel = Serving(name="serves", source=a, target=b)
         el = serialize_relationship(rel)
-        assert el.get(f"{{{ARCHIMATE_NS}}}type") == "Serving"
+        assert el.get(f"{{{XSI_NS}}}type") == "Serving"
 
     def test_composition_no_extra_attrs(self):
         a = BusinessActor(name="Parent")

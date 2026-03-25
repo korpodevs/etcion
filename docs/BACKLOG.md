@@ -1,10 +1,10 @@
 ---
 project: pyarchi
-phase: 3
+phase: 4
 last_updated: 2026-03-25
-total_epics: 21
-total_features: 79
-total_stories: 311
+total_epics: 29
+total_features: 108
+total_stories: 453
 ---
 
 # pyarchi Backlog
@@ -50,220 +50,295 @@ Detailed history is preserved in git (branch `develop`, up to commit `5b557e8`).
 
 ---
 
-## Phase 3 — Model Validation, Viewpoints, Serialization, and Customization
+## Phase 3 — Completed
 
-Phase 3 covers the remaining specification requirements not addressed in Phases 1 and 2: model-level validation enforcement, the complete Appendix B permission table as declarative data, the viewpoint mechanism (Requirement 14), language customization, the Open Group Exchange Format serialization layer, and conformance cleanup.
+Phase 3 covered model-level validation enforcement, the complete Appendix B permission table as declarative data, the viewpoint mechanism (Requirement 14), language customization (Chapter 14), the Open Group Exchange Format serialization layer (XML and JSON), and conformance cleanup resolving all deferred xfails.
+
+All 6 epics (EPIC-015 through EPIC-020), 27 features, and 112 stories are complete.
+Detailed history is preserved in git (branch `develop`).
+
+| Epic | Title | Status |
+|------|-------|--------|
+| EPIC-015 | Model-Level Validation Engine | Complete |
+| EPIC-016 | Declarative Relationship Permission Table | Complete |
+| EPIC-017 | Viewpoint Mechanism (Requirement 14) | Complete |
+| EPIC-018 | Language Customization Mechanism | Complete |
+| EPIC-019 | Open Group Exchange Format Serialization | Complete |
+| EPIC-020 | Conformance Cleanup and Phase 3 Public API | Complete |
 
 ---
 
-## [EPIC-015] Model-Level Validation Engine
-**Status:** Complete
+## Phase 4 — Production Readiness, Tooling, and Extended Features
+
+Phase 4 focuses on production readiness: performance optimization for large models, a predefined viewpoint catalogue, a model querying API, model comparison utilities, a plugin/extension system, comprehensive documentation, packaging/distribution, CLI tooling, and Archi tool interoperability testing.
+
+---
+
+## [EPIC-021] Performance Optimization
+**Status:** To-Do
 **Priority:** High
 
-Resolves all deferred model-level validation xfails (ADR-017 ss5/ss6). Adds construction-time and model-time enforcement of relationship direction, source/target type constraints, and Junction homogeneity.
+Optimize runtime performance for large-scale enterprise models (10k+ elements). Address memory footprint, import speed, and permission lookup latency.
 
-### [FEAT-15.1] Relationship Direction Enforcement
-- [x] [STORY-15.1.1] Implement `Assignment` direction validation: source must be active structure or behavior, target must be behavior or passive structure; raise `ValidationError` on wrong direction
-- [x] [STORY-15.1.2] Implement `Access` direction validation: source must be behavior or active structure, target must be passive structure; raise `ValidationError` on wrong direction
-- [x] [STORY-15.1.3] Implement `Serving` direction validation: source is provider, target is consumer; raise `ValidationError` on wrong direction
-- [x] [STORY-15.1.4] Implement `Realization` direction validation: source is lower abstraction (realizer), target is higher abstraction (realized); raise `ValidationError` on wrong direction
-- [x] [STORY-15.1.5] Write test: `Assignment(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError` (resolve xfail in `test_feat052_structural.py`)
-- [x] [STORY-15.1.6] Write test: `Access(source=PassiveStructureElement, target=BehaviorElement)` raises `ValidationError` (resolve xfail in `test_feat054_access.py`)
-- [x] [STORY-15.1.7] Write test: `Serving` wrong direction raises `ValidationError` (resolve xfail in `test_feat053_serving.py`)
+### [FEAT-21.1] Lazy Module Loading
+- [ ] [STORY-21.1.1] Implement lazy imports for layer modules (business, application, technology, physical, motivation, strategy, implementation_migration) so that importing `pyarchi` does not eagerly load all concrete classes
+- [ ] [STORY-21.1.2] Add `__getattr__` hook on `pyarchi` top-level to defer layer module imports until first access
+- [ ] [STORY-21.1.3] Write test: `import pyarchi` completes without importing `lxml` unless serialization is used
+- [ ] [STORY-21.1.4] Write benchmark: measure import time before and after lazy loading; target < 100ms for base import
 
-### [FEAT-15.2] Aggregation/Composition Target Validation
-- [x] [STORY-15.2.1] Implement rule: when target of `Aggregation` or `Composition` is a `Relationship`, source must be a `CompositeElement`; raise `ValidationError` otherwise
-- [x] [STORY-15.2.2] Write test: `Aggregation(source=NonComposite, target=some_relationship)` raises `ValidationError` (resolve xfail in `test_feat052_structural.py`)
+### [FEAT-21.2] Permission Cache Warming
+- [ ] [STORY-21.2.1] Implement LRU cache on `is_permitted()` to avoid repeated hierarchical type resolution
+- [ ] [STORY-21.2.2] Add `warm_cache()` utility that pre-computes all concrete type-pair permissions at startup
+- [ ] [STORY-21.2.3] Write benchmark: `is_permitted()` lookup time for 10,000 calls before and after caching
+- [ ] [STORY-21.2.4] Write test: cache invalidation works correctly when a `Profile` adds new specialization types
 
-### [FEAT-15.3] Specialization Same-Type Enforcement
-- [x] [STORY-15.3.1] Implement construction-time or model-time check: `Specialization` only permitted between same concrete type; raise `ValidationError` for cross-type
-- [x] [STORY-15.3.2] Write test: `Specialization(source=BusinessProcess, target=ApplicationFunction)` raises `ValidationError` (resolve xfail in `test_feat058_specialization.py`)
+### [FEAT-21.3] Model Memory Optimization
+- [ ] [STORY-21.3.1] Profile memory usage of a 10,000-element model using `tracemalloc`; document baseline
+- [ ] [STORY-21.3.2] Implement `__slots__` on high-frequency classes (concrete elements, relationships) where compatible with Pydantic
+- [ ] [STORY-21.3.3] Evaluate and implement ID interning for repeated identifier strings
+- [ ] [STORY-21.3.4] Write benchmark: memory footprint of 10,000-element model before and after optimization
 
-### [FEAT-15.4] Junction Validation
-- [x] [STORY-15.4.1] Implement validation: all relationships connected to a `Junction` must be of the same concrete relationship type; raise `ValidationError` otherwise
-- [x] [STORY-15.4.2] Implement validation: endpoint elements connected via a `Junction` chain must permit the relationship type per Appendix B
-- [x] [STORY-15.4.3] Write test: connecting `Composition` and `Serving` to the same `Junction` raises `ValidationError` (resolve xfail in `test_feat059_junction.py`)
-- [x] [STORY-15.4.4] Write test: endpoint permission violation through `Junction` raises `ValidationError` (resolve xfail in `test_feat059_junction.py`)
-
-### [FEAT-15.5] Collaboration Minimum-Two Constraint Enforcement
-- [x] [STORY-15.5.1] Implement model-level validation: `Collaboration` subclasses (Business, Application, Technology) must have at least 2 internal active structure elements assigned; raise `ValidationError` otherwise
-- [x] [STORY-15.5.2] Write test: `BusinessCollaboration` with only 1 assigned element raises `ValidationError` (resolve xfail in `test_feat046_validation.py`)
-
-### [FEAT-15.6] Passive Structure Cannot Perform Behavior
-- [x] [STORY-15.6.1] Implement model-level rule: `PassiveStructureElement` subclasses may not be `Assignment` source targeting `BehaviorElement`; raise `ValidationError`
-- [x] [STORY-15.6.2] Write test: `Assignment(source=BusinessObject, target=BusinessProcess)` raises `ValidationError` (resolve xfail in `test_feat046_validation.py`)
-
-### [FEAT-15.7] Model.validate() Method
-- [x] [STORY-15.7.1] Add `Model.validate() -> list[ValidationError]` method that runs all model-level validation rules against all concepts in the model
-- [x] [STORY-15.7.2] Add `Model.validate(strict=True)` mode that raises on first error instead of collecting
-- [x] [STORY-15.7.3] Write test: `Model.validate()` on a model with mixed valid and invalid relationships returns the correct error list
-- [x] [STORY-15.7.4] Write test: `Model.validate(strict=True)` raises `ValidationError` on first invalid relationship
+### [FEAT-21.4] XML Streaming for Large Files
+- [ ] [STORY-21.4.1] Implement `iterparse`-based streaming deserialization in `Model.from_file()` for files > 50 MB
+- [ ] [STORY-21.4.2] Add progress callback parameter to `Model.from_file(path, on_progress=...)` for large file loading
+- [ ] [STORY-21.4.3] Write test: loading a 50 MB synthetic XML file completes without exceeding 2x file size in memory
+- [ ] [STORY-21.4.4] Write test: progress callback is invoked at least once per 1000 elements during large file load
 
 ---
 
-## [EPIC-016] Declarative Relationship Permission Table
-**Status:** Complete
-**Priority:** High
-
-Replaces the current ad-hoc rule-based `is_permitted()` implementation with a declarative, machine-readable Appendix B table. Enables spec revision updates without code changes.
-
-### [FEAT-16.1] Permission Table Data Structure
-- [x] [STORY-16.1.1] Design the permission table data format: `frozenset[tuple[type[Relationship], type[Element], type[Element]]]` loaded from a CSV or embedded data structure
-- [x] [STORY-16.1.2] Encode all explicit triples from Appendix B of the ArchiMate 3.2 specification (beyond the universal rules already implemented)
-- [x] [STORY-16.1.3] Write ADR documenting the declarative table approach and migration from rule-based to data-driven
-- [x] [STORY-16.1.4] Write test: every Appendix B triple is present in the loaded table
-
-### [FEAT-16.2] Hierarchical Type Matching
-- [x] [STORY-16.2.1] Implement type-hierarchy-aware lookup: a permission for `InternalBehaviorElement` as source covers all its subclasses (Business, Application, Technology)
-- [x] [STORY-16.2.2] Ensure universal rules (Composition, Aggregation, Specialization same-type; Association any-pair) remain as fast-path short-circuits
-- [x] [STORY-16.2.3] Write test: permission granted for abstract base type also covers concrete subclass queries
-
-### [FEAT-16.3] Permission Table Completeness Audit
-- [x] [STORY-16.3.1] Add a parametrized test that checks every concrete element type pair against Appendix B expected results
-- [x] [STORY-16.3.2] Add a parametrized test for all explicitly prohibited triples (e.g., `Realization` targeting `BusinessActor`)
-- [x] [STORY-16.3.3] Write test: `is_permitted` returns `False` for triples not in the table and not covered by universal rules
-
----
-
-## [EPIC-017] Viewpoint Mechanism (Requirement 14)
-**Status:** Complete
-**Priority:** High
-
-Implements the mandatory viewpoint mechanism per Section 13 of the ArchiMate 3.2 specification. Resolves the `test_viewpoint_mechanism` conformance xfail.
-
-### [FEAT-17.1] Viewpoint Enums and Data Types
-- [x] [STORY-17.1.1] Define `PurposeCategory` enum with members: `DESIGNING`, `DECIDING`, `INFORMING`
-- [x] [STORY-17.1.2] Define `ContentCategory` enum with members: `DETAILS`, `COHERENCE`, `OVERVIEW`
-- [x] [STORY-17.1.3] Write test: both enums have exactly 3 members each
-
-### [FEAT-17.2] Viewpoint Class
-- [x] [STORY-17.2.1] Define `Viewpoint` Pydantic model with fields: `name: str`, `purpose: PurposeCategory`, `content: ContentCategory`, `permitted_concept_types: frozenset[type[Concept]]`
-- [x] [STORY-17.2.2] Add optional field: `representation_description: str | None = None`
-- [x] [STORY-17.2.3] Add optional field: `concerns: list[Concern] = []`
-- [x] [STORY-17.2.4] Write test: `Viewpoint` can be instantiated with `purpose`, `content`, and `permitted_concept_types`
-- [x] [STORY-17.2.5] Write test: `Viewpoint` allows custom (user-defined) viewpoints, not restricted to predefined list
-
-### [FEAT-17.3] View Class
-- [x] [STORY-17.3.1] Define `View` class with fields: `governing_viewpoint: Viewpoint`, `concepts: list[Concept]`, `underlying_model: Model`
-- [x] [STORY-17.3.2] Implement validation: `View.governing_viewpoint` is required; `None` raises `ValidationError`
-- [x] [STORY-17.3.3] Implement validation: adding a concept whose type is not in `governing_viewpoint.permitted_concept_types` raises `ValidationError`
-- [x] [STORY-17.3.4] Implement validation: adding a concept not present in `underlying_model` raises `ValidationError`
-- [x] [STORY-17.3.5] Write test: adding `BusinessProcess` to a `View` whose viewpoint does not include `BusinessProcess` raises `ValidationError`
-- [x] [STORY-17.3.6] Write test: `View` with viewpoint permitting `{ApplicationComponent, ApplicationService, Serving}` accepts a `Serving` relationship
-- [x] [STORY-17.3.7] Write test: `View` is a projection, not a copy; concepts reference the same objects as the underlying model
-
-### [FEAT-17.4] Concern Class
-- [x] [STORY-17.4.1] Define `Concern` class with fields: `description: str`, `stakeholders: list[Stakeholder]`, `viewpoints: list[Viewpoint]`
-- [x] [STORY-17.4.2] Implement navigable associations: from `Stakeholder` to `Concern`, from `Concern` to `Viewpoint`, from `Viewpoint` to `View`
-- [x] [STORY-17.4.3] Write test: stakeholder-concern-viewpoint-view navigation chain works end-to-end
-
----
-
-## [EPIC-018] Language Customization Mechanism
-**Status:** Complete
+## [EPIC-022] Predefined Viewpoint Catalogue
+**Status:** To-Do
 **Priority:** Medium
 
-Implements the language customization mechanism (Chapter 14 of the ArchiMate 3.2 specification). Resolves the `test_language_customization` conformance xfail.
+Implement the example viewpoints from Appendix C of the ArchiMate 3.2 Specification as a predefined catalogue. Per Section 1.3, support for these viewpoints is optional (`may`) but provides significant usability value.
 
-### [FEAT-18.1] Profile Class
-- [x] [STORY-18.1.1] Define `Profile` class that represents a named customization of the ArchiMate language
-- [x] [STORY-18.1.2] Implement `Profile.specializations: dict[type[Element], list[str]]` mapping base element types to custom specialization names
-- [x] [STORY-18.1.3] Implement `Profile.attribute_extensions: dict[type[Element], dict[str, type]]` mapping element types to additional custom attributes
-- [x] [STORY-18.1.4] Write ADR documenting the language customization design
-- [x] [STORY-18.1.5] Write test: `Profile` can be instantiated with custom specializations
-- [x] [STORY-18.1.6] Write test: `Profile` can extend an element type with additional attributes
+### [FEAT-22.1] Standard Viewpoint Definitions
+- [ ] [STORY-22.1.1] Define `ORGANIZATION_VIEWPOINT` with permitted types: `BusinessActor`, `BusinessRole`, `BusinessCollaboration`, `BusinessInterface`, `Location`, `Composition`, `Aggregation`, `Assignment`, `Serving`, `Association`
+- [ ] [STORY-22.1.2] Define `APPLICATION_COOPERATION_VIEWPOINT` with permitted types: `ApplicationComponent`, `ApplicationCollaboration`, `ApplicationInterface`, `ApplicationService`, `DataObject`, `Serving`, `Flow`, `Realization`, `Association`
+- [ ] [STORY-22.1.3] Define `TECHNOLOGY_USAGE_VIEWPOINT` with permitted types covering technology and application layer interactions
+- [ ] [STORY-22.1.4] Define `MOTIVATION_VIEWPOINT` with all motivation element types and `Influence`, `Realization`, `Association`, `Aggregation`, `Composition`, `Specialization`
+- [ ] [STORY-22.1.5] Define `STRATEGY_VIEWPOINT` with `Resource`, `Capability`, `ValueStream`, `CourseOfAction` and relevant relationships
+- [ ] [STORY-22.1.6] Define `IMPLEMENTATION_MIGRATION_VIEWPOINT` with `WorkPackage`, `Deliverable`, `ImplementationEvent`, `Plateau`, `Gap` and relevant relationships
+- [ ] [STORY-22.1.7] Define `BUSINESS_PROCESS_COOPERATION_VIEWPOINT` with business behavior, service, and active structure types
+- [ ] [STORY-22.1.8] Define `INFORMATION_STRUCTURE_VIEWPOINT` with passive structure types across layers
+- [ ] [STORY-22.1.9] Define `LAYERED_VIEWPOINT` spanning all layers with permitted types for full-stack architecture views
+- [ ] [STORY-22.1.10] Write test: each predefined viewpoint has a non-empty `permitted_concept_types` set and valid `purpose`/`content` categories
 
-### [FEAT-18.2] Profile Validation
-- [x] [STORY-18.2.1] Implement validation: profile specializations must reference valid ArchiMate element types
-- [x] [STORY-18.2.2] Implement validation: profile attribute extensions must not conflict with existing element attributes
-- [x] [STORY-18.2.3] Write test: specialization referencing a non-existent base type raises `ValidationError`
-- [x] [STORY-18.2.4] Write test: attribute extension conflicting with existing field raises `ValidationError`
-
-### [FEAT-18.3] Profile Application to Model
-- [x] [STORY-18.3.1] Implement `Model.apply_profile(profile: Profile)` to register a customization profile with a model
-- [x] [STORY-18.3.2] Implement runtime element creation from profile specializations (e.g., dynamically creating a `CloudService` as a specialization of `TechnologyService`)
-- [x] [STORY-18.3.3] Write test: applying a profile to a model allows creation of specialized elements
-- [x] [STORY-18.3.4] Write test: serialized model preserves profile metadata
+### [FEAT-22.2] Viewpoint Catalogue Registry
+- [ ] [STORY-22.2.1] Implement `VIEWPOINT_CATALOGUE: dict[str, Viewpoint]` mapping viewpoint names to instances
+- [ ] [STORY-22.2.2] Export `VIEWPOINT_CATALOGUE` from `pyarchi` top-level
+- [ ] [STORY-22.2.3] Write test: `VIEWPOINT_CATALOGUE["Organization"]` returns the organization viewpoint
+- [ ] [STORY-22.2.4] Write test: creating a `View` with a catalogue viewpoint correctly filters concepts
 
 ---
 
-## [EPIC-019] Open Group Exchange Format Serialization
-**Status:** Complete
+## [EPIC-023] Model Querying and Filtering API
+**Status:** To-Do
 **Priority:** High
 
-Implements XML serialization and deserialization for the Open Group ArchiMate Model Exchange File Format, enabling cross-tool interoperability. This is the primary persistence layer.
+Provide a fluent, composable API for querying and filtering model contents. Enables users to extract subsets of a model without manual iteration.
 
-### [FEAT-19.1] XML Namespace and Schema Setup
-- [x] [STORY-19.1.1] Define XML namespace constants for the ArchiMate Exchange Format (namespace URI, schema location)
-- [x] [STORY-19.1.2] Embed or reference the Exchange Format XSD for validation
-- [x] [STORY-19.1.3] Write ADR documenting the serialization strategy (`lxml` for parsing, Pydantic for validation)
-- [x] [STORY-19.1.4] Write test: namespace constants match the Open Group Exchange Format specification
+### [FEAT-23.1] Element Query Interface
+- [ ] [STORY-23.1.1] Implement `Model.query()` returning a `QueryBuilder` with chainable filter methods
+- [ ] [STORY-23.1.2] Implement `QueryBuilder.of_type(cls)` to filter by element type (including subclass matching)
+- [ ] [STORY-23.1.3] Implement `QueryBuilder.in_layer(layer: Layer)` to filter by layer classification
+- [ ] [STORY-23.1.4] Implement `QueryBuilder.with_aspect(aspect: Aspect)` to filter by aspect classification
+- [ ] [STORY-23.1.5] Implement `QueryBuilder.named(pattern: str)` with glob-style matching on element names
+- [ ] [STORY-23.1.6] Implement `QueryBuilder.all()` returning `list[Concept]` and `QueryBuilder.first()` returning `Concept | None`
+- [ ] [STORY-23.1.7] Write test: `model.query().of_type(BusinessActor).all()` returns only business actors
+- [ ] [STORY-23.1.8] Write test: `model.query().in_layer(Layer.TECHNOLOGY).named("*Server*").all()` returns correctly filtered results
 
-### [FEAT-19.2] Element Serialization
-- [x] [STORY-19.2.1] Implement `to_xml()` method on `Element` base class returning an `lxml.etree.Element`
-- [x] [STORY-19.2.2] Map each concrete element type to its Exchange Format XML tag name
-- [x] [STORY-19.2.3] Serialize element attributes: `identifier`, `name`, `documentation`, custom properties
-- [x] [STORY-19.2.4] Write test: `BusinessActor(name="Alice").to_xml()` produces correct XML element with namespace
-- [x] [STORY-19.2.5] Write test: round-trip serialization preserves element identity (`id`) and attributes
+### [FEAT-23.2] Relationship Traversal
+- [ ] [STORY-23.2.1] Implement `QueryBuilder.sources_of(element)` returning all elements that are sources of relationships targeting the given element
+- [ ] [STORY-23.2.2] Implement `QueryBuilder.targets_of(element)` returning all elements that are targets of relationships sourced from the given element
+- [ ] [STORY-23.2.3] Implement `QueryBuilder.related_to(element, rel_type=None)` returning all elements connected by a relationship of the given type (or any type if None)
+- [ ] [STORY-23.2.4] Implement `QueryBuilder.path_between(source, target, max_hops=5)` returning shortest relationship path
+- [ ] [STORY-23.2.5] Write test: `model.query().targets_of(actor).of_type(BusinessRole).all()` returns roles assigned to the actor
+- [ ] [STORY-23.2.6] Write test: `path_between` with no valid path returns empty list
 
-### [FEAT-19.3] Relationship Serialization
-- [x] [STORY-19.3.1] Implement `to_xml()` method on `Relationship` base class
-- [x] [STORY-19.3.2] Serialize relationship attributes: `identifier`, `source`, `target`, `name`, type-specific fields (`access_mode`, `sign`, `direction`, etc.)
-- [x] [STORY-19.3.3] Write test: `Serving(source=a, target=b).to_xml()` produces correct XML with source/target references
-- [x] [STORY-19.3.4] Write test: `Influence` serialization includes `sign` and `strength` attributes when present
-
-### [FEAT-19.4] Model Serialization (Write)
-- [x] [STORY-19.4.1] Implement `Model.to_xml() -> lxml.etree.ElementTree` producing a complete Exchange Format document
-- [x] [STORY-19.4.2] Implement `Model.to_file(path: Path)` writing the XML tree to disk with proper encoding and declaration
-- [x] [STORY-19.4.3] Include model metadata: name, documentation, property definitions
-- [x] [STORY-19.4.4] Write test: `Model.to_xml()` produces a valid XML document with correct root element and namespace
-- [x] [STORY-19.4.5] Write test: `Model.to_file()` writes a file that can be read back
-
-### [FEAT-19.5] Model Deserialization (Read)
-- [x] [STORY-19.5.1] Implement `Model.from_xml(tree: lxml.etree.ElementTree) -> Model` class method
-- [x] [STORY-19.5.2] Implement `Model.from_file(path: Path) -> Model` class method with stream parsing for large files
-- [x] [STORY-19.5.3] Resolve element cross-references: relationship source/target IDs to element instances
-- [x] [STORY-19.5.4] Handle unknown element types gracefully: log warning, skip or store as generic `Element`
-- [x] [STORY-19.5.5] Write test: round-trip `Model -> XML -> Model` preserves all elements and relationships
-- [x] [STORY-19.5.6] Write test: loading a file with 1000+ elements completes in under 5 seconds
-
-### [FEAT-19.6] Exchange Format Compliance
-- [x] [STORY-19.6.1] Validate serialized XML against the Exchange Format XSD schema
-- [x] [STORY-19.6.2] Ensure ID format compliance: identifiers use the `id-` prefix format compatible with Archi tooling
-- [x] [STORY-19.6.3] Preserve visual/diagrammatic data (view coordinates, bendpoints) during round-trip even if not interpreted
-- [x] [STORY-19.6.4] Write test: serialized XML passes XSD validation
-- [x] [STORY-19.6.5] Write test: visual data present in input XML is preserved in output XML (no data loss)
-
-### [FEAT-19.7] JSON Serialization (Optional / Secondary)
-- [x] [STORY-19.7.1] Implement `Model.to_dict() -> dict` for JSON-compatible dictionary output
-- [x] [STORY-19.7.2] Implement `Model.from_dict(data: dict) -> Model` for JSON-compatible input
-- [x] [STORY-19.7.3] Write test: round-trip `Model -> dict -> Model` preserves all concepts
+### [FEAT-23.3] Relationship Query Interface
+- [ ] [STORY-23.3.1] Implement `QueryBuilder.relationships()` switching the query to operate over relationships instead of elements
+- [ ] [STORY-23.3.2] Implement `QueryBuilder.of_category(cat: RelationshipCategory)` to filter relationships by category
+- [ ] [STORY-23.3.3] Implement `QueryBuilder.between(source_type, target_type)` to filter relationships by source/target type constraints
+- [ ] [STORY-23.3.4] Write test: `model.query().relationships().of_type(Serving).all()` returns all serving relationships
+- [ ] [STORY-23.3.5] Write test: `model.query().relationships().between(ApplicationComponent, ApplicationService).all()` returns correctly filtered results
 
 ---
 
-## [EPIC-020] Conformance Cleanup and Phase 3 Public API
-**Status:** Complete
+## [EPIC-024] Model Comparison and Diff Utilities
+**Status:** To-Do
 **Priority:** Medium
 
-Resolves all remaining conformance xfails, exports Phase 3 types from the public API, and ensures the conformance test suite passes fully.
+Provide utilities for comparing two model instances and producing a structured diff, enabling change tracking and migration analysis.
 
-### [FEAT-20.1] Resolve Conformance xfails
-- [x] [STORY-20.1.1] Remove `xfail` from `TestShouldFeatures.test_viewpoint_mechanism` after EPIC-017 ships
-- [x] [STORY-20.1.2] Remove `xfail` from `TestShouldFeatures.test_language_customization` after EPIC-018 ships
-- [x] [STORY-20.1.3] Verify all `TestShallFeatures` tests continue to pass
-- [x] [STORY-20.1.4] Write test: every Phase 3 concrete class is importable from `pyarchi` top-level
+### [FEAT-24.1] Structural Diff Engine
+- [ ] [STORY-24.1.1] Implement `ModelDiff` class with fields: `added: list[Concept]`, `removed: list[Concept]`, `modified: list[tuple[Concept, Concept]]`
+- [ ] [STORY-24.1.2] Implement `diff(model_a: Model, model_b: Model) -> ModelDiff` that compares by concept identifier
+- [ ] [STORY-24.1.3] Implement attribute-level change detection for modified concepts (track which fields changed)
+- [ ] [STORY-24.1.4] Write test: adding an element to model_b shows it in `diff.added`
+- [ ] [STORY-24.1.5] Write test: renaming an element shows it in `diff.modified` with the old and new names
 
-### [FEAT-20.2] Resolve Deferred Validation xfails
-- [x] [STORY-20.2.1] Remove `xfail` from `test_feat052_structural.py::TestDeferredValidation` after FEAT-15.1 and FEAT-15.2 ship
-- [x] [STORY-20.2.2] Remove `xfail` from `test_feat053_serving.py::TestDeferredValidation` after FEAT-15.1 ships
-- [x] [STORY-20.2.3] Remove `xfail` from `test_feat054_access.py::TestDeferredValidation` after FEAT-15.1 ships
-- [x] [STORY-20.2.4] Remove `xfail` from `test_feat058_specialization.py::TestDeferredValidation` after FEAT-15.3 ships
-- [x] [STORY-20.2.5] Remove `xfail` from `test_feat059_junction.py::TestDeferredValidation` after FEAT-15.4 ships
-- [x] [STORY-20.2.6] Remove `xfail` from `test_feat046_validation.py::TestCollaborationValidation` after FEAT-15.5 ships
-- [x] [STORY-20.2.7] Remove `xfail` from `test_feat046_validation.py::TestPassiveCannotPerformBehavior` after FEAT-15.6 ships
+### [FEAT-24.2] Diff Serialization
+- [ ] [STORY-24.2.1] Implement `ModelDiff.to_dict()` for JSON-serializable diff output
+- [ ] [STORY-24.2.2] Implement `ModelDiff.summary() -> str` for human-readable diff summary
+- [ ] [STORY-24.2.3] Write test: round-trip `ModelDiff -> dict -> ModelDiff` preserves all diff entries
+- [ ] [STORY-24.2.4] Write test: `summary()` includes counts of added, removed, and modified concepts
 
-### [FEAT-20.3] Update __init__.py Exports
-- [x] [STORY-20.3.1] Export `Viewpoint`, `View`, `Concern`, `PurposeCategory`, `ContentCategory` from `pyarchi`
-- [x] [STORY-20.3.2] Export `Profile` from `pyarchi`
-- [x] [STORY-20.3.3] Update `__all__` list to include all Phase 3 public types
-- [x] [STORY-20.3.4] Write test: `__all__` list matches the actual public API surface
+### [FEAT-24.3] Merge Support
+- [ ] [STORY-24.3.1] Implement `merge(base: Model, theirs: Model) -> Model` for non-conflicting merges (additions and removals only)
+- [ ] [STORY-24.3.2] Implement conflict detection: raise `MergeConflictError` when both models modify the same concept differently
+- [ ] [STORY-24.3.3] Write test: merging two models with non-overlapping additions produces a combined model
+- [ ] [STORY-24.3.4] Write test: merging two models that both modify the same element raises `MergeConflictError`
+
+---
+
+## [EPIC-025] Plugin and Extension System
+**Status:** To-Do
+**Priority:** Low
+
+Provide a plugin mechanism for registering custom element types, relationship rules, and serialization formats beyond the standard ArchiMate language.
+
+### [FEAT-25.1] Element Type Registry
+- [ ] [STORY-25.1.1] Implement `TypeRegistry` class that manages the mapping between type names and concrete classes
+- [ ] [STORY-25.1.2] Implement `TypeRegistry.register(cls)` decorator for registering custom element subclasses
+- [ ] [STORY-25.1.3] Implement `TypeRegistry.unregister(cls)` for removing custom types
+- [ ] [STORY-25.1.4] Integrate `TypeRegistry` with the serialization layer so custom types can be serialized/deserialized
+- [ ] [STORY-25.1.5] Write test: registering a custom `CloudService(TechnologyService)` type allows instantiation and serialization
+- [ ] [STORY-25.1.6] Write test: unregistering a type and then attempting deserialization of that type raises a warning
+
+### [FEAT-25.2] Custom Validation Rules
+- [ ] [STORY-25.2.1] Implement `ValidationRule` protocol with `def validate(model: Model) -> list[ValidationError]`
+- [ ] [STORY-25.2.2] Implement `Model.add_validation_rule(rule: ValidationRule)` for registering custom rules
+- [ ] [STORY-25.2.3] Ensure `Model.validate()` runs custom rules in addition to built-in rules
+- [ ] [STORY-25.2.4] Write test: a custom rule that forbids elements with empty documentation is triggered by `Model.validate()`
+- [ ] [STORY-25.2.5] Write test: removing a custom rule excludes it from subsequent `validate()` calls
+
+### [FEAT-25.3] Serialization Format Plugins
+- [ ] [STORY-25.3.1] Define `SerializationPlugin` protocol with `serialize(model: Model) -> bytes` and `deserialize(data: bytes) -> Model`
+- [ ] [STORY-25.3.2] Implement plugin discovery via entry points (`pyarchi.serializers` group)
+- [ ] [STORY-25.3.3] Write test: a YAML serialization plugin registered via entry point is discoverable and usable
+
+---
+
+## [EPIC-026] Documentation and API Reference
+**Status:** To-Do
+**Priority:** High
+
+Generate comprehensive API documentation, a user guide, and architecture documentation from source code and docstrings.
+
+### [FEAT-26.1] API Reference Generation
+- [ ] [STORY-26.1.1] Configure Sphinx (or mkdocs) with autodoc to generate API reference from docstrings
+- [ ] [STORY-26.1.2] Add docstrings to all public classes in `__all__` (minimum: one-line summary and parameter descriptions)
+- [ ] [STORY-26.1.3] Add docstrings to all public methods on `Model`, `QueryBuilder`, `DerivationEngine`
+- [ ] [STORY-26.1.4] Write test: every symbol in `__all__` has a non-empty `__doc__` attribute
+
+### [FEAT-26.2] User Guide
+- [ ] [STORY-26.2.1] Write "Getting Started" guide: installation, creating a model, adding elements and relationships
+- [ ] [STORY-26.2.2] Write "Serialization" guide: XML export/import, JSON export/import, round-trip examples
+- [ ] [STORY-26.2.3] Write "Validation" guide: using `Model.validate()`, understanding `ValidationError`, custom rules
+- [ ] [STORY-26.2.4] Write "Viewpoints" guide: creating viewpoints, filtering views, predefined catalogue usage
+- [ ] [STORY-26.2.5] Write "Language Customization" guide: profiles, specializations, attribute extensions
+
+### [FEAT-26.3] Architecture Documentation
+- [ ] [STORY-26.3.1] Generate ADR index page from `docs/adr/` directory
+- [ ] [STORY-26.3.2] Write class hierarchy diagram (text-based or generated) showing the full element taxonomy
+- [ ] [STORY-26.3.3] Write relationship permission matrix documentation with cross-references to Appendix B
+
+---
+
+## [EPIC-027] Packaging, Distribution, and CI/CD
+**Status:** To-Do
+**Priority:** High
+
+Prepare the library for PyPI publication, set up CI/CD pipelines, and configure release automation.
+
+### [FEAT-27.1] PyPI Packaging
+- [ ] [STORY-27.1.1] Finalize `pyproject.toml` metadata: description, classifiers, URLs, license, keywords
+- [ ] [STORY-27.1.2] Configure optional dependency groups: `pyarchi[xml]` for lxml, `pyarchi[dev]` for test/lint tools, `pyarchi[docs]` for documentation generation
+- [ ] [STORY-27.1.3] Add `py.typed` marker file for PEP 561 type stub distribution
+- [ ] [STORY-27.1.4] Build and validate sdist and wheel with `python -m build`; verify contents
+- [ ] [STORY-27.1.5] Write test: installing the built wheel in a clean virtualenv allows `import pyarchi` and basic model creation
+
+### [FEAT-27.2] CI/CD Pipeline
+- [ ] [STORY-27.2.1] Configure GitHub Actions workflow: lint (ruff), type check (mypy), test (pytest) on Python 3.12
+- [ ] [STORY-27.2.2] Add matrix testing for Python 3.11 and 3.13 compatibility
+- [ ] [STORY-27.2.3] Add test coverage reporting with minimum threshold (target: 90%)
+- [ ] [STORY-27.2.4] Configure automated PyPI publishing on tagged releases
+- [ ] [STORY-27.2.5] Write test: CI configuration files are valid YAML
+
+### [FEAT-27.3] Release Management
+- [ ] [STORY-27.3.1] Implement version management using `hatch version` or `setuptools-scm`
+- [ ] [STORY-27.3.2] Create `CHANGELOG.md` with Keep a Changelog format; document Phases 1-3
+- [ ] [STORY-27.3.3] Write release checklist documenting the publish workflow
+
+---
+
+## [EPIC-028] Archi Tool Interoperability Testing
+**Status:** To-Do
+**Priority:** High (upgraded — blocks real-world usage)
+
+Validate that pyarchi-generated Exchange Format files are compatible with the Archi modeling tool and other ArchiMate-compliant tools. Ensure round-trip fidelity. Addresses issues documented in `docs/dev-brief/ARCHI-COMPAT-ISSUES.md`.
+
+### [FEAT-28.1] Exchange Format Compliance Fixes (blocks Archi import)
+- [ ] [STORY-28.1.1] Add `<name xml:lang="en">` sub-element on `<model>` root — **likely root cause of Archi import failure** (XSD `ModelType` requires `NameGroup`). Accept optional `model_name: str` parameter in `serialize_model()`, default `"Untitled Model"`
+- [ ] [STORY-28.1.2] Add `xml:lang="en"` attribute to all `<name>` and `<documentation>` sub-elements in `serialize_element()` and `serialize_relationship()` — XSD `LangStringType` supports it; Archi always emits it
+- [ ] [STORY-28.1.3] Add `xsi:schemaLocation` attribute on `<model>` root: `"http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd"`
+- [ ] [STORY-28.1.4] Bundle the 3 XSD files (`archimate3_Model.xsd`, `archimate3_View.xsd`, `archimate3_Diagram.xsd`) from `examples/` into `src/pyarchi/serialization/schema/`
+- [ ] [STORY-28.1.5] Update `_deserialize_element()` to handle `xml:lang` attribute on `<name>` during import (currently ignores it — should still work but be explicit)
+- [ ] [STORY-28.1.6] Validate our output against the bundled XSD — run `validate_exchange_format()` on the pet_shop model and fix any remaining XSD errors
+- [ ] [STORY-28.1.7] Write test: exported XML has `<name xml:lang="en">` on model root
+- [ ] [STORY-28.1.8] Write test: all `<name>` sub-elements have `xml:lang` attribute
+- [ ] [STORY-28.1.9] Write test: exported XML passes XSD validation against bundled schema
+- [ ] VERIFIED: `xsi:type` values match XSD `ElementTypeEnum`/`RelationshipTypeEnum` exactly — no suffix needed
+- [ ] VERIFIED: `accessType`, `modifier` attribute names match XSD — no changes needed
+
+### [FEAT-28.2] Archi Import/Export Validation
+- [ ] [STORY-28.2.1] Create a reference Archi model (`.archimate` format) with representative elements from all layers
+- [ ] [STORY-28.2.2] Export reference model to Exchange Format from Archi; import into pyarchi; verify all elements and relationships load correctly
+- [ ] [STORY-28.2.3] Create a pyarchi model programmatically; export to Exchange Format; import into Archi; verify correct rendering
+- [ ] [STORY-28.2.4] Write test: round-trip through Archi preserves element identifiers and names
+- [ ] [STORY-28.2.5] Document the Archi import workflow for pyarchi users (which menu, expected behavior)
+
+### [FEAT-28.3] Visual Data Preservation
+- [ ] [STORY-28.3.1] Parse view/diagram coordinates (x, y, width, height) from Exchange Format XML during deserialization
+- [ ] [STORY-28.3.2] Preserve bendpoint data on relationship connections during round-trip
+- [ ] [STORY-28.3.3] Preserve view metadata (name, documentation, viewpoint reference) during round-trip
+- [ ] [STORY-28.3.4] Write test: loading an Exchange Format file with diagram data and re-serializing produces byte-equivalent view sections
+
+### [FEAT-28.4] XSD Schema Bundling
+- [ ] [STORY-28.4.1] Bundle the official ArchiMate Exchange Format XSD schema within the package (`etc/` or `data/`)
+- [ ] [STORY-28.4.2] Implement `validate_xml(path: Path) -> list[str]` utility that validates an XML file against the bundled XSD
+- [ ] [STORY-28.4.3] Write test: a known-valid Exchange Format file passes XSD validation
+- [ ] [STORY-28.4.4] Write test: an intentionally malformed XML file fails XSD validation with descriptive errors
+
+### [FEAT-28.5] Archi Native Format Support (Optional)
+- [ ] [STORY-28.5.1] Investigate feasibility of reading/writing Archi's proprietary `.archimate` format (namespace `http://www.archimatetool.com/archimate`)
+- [ ] [STORY-28.5.2] If feasible, implement `read_archi_native(path) -> Model` for direct `.archimate` import
+- [ ] [STORY-28.5.3] Document the difference between Archi native format and Open Group Exchange Format for users
+
+---
+
+## [EPIC-029] CLI Tooling
+**Status:** To-Do
+**Priority:** Low
+
+Provide a command-line interface for common model operations: validation, format conversion, querying, and diffing.
+
+### [FEAT-29.1] Core CLI Framework
+- [ ] [STORY-29.1.1] Implement `pyarchi` CLI entry point using `click` or `argparse`
+- [ ] [STORY-29.1.2] Implement `pyarchi validate <file>` command that loads a model and runs `Model.validate()`
+- [ ] [STORY-29.1.3] Implement `pyarchi info <file>` command that prints model summary (element counts by layer, relationship counts by type)
+- [ ] [STORY-29.1.4] Write test: `pyarchi validate` on a valid Exchange Format file exits with code 0
+- [ ] [STORY-29.1.5] Write test: `pyarchi validate` on an invalid file exits with code 1 and prints errors
+
+### [FEAT-29.2] Format Conversion
+- [ ] [STORY-29.2.1] Implement `pyarchi convert <input> <output>` supporting XML-to-JSON and JSON-to-XML conversion
+- [ ] [STORY-29.2.2] Implement `--format` flag for explicit output format specification
+- [ ] [STORY-29.2.3] Write test: `pyarchi convert model.xml model.json` produces valid JSON output
+- [ ] [STORY-29.2.4] Write test: round-trip conversion XML -> JSON -> XML preserves all concepts
+
+### [FEAT-29.3] CLI Query and Diff
+- [ ] [STORY-29.3.1] Implement `pyarchi query <file> --type <ElementType>` to list elements of a given type
+- [ ] [STORY-29.3.2] Implement `pyarchi diff <file_a> <file_b>` to print structural differences
+- [ ] [STORY-29.3.3] Write test: `pyarchi diff` on identical files reports no differences
+- [ ] [STORY-29.3.4] Write test: `pyarchi query --type BusinessActor` returns only business actors
