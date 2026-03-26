@@ -366,6 +366,20 @@ def _build_cache() -> dict[tuple[type[Relationship], type[Element], type[Element
     return cache
 
 
+def warm_cache() -> None:
+    """Eagerly build the permission lookup cache.
+
+    By default the cache is built lazily on the first ``is_permitted()``
+    call. Call this function during application startup to pay the cost
+    upfront and ensure deterministic latency on the first permission check.
+
+    This is a no-op if the cache is already built.
+    """
+    global _cache
+    if _cache is None:
+        _cache = _build_cache()
+
+
 def is_permitted(
     rel_type: type[Relationship],
     source_type: type[Element],

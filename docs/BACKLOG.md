@@ -75,60 +75,62 @@ Phase 4 focuses on production readiness: performance optimization for large mode
 ---
 
 ## [EPIC-021] Performance Optimization
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 Optimize runtime performance for large-scale enterprise models (10k+ elements). Address memory footprint, import speed, and permission lookup latency.
 
 ### [FEAT-21.1] Lazy Module Loading
-- [ ] [STORY-21.1.1] Implement lazy imports for layer modules (business, application, technology, physical, motivation, strategy, implementation_migration) so that importing `pyarchi` does not eagerly load all concrete classes
-- [ ] [STORY-21.1.2] Add `__getattr__` hook on `pyarchi` top-level to defer layer module imports until first access
-- [ ] [STORY-21.1.3] Write test: `import pyarchi` completes without importing `lxml` unless serialization is used
-- [ ] [STORY-21.1.4] Write benchmark: measure import time before and after lazy loading; target < 100ms for base import
+- [~] [STORY-21.1.1] Implement lazy imports for layer modules (business, application, technology, physical, motivation, strategy, implementation_migration) so that importing `pyarchi` does not eagerly load all concrete classes — **WONTFIX** per ADR-034 Decision 2 (no lazy imports)
+- [~] [STORY-21.1.2] Add `__getattr__` hook on `pyarchi` top-level to defer layer module imports until first access — **WONTFIX** per ADR-034 Decision 2 (no `__getattr__` hook)
+- [x] [STORY-21.1.3] Write test: `import pyarchi` completes without importing `lxml` unless serialization is used — `test_import_does_not_load_lxml` in `test/benchmarks/test_bench_import.py`
+- [x] [STORY-21.1.4] Write benchmark: measure import time before and after lazy loading; target < 100ms for base import — `test_bench_import_cold` in `test/benchmarks/test_bench_import.py` (baseline capture, no threshold per ADR-034)
 
 ### [FEAT-21.2] Permission Cache Warming
-- [ ] [STORY-21.2.1] Implement LRU cache on `is_permitted()` to avoid repeated hierarchical type resolution
-- [ ] [STORY-21.2.2] Add `warm_cache()` utility that pre-computes all concrete type-pair permissions at startup
-- [ ] [STORY-21.2.3] Write benchmark: `is_permitted()` lookup time for 10,000 calls before and after caching
-- [ ] [STORY-21.2.4] Write test: cache invalidation works correctly when a `Profile` adds new specialization types
+- [~] [STORY-21.2.1] Implement LRU cache on `is_permitted()` to avoid repeated hierarchical type resolution — **WONTFIX** per ADR-034 Decision 5: existing `_build_cache()` already provides O(1) dict lookup; LRU adds no value
+- [x] [STORY-21.2.2] Add `warm_cache()` utility that pre-computes all concrete type-pair permissions at startup — `warm_cache()` in `src/pyarchi/validation/permissions.py`, exported from `pyarchi.__init__`
+- [x] [STORY-21.2.3] Write benchmark: `is_permitted()` lookup time for 10,000 calls before and after caching — `test_bench_warm_cache_time` in `test/benchmarks/test_bench_permissions.py`
+- [~] [STORY-21.2.4] Write test: cache invalidation works correctly when a `Profile` adds new specialization types — **WONTFIX** per ADR-034: Profiles add specializations, not new concrete types; the permission cache operates on concrete `type` objects, not specialization strings. No invalidation needed.
 
-### [FEAT-21.3] Model Memory Optimization
-- [ ] [STORY-21.3.1] Profile memory usage of a 10,000-element model using `tracemalloc`; document baseline
-- [ ] [STORY-21.3.2] Implement `__slots__` on high-frequency classes (concrete elements, relationships) where compatible with Pydantic
-- [ ] [STORY-21.3.3] Evaluate and implement ID interning for repeated identifier strings
-- [ ] [STORY-21.3.4] Write benchmark: memory footprint of 10,000-element model before and after optimization
+### [FEAT-21.3] Model Memory Optimization — Closed (baseline under threshold)
+- [x] [STORY-21.3.1] Profile memory usage of a 10,000-element model using `tracemalloc`; document baseline — **7.36 MB** (FEAT-21.4 benchmark), well under 100MB decision gate
+- [~] [STORY-21.3.2] Implement `__slots__` on high-frequency classes — **WONTFIX** (Pydantic v2 incompatible, ADR-034 Decision 6)
+- [~] [STORY-21.3.3] Evaluate and implement ID interning — **WONTFIX** (7.36 MB baseline does not warrant optimization)
+- [~] [STORY-21.3.4] Write benchmark: memory before/after — **WONTFIX** (no optimization to measure)
 
-### [FEAT-21.4] XML Streaming for Large Files
-- [ ] [STORY-21.4.1] Implement `iterparse`-based streaming deserialization in `Model.from_file()` for files > 50 MB
-- [ ] [STORY-21.4.2] Add progress callback parameter to `Model.from_file(path, on_progress=...)` for large file loading
-- [ ] [STORY-21.4.3] Write test: loading a 50 MB synthetic XML file completes without exceeding 2x file size in memory
-- [ ] [STORY-21.4.4] Write test: progress callback is invoked at least once per 1000 elements during large file load
+### [FEAT-21.4] Benchmark Suite
+**Deliverable: benchmark harness in `test/benchmarks/` (ADR-034 Decision 1)**
+
+- [~] [STORY-21.4.1] Implement `iterparse`-based streaming deserialization in `Model.from_file()` for files > 50 MB — **DEFERRED** per ADR-034 Decision 5 (keep single-pass lxml for now; streaming gated on benchmark data)
+- [~] [STORY-21.4.2] Add progress callback parameter to `Model.from_file(path, on_progress=...)` for large file loading — **DEFERRED** depends on STORY-21.4.1
+- [~] [STORY-21.4.3] Write test: loading a 50 MB synthetic XML file completes without exceeding 2x file size in memory — **DEFERRED** depends on STORY-21.4.1
+- [~] [STORY-21.4.4] Write test: progress callback is invoked at least once per 1000 elements during large file load — **DEFERRED** depends on STORY-21.4.1
 
 ---
 
 ## [EPIC-022] Predefined Viewpoint Catalogue
-**Status:** To-Do
+**Status:** Complete
 **Priority:** Medium
 
 Implement the example viewpoints from Appendix C of the ArchiMate 3.2 Specification as a predefined catalogue. Per Section 1.3, support for these viewpoints is optional (`may`) but provides significant usability value.
 
 ### [FEAT-22.1] Standard Viewpoint Definitions
-- [ ] [STORY-22.1.1] Define `ORGANIZATION_VIEWPOINT` with permitted types: `BusinessActor`, `BusinessRole`, `BusinessCollaboration`, `BusinessInterface`, `Location`, `Composition`, `Aggregation`, `Assignment`, `Serving`, `Association`
-- [ ] [STORY-22.1.2] Define `APPLICATION_COOPERATION_VIEWPOINT` with permitted types: `ApplicationComponent`, `ApplicationCollaboration`, `ApplicationInterface`, `ApplicationService`, `DataObject`, `Serving`, `Flow`, `Realization`, `Association`
-- [ ] [STORY-22.1.3] Define `TECHNOLOGY_USAGE_VIEWPOINT` with permitted types covering technology and application layer interactions
-- [ ] [STORY-22.1.4] Define `MOTIVATION_VIEWPOINT` with all motivation element types and `Influence`, `Realization`, `Association`, `Aggregation`, `Composition`, `Specialization`
-- [ ] [STORY-22.1.5] Define `STRATEGY_VIEWPOINT` with `Resource`, `Capability`, `ValueStream`, `CourseOfAction` and relevant relationships
-- [ ] [STORY-22.1.6] Define `IMPLEMENTATION_MIGRATION_VIEWPOINT` with `WorkPackage`, `Deliverable`, `ImplementationEvent`, `Plateau`, `Gap` and relevant relationships
-- [ ] [STORY-22.1.7] Define `BUSINESS_PROCESS_COOPERATION_VIEWPOINT` with business behavior, service, and active structure types
-- [ ] [STORY-22.1.8] Define `INFORMATION_STRUCTURE_VIEWPOINT` with passive structure types across layers
-- [ ] [STORY-22.1.9] Define `LAYERED_VIEWPOINT` spanning all layers with permitted types for full-stack architecture views
-- [ ] [STORY-22.1.10] Write test: each predefined viewpoint has a non-empty `permitted_concept_types` set and valid `purpose`/`content` categories
+- [x] [STORY-22.1.1] Define `_build_organization` with permitted types: `BusinessActor`, `BusinessRole`, `BusinessCollaboration`, `BusinessInterface`, `Location`, `Composition`, `Aggregation`, `Assignment`, `Serving`, `Realization`, `Association`, `Specialization`
+- [x] [STORY-22.1.2] Define `_build_application_cooperation` with permitted types: `ApplicationComponent`, `ApplicationCollaboration`, `ApplicationInterface`, `ApplicationFunction`, `ApplicationInteraction`, `ApplicationProcess`, `ApplicationEvent`, `ApplicationService`, `DataObject`, `Location`, `Serving`, `Flow`, `Triggering`, `Realization`, `Access`, `Composition`, `Aggregation`, `Assignment`, `Association`, `Specialization`
+- [x] [STORY-22.1.3] Define `_build_technology_usage` with permitted types covering technology and application layer interactions
+- [x] [STORY-22.1.4] Define `_build_motivation` with all motivation element types and `Influence`, `Realization`, `Association`, `Aggregation`, `Composition`, `Specialization`
+- [x] [STORY-22.1.5] Define `_build_strategy` with `Resource`, `Capability`, `ValueStream`, `CourseOfAction` and relevant relationships
+- [x] [STORY-22.1.6] Define `_build_implementation_and_migration` with `WorkPackage`, `Deliverable`, `ImplementationEvent`, `Plateau`, `Gap`, `Location` and relevant relationships
+- [x] [STORY-22.1.7] Define `_build_business_process_cooperation` with business behavior, service, and active structure types
+- [x] [STORY-22.1.8] Define `_build_information_structure` with passive structure types across layers
+- [x] [STORY-22.1.9] Define `_build_layered` spanning all layers with permitted types for full-stack architecture views
+- [x] [STORY-22.1.10] Write test: each predefined viewpoint has a non-empty `permitted_concept_types` set and valid `purpose`/`content` categories
 
 ### [FEAT-22.2] Viewpoint Catalogue Registry
-- [ ] [STORY-22.2.1] Implement `VIEWPOINT_CATALOGUE: dict[str, Viewpoint]` mapping viewpoint names to instances
-- [ ] [STORY-22.2.2] Export `VIEWPOINT_CATALOGUE` from `pyarchi` top-level
-- [ ] [STORY-22.2.3] Write test: `VIEWPOINT_CATALOGUE["Organization"]` returns the organization viewpoint
-- [ ] [STORY-22.2.4] Write test: creating a `View` with a catalogue viewpoint correctly filters concepts
+- [x] [STORY-22.2.1] Implement `VIEWPOINT_CATALOGUE: dict[str, Viewpoint]` mapping viewpoint names to instances
+- [x] [STORY-22.2.2] Export `VIEWPOINT_CATALOGUE` from `pyarchi` top-level
+- [x] [STORY-22.2.3] Write test: `VIEWPOINT_CATALOGUE["Organization"]` returns the organization viewpoint
+- [x] [STORY-22.2.4] Write test: creating a `View` with a catalogue viewpoint correctly filters concepts
 
 ---
 
