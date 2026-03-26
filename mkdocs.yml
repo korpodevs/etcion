@@ -3,11 +3,6 @@ site_description: Python implementation of the ArchiMate 3.2 metamodel
 repo_url: https://github.com/korpodevs/pyarchi
 exclude_docs: |
   adr/
-  archive/
-  dev-brief/
-  requirements/
-  BACKLOG.md
-  REQUIREMENTS.md
 theme:
   name: material
   features:
