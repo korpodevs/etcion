@@ -17,8 +17,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Typing :: Typed",
 ]
+keywords = ["archimate", "enterprise-architecture", "metamodel", "archi", "open-group", "architecture-as-code"]
 dependencies = [
     "pydantic>=2.0,<3.0",
 ]
@@ -27,16 +29,26 @@ dependencies = [
 xml = ["lxml>=5.0,<6.0"]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=5.0",
     "mypy>=1.10",
     "pydantic>=2.0,<3.0",
     "ruff>=0.4",
     "lxml>=5.0,<6.0",
+    "build>=1.0",
+    "twine>=5.0",
 ]
 docs = [
     "mkdocs>=1.6",
     "mkdocs-material>=9.5",
     "mkdocstrings[python]>=0.25",
 ]
+
+[project.urls]
+Homepage = "https://github.com/pyarchi-org/pyarchi"
+Documentation = "https://pyarchi-org.github.io/pyarchi/"
+Repository = "https://github.com/pyarchi-org/pyarchi"
+Issues = "https://github.com/pyarchi-org/pyarchi/issues"
+Changelog = "https://github.com/pyarchi-org/pyarchi/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pyarchi"]

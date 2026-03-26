@@ -1,5 +1,13 @@
 """pyarchi -- Python implementation of the ArchiMate 3.2 metamodel."""
 
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _meta_version
+
+try:
+    __version__: str = _meta_version("pyarchi")
+except PackageNotFoundError:  # pragma: no cover
+    __version__ = "0.0.0.dev0"
+
 # Phase 4: Model comparison and diff utilities (EPIC-024, FEAT-24.1)
 from pyarchi.comparison import ConceptChange, FieldChange, ModelDiff, diff_models
 from pyarchi.conformance import CONFORMANCE, ConformanceProfile
@@ -178,6 +186,7 @@ SPEC_VERSION: str = "3.2"
 """The ArchiMate specification version implemented by this library."""
 
 __all__: list[str] = [
+    "__version__",
     "SPEC_VERSION",
     # exceptions (FEAT-00.2)
     "PyArchiError",
