@@ -1,0 +1,3 @@
+# Relationships
+
+::: pyarchi.metamodel.relationships

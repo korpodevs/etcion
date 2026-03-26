@@ -1,0 +1,3 @@
+# Model
+
+::: pyarchi.metamodel.model

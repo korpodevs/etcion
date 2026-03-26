@@ -1,0 +1,73 @@
+site_name: pyarchi
+site_description: Python implementation of the ArchiMate 3.2 metamodel
+repo_url: https://github.com/YOUR_ORG/pyarchi
+exclude_docs: |
+  adr/
+  archive/
+  dev-brief/
+  requirements/
+  BACKLOG.md
+  REQUIREMENTS.md
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - search.highlight
+    - content.code.copy
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            members_order: source
+            merge_init_into_class: true
+            show_if_no_docstring: false
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - User Guide:
+    - Building Models: user-guide/building-models.md
+    - Validation: user-guide/validation.md
+    - Serialization: user-guide/serialization.md
+    - Viewpoints: user-guide/viewpoints.md
+    - Profiles: user-guide/profiles.md
+    - Querying: user-guide/querying.md
+    - Diffing: user-guide/diffing.md
+    - Extending: user-guide/extending.md
+  - Architecture:
+    - Overview: architecture/overview.md
+    - ADR Index: architecture/adr-index.md
+    - Permission Matrix: architecture/permission-matrix.md
+  - API Reference:
+    - Overview: api/index.md
+    - Model: api/model.md
+    - Elements: api/elements.md
+    - Relationships: api/relationships.md
+    - Validation: api/validation.md
+    - Serialization: api/serialization.md
+    - Viewpoints: api/viewpoints.md
+    - Profiles: api/profiles.md
+    - Querying: api/querying.md
+    - Comparison: api/comparison.md
+    - Enums: api/enums.md
+    - Exceptions: api/exceptions.md
+  - Examples: examples/index.md
+  - Changelog: changelog.md
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true

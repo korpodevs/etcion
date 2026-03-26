@@ -1,0 +1,3 @@
+# Querying
+
+::: pyarchi.metamodel.model

@@ -1,0 +1,3 @@
+# Profiles
+
+::: pyarchi.metamodel.profiles
