@@ -109,7 +109,7 @@ class PermissionRule(NamedTuple):
 # permissions (permitted=True). First matching rule wins during cache build.
 # Universal rel types (Composition, Aggregation, Specialization, Association)
 # are NOT in this table; they are handled by short-circuits in is_permitted().
-_PERMISSION_TABLE: tuple[PermissionRule, ...] = (
+_PERMISSION_TABLE: list[PermissionRule] = [
     # ------------------------------------------------------------------
     # Assignment
     # ------------------------------------------------------------------
@@ -324,7 +324,7 @@ _PERMISSION_TABLE: tuple[PermissionRule, ...] = (
     PermissionRule(Flow, TechnologyEvent, TechnologyEvent, True),
     # St8: Strategy intra-layer Flow (FEAT-16.2)
     PermissionRule(Flow, ValueStream, ValueStream, True),
-)
+]
 
 # Lazy concrete-type cache. Initialized on first is_permitted() call.
 # Defined AFTER _PERMISSION_TABLE so that any modification to the table
@@ -440,3 +440,38 @@ def is_permitted(
     if _cache is None:
         _cache = _build_cache()
     return _cache.get((rel_type, source_type, target_type), False)
+
+
+def register_permission_rule(rule: PermissionRule) -> None:
+    """Append a custom permission rule to the permission table.
+
+    .. warning::
+        Custom permission rules are **not portable**. Models validated
+        with custom rules may not conform to the ArchiMate 3.2 spec.
+
+    The rule is appended to the **end** of ``_PERMISSION_TABLE``.
+    Ordering matters: prohibitions (``permitted=False``) should precede
+    permissions (``permitted=True``) within each ``rel_type`` group for
+    correct first-match-wins semantics during cache build.
+
+    :param rule: A :class:`PermissionRule` namedtuple.
+    :raises TypeError: If *rule* is not a PermissionRule.
+    """
+    import warnings
+
+    global _cache
+
+    if not isinstance(rule, PermissionRule):
+        raise TypeError(f"Expected PermissionRule, got {type(rule).__name__}")
+
+    _PERMISSION_TABLE.append(rule)
+    _cache = None
+
+    warnings.warn(
+        f"Custom permission rule registered: "
+        f"{rule.rel_type.__name__}({rule.source_type.__name__} -> "
+        f"{rule.target_type.__name__}, permitted={rule.permitted}). "
+        f"Models using this rule are NOT portable.",
+        UserWarning,
+        stacklevel=2,
+    )

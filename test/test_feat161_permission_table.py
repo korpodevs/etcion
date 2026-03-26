@@ -52,8 +52,8 @@ class TestPermissionRuleNamedTuple:
 class TestPermissionTableStructure:
     """Table is a tuple of PermissionRule; ordering invariants hold."""
 
-    def test_table_is_tuple(self) -> None:
-        assert isinstance(_PERMISSION_TABLE, tuple)
+    def test_table_is_list(self) -> None:
+        assert isinstance(_PERMISSION_TABLE, list)
 
     def test_all_entries_are_permission_rules(self) -> None:
         for entry in _PERMISSION_TABLE:

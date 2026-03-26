@@ -172,6 +172,7 @@ from pyarchi.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE, Viewpoint
 # Phase 3: Viewpoints (EPIC-017)
 from pyarchi.metamodel.viewpoints import Concern, View, Viewpoint
 from pyarchi.validation.permissions import is_permitted, warm_cache
+from pyarchi.validation.rules import ValidationRule
 
 SPEC_VERSION: str = "3.2"
 """The ArchiMate specification version implemented by this library."""
@@ -238,6 +239,7 @@ __all__: list[str] = [
     "DerivationEngine",
     "is_permitted",
     "warm_cache",
+    "ValidationRule",
     # Strategy layer (EPIC-006)
     "StrategyStructureElement",
     "StrategyBehaviorElement",

@@ -19,6 +19,7 @@ from pyarchi.metamodel.profiles import Profile
 
 if TYPE_CHECKING:
     from pyarchi.exceptions import ValidationError
+    from pyarchi.validation.rules import ValidationRule
 
 __all__: list[str] = ["Model"]
 
@@ -42,6 +43,7 @@ class Model:
         self._concepts: dict[str, Concept] = {}
         self._profiles: list[Profile] = []
         self._specialization_registry: dict[str, type[Element]] = {}
+        self._custom_rules: list[ValidationRule] = []
         if concepts is not None:
             for concept in concepts:
                 self.add(concept)
@@ -81,6 +83,33 @@ class Model:
                     raise ValueError(f"Duplicate specialization name: '{name}'")
                 self._specialization_registry[name] = base_type
         self._profiles.append(profile)
+
+    def add_validation_rule(self, rule: ValidationRule) -> None:
+        """Register a custom validation rule.
+
+        :param rule: An object implementing the
+            :class:`~pyarchi.validation.rules.ValidationRule` protocol.
+        :raises TypeError: If *rule* does not implement the protocol.
+        """
+        from pyarchi.validation.rules import ValidationRule as _VR
+
+        if not isinstance(rule, _VR):
+            raise TypeError(
+                f"Expected an object implementing ValidationRule protocol, "
+                f"got {type(rule).__name__}"
+            )
+        self._custom_rules.append(rule)
+
+    def remove_validation_rule(self, rule: ValidationRule) -> None:
+        """Remove a previously registered custom validation rule.
+
+        :param rule: The exact rule instance to remove (identity match).
+        :raises ValueError: If *rule* is not currently registered.
+        """
+        try:
+            self._custom_rules.remove(rule)
+        except ValueError:
+            raise ValueError("Rule is not registered on this model") from None
 
     @property
     def profiles(self) -> list[Profile]:
@@ -269,5 +298,12 @@ class Model:
                         if strict:
                             raise err
                         errors.append(err)
+
+        # Custom validation rules (ADR-038 / FEAT-25.2).
+        for rule in self._custom_rules:
+            custom_errors = rule.validate(self)
+            if strict and custom_errors:
+                raise custom_errors[0]
+            errors.extend(custom_errors)
 
         return errors

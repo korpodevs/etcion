@@ -195,30 +195,30 @@ Provide utilities for comparing two model instances and producing a structured d
 ---
 
 ## [EPIC-025] Plugin and Extension System
-**Status:** To-Do
+**Status:** Complete
 **Priority:** Low
 
 Provide a plugin mechanism for registering custom element types, relationship rules, and serialization formats beyond the standard ArchiMate language.
 
 ### [FEAT-25.1] Element Type Registry
-- [ ] [STORY-25.1.1] Implement `TypeRegistry` class that manages the mapping between type names and concrete classes
-- [ ] [STORY-25.1.2] Implement `TypeRegistry.register(cls)` decorator for registering custom element subclasses
-- [ ] [STORY-25.1.3] Implement `TypeRegistry.unregister(cls)` for removing custom types
-- [ ] [STORY-25.1.4] Integrate `TypeRegistry` with the serialization layer so custom types can be serialized/deserialized
-- [ ] [STORY-25.1.5] Write test: registering a custom `CloudService(TechnologyService)` type allows instantiation and serialization
-- [ ] [STORY-25.1.6] Write test: unregistering a type and then attempting deserialization of that type raises a warning
+- [~] [STORY-25.1.1] Implement `TypeRegistry` class that manages the mapping between type names and concrete classes — **WONTFIX** per ADR-038: plain dict + function sufficient
+- [~] [STORY-25.1.2] Implement `TypeRegistry.register(cls)` decorator for registering custom element subclasses — **WONTFIX** per ADR-038: explicit call preferred
+- [~] [STORY-25.1.3] Implement `TypeRegistry.unregister(cls)` for removing custom types — **WONTFIX** per ADR-038: YAGNI
+- [x] [STORY-25.1.4] Integrate `TypeRegistry` with the serialization layer so custom types can be serialized/deserialized — covered by `register_element_type()` adding to `TYPE_REGISTRY`
+- [x] [STORY-25.1.5] Write test: registering a custom `CloudService(TechnologyService)` type allows instantiation and serialization — `test/test_feat251_registration_hooks.py`
+- [~] [STORY-25.1.6] Write test: unregistering a type and then attempting deserialization of that type raises a warning — **WONTFIX** per ADR-038: no `unregister()`
 
 ### [FEAT-25.2] Custom Validation Rules
-- [ ] [STORY-25.2.1] Implement `ValidationRule` protocol with `def validate(model: Model) -> list[ValidationError]`
-- [ ] [STORY-25.2.2] Implement `Model.add_validation_rule(rule: ValidationRule)` for registering custom rules
-- [ ] [STORY-25.2.3] Ensure `Model.validate()` runs custom rules in addition to built-in rules
-- [ ] [STORY-25.2.4] Write test: a custom rule that forbids elements with empty documentation is triggered by `Model.validate()`
-- [ ] [STORY-25.2.5] Write test: removing a custom rule excludes it from subsequent `validate()` calls
+- [x] [STORY-25.2.1] Implement `ValidationRule` protocol with `def validate(model: Model) -> list[ValidationError]`
+- [x] [STORY-25.2.2] Implement `Model.add_validation_rule(rule: ValidationRule)` for registering custom rules
+- [x] [STORY-25.2.3] Ensure `Model.validate()` runs custom rules in addition to built-in rules
+- [x] [STORY-25.2.4] Write test: a custom rule that forbids elements with empty documentation is triggered by `Model.validate()`
+- [x] [STORY-25.2.5] Write test: removing a custom rule excludes it from subsequent `validate()` calls
 
-### [FEAT-25.3] Serialization Format Plugins
-- [ ] [STORY-25.3.1] Define `SerializationPlugin` protocol with `serialize(model: Model) -> bytes` and `deserialize(data: bytes) -> Model`
-- [ ] [STORY-25.3.2] Implement plugin discovery via entry points (`pyarchi.serializers` group)
-- [ ] [STORY-25.3.3] Write test: a YAML serialization plugin registered via entry point is discoverable and usable
+### [FEAT-25.3] Serialization Format Plugins — **Deferred per ADR-038**
+- [~] [STORY-25.3.1] Define `SerializationPlugin` protocol with `serialize(model: Model) -> bytes` and `deserialize(data: bytes) -> Model` — **DEFERRED** per ADR-038: entry-point discovery adds framework complexity for zero known consumers
+- [~] [STORY-25.3.2] Implement plugin discovery via entry points (`pyarchi.serializers` group) — **DEFERRED** per ADR-038
+- [~] [STORY-25.3.3] Write test: a YAML serialization plugin registered via entry point is discoverable and usable — **DEFERRED** per ADR-038
 
 ---
 

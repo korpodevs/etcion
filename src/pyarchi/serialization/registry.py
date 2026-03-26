@@ -244,3 +244,49 @@ def _register_all() -> None:
 
 
 _register_all()
+
+
+def register_element_type(
+    cls: type[Concept],
+    xml_tag: str,
+    extra_attrs: dict[str, Callable[[Any], str | None]] | None = None,
+) -> None:
+    """Register a custom Element subclass with the serialization layer.
+
+    .. warning::
+        Models containing custom types are **not portable** to other
+        ArchiMate tools. Prefer Profiles for spec-compliant extension.
+
+    :param cls: A concrete Element subclass (must define ``_type_name``).
+    :param xml_tag: The XML tag name used in Exchange Format serialization.
+    :param extra_attrs: Optional dict mapping XML attribute names to
+        callables that extract the attribute value from an instance.
+    :raises TypeError: If *cls* is not a concrete Element subclass.
+    :raises ValueError: If *cls* is already registered.
+    """
+    import warnings
+
+    from pyarchi.metamodel.concepts import Element as _Element
+    from pyarchi.validation import permissions as _perm
+
+    if not (isinstance(cls, type) and issubclass(cls, _Element)):
+        raise TypeError(f"Expected a concrete Element subclass, got {cls!r}")
+    if "_type_name" not in cls.__dict__ and not any(
+        "_type_name" in c.__dict__ for c in cls.__mro__ if c is not Concept
+    ):
+        raise TypeError(f"{cls.__name__} is abstract (no _type_name)")
+    if cls in TYPE_REGISTRY:
+        raise ValueError(f"{cls.__name__} is already registered")
+
+    TYPE_REGISTRY[cls] = TypeDescriptor(
+        xml_tag=xml_tag,
+        extra_attrs=extra_attrs or {},
+    )
+    _perm._cache = None
+
+    warnings.warn(
+        f"Custom type '{cls.__name__}' registered. Models containing this "
+        f"type are NOT portable to other ArchiMate tools.",
+        UserWarning,
+        stacklevel=2,
+    )
