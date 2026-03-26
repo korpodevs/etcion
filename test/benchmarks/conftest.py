@@ -43,7 +43,7 @@ def model_with_rels_1k():
         m.add(a)
     for r in roles:
         m.add(r)
-    for a, r in zip(actors, roles):
+    for a, r in zip(actors, roles, strict=True):
         m.add(Serving(name="s", source=a, target=r))
     return m
 
@@ -58,7 +58,7 @@ def model_with_rels_10k():
         m.add(a)
     for r in roles:
         m.add(r)
-    for a, r in zip(actors, roles):
+    for a, r in zip(actors, roles, strict=True):
         m.add(Serving(name="s", source=a, target=r))
     return m
 
