@@ -1,6 +1,6 @@
 site_name: pyarchi
 site_description: Python implementation of the ArchiMate 3.2 metamodel
-repo_url: https://github.com/YOUR_ORG/pyarchi
+repo_url: https://github.com/korpodevs/pyarchi
 exclude_docs: |
   adr/
   archive/
