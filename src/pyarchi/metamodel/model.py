@@ -9,9 +9,11 @@ Reference: ADR-010.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
+from pyarchi.enums import Aspect, Layer
 from pyarchi.metamodel.concepts import Concept, Element, Relationship
 from pyarchi.metamodel.profiles import Profile
 
@@ -103,6 +105,44 @@ class Model:
         instances (e.g. Junction) because connectors are not relationships.
         """
         return [c for c in self._concepts.values() if isinstance(c, Relationship)]
+
+    def elements_of_type(self, cls: type[Element]) -> list[Element]:
+        """Return elements that are instances of *cls* (includes subclasses)."""
+        return [e for e in self.elements if isinstance(e, cls)]
+
+    def elements_by_layer(self, layer: Layer) -> list[Element]:
+        """Return elements whose class-level ``layer`` ClassVar matches."""
+        return [e for e in self.elements if getattr(type(e), "layer", None) is layer]
+
+    def elements_by_aspect(self, aspect: Aspect) -> list[Element]:
+        """Return elements whose class-level ``aspect`` ClassVar matches."""
+        return [e for e in self.elements if getattr(type(e), "aspect", None) is aspect]
+
+    def elements_by_name(self, pattern: str, *, regex: bool = False) -> list[Element]:
+        """Return elements whose name contains *pattern* (substring).
+
+        When *regex* is ``True``, uses ``re.search(pattern, name)`` instead.
+        """
+        if regex:
+            compiled = re.compile(pattern)
+            return [e for e in self.elements if e.name and compiled.search(e.name)]
+        return [e for e in self.elements if e.name and pattern in e.name]
+
+    def relationships_of_type(self, cls: type[Relationship]) -> list[Relationship]:
+        """Return relationships that are instances of *cls* (includes subclasses)."""
+        return [r for r in self.relationships if isinstance(r, cls)]
+
+    def connected_to(self, concept: Concept) -> list[Relationship]:
+        """Return all relationships where *concept* is source or target (identity check)."""
+        return [r for r in self.relationships if r.source is concept or r.target is concept]
+
+    def sources_of(self, concept: Concept) -> list[Concept]:
+        """Return source concepts of all relationships targeting *concept*."""
+        return [r.source for r in self.relationships if r.target is concept]
+
+    def targets_of(self, concept: Concept) -> list[Concept]:
+        """Return target concepts of all relationships sourced from *concept*."""
+        return [r.target for r in self.relationships if r.source is concept]
 
     def validate(self, *, strict: bool = False) -> list[ValidationError]:
         """Run all model-level validation rules.

@@ -32,9 +32,7 @@ def test_bench_serialize_1k():
     tree = serialize_model(model)
     assert tree is not None
     rate = 1000 / elapsed
-    print(
-        f"\nserialize_model() 1K elements: {elapsed * 1000:.1f}ms  ({rate:.0f} elements/sec)"
-    )
+    print(f"\nserialize_model() 1K elements: {elapsed * 1000:.1f}ms  ({rate:.0f} elements/sec)")
 
 
 @pytest.mark.slow
@@ -48,9 +46,7 @@ def test_bench_deserialize_1k():
     restored = deserialize_model(tree)
     assert len(restored.elements) == 1000
     rate = 1000 / elapsed
-    print(
-        f"\ndeserialize_model() 1K elements: {elapsed * 1000:.1f}ms  ({rate:.0f} elements/sec)"
-    )
+    print(f"\ndeserialize_model() 1K elements: {elapsed * 1000:.1f}ms  ({rate:.0f} elements/sec)")
 
 
 @pytest.mark.slow

@@ -135,35 +135,35 @@ Implement the example viewpoints from Appendix C of the ArchiMate 3.2 Specificat
 ---
 
 ## [EPIC-023] Model Querying and Filtering API
-**Status:** To-Do
+**Status:** Complete
 **Priority:** High
 
 Provide a fluent, composable API for querying and filtering model contents. Enables users to extract subsets of a model without manual iteration.
 
 ### [FEAT-23.1] Element Query Interface
-- [ ] [STORY-23.1.1] Implement `Model.query()` returning a `QueryBuilder` with chainable filter methods
-- [ ] [STORY-23.1.2] Implement `QueryBuilder.of_type(cls)` to filter by element type (including subclass matching)
-- [ ] [STORY-23.1.3] Implement `QueryBuilder.in_layer(layer: Layer)` to filter by layer classification
-- [ ] [STORY-23.1.4] Implement `QueryBuilder.with_aspect(aspect: Aspect)` to filter by aspect classification
-- [ ] [STORY-23.1.5] Implement `QueryBuilder.named(pattern: str)` with glob-style matching on element names
-- [ ] [STORY-23.1.6] Implement `QueryBuilder.all()` returning `list[Concept]` and `QueryBuilder.first()` returning `Concept | None`
-- [ ] [STORY-23.1.7] Write test: `model.query().of_type(BusinessActor).all()` returns only business actors
-- [ ] [STORY-23.1.8] Write test: `model.query().in_layer(Layer.TECHNOLOGY).named("*Server*").all()` returns correctly filtered results
+- [~] [STORY-23.1.1] Implement `Model.query()` returning a `QueryBuilder` with chainable filter methods — **WONTFIX** per ADR-036 D1 (QueryBuilder rejected; direct methods on Model used instead)
+- [x] [STORY-23.1.2] Implement `Model.elements_of_type(cls)` to filter by element type (including subclass matching)
+- [x] [STORY-23.1.3] Implement `Model.elements_by_layer(layer: Layer)` to filter by layer classification
+- [x] [STORY-23.1.4] Implement `Model.elements_by_aspect(aspect: Aspect)` to filter by aspect classification
+- [x] [STORY-23.1.5] Implement `Model.elements_by_name(pattern, *, regex=False)` with substring and optional regex matching (glob rejected per ADR-036 D3)
+- [~] [STORY-23.1.6] Implement `QueryBuilder.all()` and `QueryBuilder.first()` — **WONTFIX** per ADR-036 D1 (no QueryBuilder)
+- [x] [STORY-23.1.7] Write test: `model.elements_of_type(BusinessActor)` returns only business actors — `test/test_feat231_element_queries.py::TestElementsOfType`
+- [x] [STORY-23.1.8] Write test: composition via list comprehension replaces chained QueryBuilder — `test/test_feat231_element_queries.py::TestComposition`
 
 ### [FEAT-23.2] Relationship Traversal
-- [ ] [STORY-23.2.1] Implement `QueryBuilder.sources_of(element)` returning all elements that are sources of relationships targeting the given element
-- [ ] [STORY-23.2.2] Implement `QueryBuilder.targets_of(element)` returning all elements that are targets of relationships sourced from the given element
-- [ ] [STORY-23.2.3] Implement `QueryBuilder.related_to(element, rel_type=None)` returning all elements connected by a relationship of the given type (or any type if None)
-- [ ] [STORY-23.2.4] Implement `QueryBuilder.path_between(source, target, max_hops=5)` returning shortest relationship path
-- [ ] [STORY-23.2.5] Write test: `model.query().targets_of(actor).of_type(BusinessRole).all()` returns roles assigned to the actor
-- [ ] [STORY-23.2.6] Write test: `path_between` with no valid path returns empty list
+- [x] [STORY-23.2.1] Implement `Model.sources_of(concept)` returning all source concepts of relationships targeting the given concept — `src/pyarchi/metamodel/model.py`
+- [x] [STORY-23.2.2] Implement `Model.targets_of(concept)` returning all target concepts of relationships sourced from the given concept — `src/pyarchi/metamodel/model.py`
+- [x] [STORY-23.2.3] Implement `Model.connected_to(concept)` returning all relationships where concept is source or target — `src/pyarchi/metamodel/model.py`
+- [~] [STORY-23.2.4] Implement `path_between(source, target, max_hops=5)` returning shortest relationship path — **DEFERRED** per ADR D5 (graph traversal gated on future graph epic)
+- [x] [STORY-23.2.5] Write test: `targets_of(actor)` filtered by type returns roles assigned to the actor — `test/test_feat232_relationship_traversal.py::TestTargetsOf::test_composition_with_of_type`
+- [~] [STORY-23.2.6] Write test: `path_between` with no valid path returns empty list — **DEFERRED** (depends on STORY-23.2.4)
 
 ### [FEAT-23.3] Relationship Query Interface
-- [ ] [STORY-23.3.1] Implement `QueryBuilder.relationships()` switching the query to operate over relationships instead of elements
-- [ ] [STORY-23.3.2] Implement `QueryBuilder.of_category(cat: RelationshipCategory)` to filter relationships by category
-- [ ] [STORY-23.3.3] Implement `QueryBuilder.between(source_type, target_type)` to filter relationships by source/target type constraints
-- [ ] [STORY-23.3.4] Write test: `model.query().relationships().of_type(Serving).all()` returns all serving relationships
-- [ ] [STORY-23.3.5] Write test: `model.query().relationships().between(ApplicationComponent, ApplicationService).all()` returns correctly filtered results
+- [~] [STORY-23.3.1] Implement `QueryBuilder.relationships()` switching the query to operate over relationships instead of elements — **WONTFIX** per ADR D6 (QueryBuilder rejected; `Model.relationships_of_type()` replaces it)
+- [~] [STORY-23.3.2] Implement `QueryBuilder.of_category(cat: RelationshipCategory)` to filter relationships by category — **WONTFIX** per ADR D6 (trivial comprehension: `[r for r in model.relationships_of_type(X) if r.category == cat]`)
+- [~] [STORY-23.3.3] Implement `QueryBuilder.between(source_type, target_type)` to filter relationships by source/target type constraints — **WONTFIX** per ADR D6 (trivial comprehension over `relationships_of_type`)
+- [x] [STORY-23.3.4] Write test: `model.relationships_of_type(Serving)` returns all serving relationships — `test/test_feat233_relationship_query.py::TestRelationshipsOfType`
+- [x] [STORY-23.3.5] Write test: composition via comprehension over `relationships_of_type` filters by source/target type — `test/test_feat233_relationship_query.py::TestCompositionPatterns::test_between_types`
 
 ---
 

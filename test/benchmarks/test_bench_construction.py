@@ -63,4 +63,6 @@ def test_bench_construction_10k_varied():
     assert model is not None
     assert len(model.elements) == 10000
     rate = 10000 / elapsed
-    print(f"\nconstruction 10K elements (varied): {elapsed * 1000:.1f}ms  ({rate:.0f} elements/sec)")
+    print(
+        f"\nconstruction 10K elements (varied): {elapsed * 1000:.1f}ms  ({rate:.0f} elements/sec)"
+    )
