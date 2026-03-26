@@ -1,5 +1,7 @@
 """pyarchi -- Python implementation of the ArchiMate 3.2 metamodel."""
 
+# Phase 4: Model comparison and diff utilities (EPIC-024, FEAT-24.1)
+from pyarchi.comparison import ConceptChange, FieldChange, ModelDiff, diff_models
 from pyarchi.conformance import CONFORMANCE, ConformanceProfile
 from pyarchi.derivation.engine import DerivationEngine
 from pyarchi.enums import (
@@ -322,4 +324,9 @@ __all__: list[str] = [
     # Predefined Viewpoint Catalogue (EPIC-022, FEAT-22.1)
     "ViewpointCatalogue",
     "VIEWPOINT_CATALOGUE",
+    # Model comparison and diff utilities (EPIC-024, FEAT-24.1)
+    "FieldChange",
+    "ConceptChange",
+    "ModelDiff",
+    "diff_models",
 ]

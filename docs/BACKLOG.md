@@ -168,23 +168,23 @@ Provide a fluent, composable API for querying and filtering model contents. Enab
 ---
 
 ## [EPIC-024] Model Comparison and Diff Utilities
-**Status:** To-Do
+**Status:** Complete
 **Priority:** Medium
 
 Provide utilities for comparing two model instances and producing a structured diff, enabling change tracking and migration analysis.
 
 ### [FEAT-24.1] Structural Diff Engine
-- [ ] [STORY-24.1.1] Implement `ModelDiff` class with fields: `added: list[Concept]`, `removed: list[Concept]`, `modified: list[tuple[Concept, Concept]]`
-- [ ] [STORY-24.1.2] Implement `diff(model_a: Model, model_b: Model) -> ModelDiff` that compares by concept identifier
-- [ ] [STORY-24.1.3] Implement attribute-level change detection for modified concepts (track which fields changed)
-- [ ] [STORY-24.1.4] Write test: adding an element to model_b shows it in `diff.added`
-- [ ] [STORY-24.1.5] Write test: renaming an element shows it in `diff.modified` with the old and new names
+- [x] [STORY-24.1.1] Implement `ModelDiff` frozen dataclass with fields: `added: tuple[Concept, ...]`, `removed: tuple[Concept, ...]`, `modified: tuple[ConceptChange, ...]`; plus `FieldChange` and `ConceptChange` frozen dataclasses — `src/pyarchi/comparison.py`
+- [x] [STORY-24.1.2] Implement `diff_models(model_a: Model, model_b: Model, *, match_by: Literal["id", "type_name"] = "id") -> ModelDiff` in `src/pyarchi/comparison.py`
+- [x] [STORY-24.1.3] Implement attribute-level change detection via `_normalize_dump()` / `_diff_fields()` helpers; Relationship `source`/`target` normalized to id strings before comparison
+- [x] [STORY-24.1.4] Write test: adding an element to model_b shows it in `diff.added` — `TestDiffById::test_added_element`
+- [x] [STORY-24.1.5] Write test: renaming an element shows it in `diff.modified` with the old and new names — `TestDiffById::test_modified_element_name_change`
 
 ### [FEAT-24.2] Diff Serialization
-- [ ] [STORY-24.2.1] Implement `ModelDiff.to_dict()` for JSON-serializable diff output
-- [ ] [STORY-24.2.2] Implement `ModelDiff.summary() -> str` for human-readable diff summary
-- [ ] [STORY-24.2.3] Write test: round-trip `ModelDiff -> dict -> ModelDiff` preserves all diff entries
-- [ ] [STORY-24.2.4] Write test: `summary()` includes counts of added, removed, and modified concepts
+- [x] [STORY-24.2.1] Implement `ModelDiff.to_dict()` for JSON-serializable diff output — `src/pyarchi/comparison.py`
+- [x] [STORY-24.2.2] Implement `ModelDiff.summary() -> str` for human-readable diff summary — `src/pyarchi/comparison.py`
+- [x] [STORY-24.2.3] Write test: round-trip `ModelDiff -> dict -> ModelDiff` preserves all diff entries — `test/test_feat242_diff_serialization.py::TestToDict::test_to_dict_round_trip_keys`
+- [x] [STORY-24.2.4] Write test: `summary()` includes counts of added, removed, and modified concepts — `test/test_feat242_diff_serialization.py::TestSummary`
 
 ### [FEAT-24.3] Merge Support
 - [ ] [STORY-24.3.1] Implement `merge(base: Model, theirs: Model) -> Model` for non-conflicting merges (additions and removals only)
