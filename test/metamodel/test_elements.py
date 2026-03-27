@@ -7,9 +7,9 @@ from typing import ClassVar
 
 import pytest
 
-from pyarchi.enums import Aspect, Layer, RelationshipCategory
-from pyarchi.metamodel.concepts import Concept, Element, Relationship
-from pyarchi.metamodel.elements import (
+from etcion.enums import Aspect, Layer, RelationshipCategory
+from etcion.metamodel.concepts import Concept, Element, Relationship
+from etcion.metamodel.elements import (
     ActiveStructureElement,
     BehaviorElement,
     CompositeElement,
@@ -367,7 +367,7 @@ class TestCollaborationValidation:
     def test_collaboration_requires_two_internal_active(self) -> None:
         from pydantic import ValidationError as PydanticValidationError
 
-        from pyarchi.metamodel.business import BusinessActor, BusinessCollaboration
+        from etcion.metamodel.business import BusinessActor, BusinessCollaboration
 
         a = BusinessActor(name="a")
         with pytest.raises(PydanticValidationError):

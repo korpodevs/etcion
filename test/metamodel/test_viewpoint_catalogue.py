@@ -8,10 +8,10 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic import ValidationError as PydanticValidationError
 
-from pyarchi import VIEWPOINT_CATALOGUE
-from pyarchi.enums import ContentCategory, PurposeCategory
-from pyarchi.metamodel.concepts import Concept
-from pyarchi.metamodel.viewpoints import Viewpoint
+from etcion import VIEWPOINT_CATALOGUE
+from etcion.enums import ContentCategory, PurposeCategory
+from etcion.metamodel.concepts import Concept
+from etcion.metamodel.viewpoints import Viewpoint
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -21,7 +21,7 @@ from pyarchi.metamodel.viewpoints import Viewpoint
 def _make_viewpoint(name: str = "Test") -> Viewpoint:
     """Return a minimal Viewpoint using a real concrete type as the sole
     permitted concept type so Pydantic validation passes."""
-    from pyarchi.metamodel.motivation import Goal
+    from etcion.metamodel.motivation import Goal
 
     return Viewpoint(
         name=name,
@@ -41,7 +41,7 @@ class TestViewpointCatalogueMechanics:
 
     def _make_catalogue(self, keys: list[str]):
         """Build a catalogue with mock builders for the given keys."""
-        from pyarchi.metamodel.viewpoint_catalogue import ViewpointCatalogue
+        from etcion.metamodel.viewpoint_catalogue import ViewpointCatalogue
 
         builders = {k: MagicMock(return_value=_make_viewpoint(k)) for k in keys}
         return ViewpointCatalogue(builders), builders
@@ -79,7 +79,7 @@ class TestViewpointCatalogueMechanics:
         builders["Alpha"].assert_called_once()
 
     def test_is_mapping(self) -> None:
-        from pyarchi.metamodel.viewpoint_catalogue import ViewpointCatalogue
+        from etcion.metamodel.viewpoint_catalogue import ViewpointCatalogue
 
         assert issubclass(ViewpointCatalogue, Mapping)
 
@@ -107,7 +107,7 @@ class TestViewpointCatalogueSingleton:
 
     @pytest.fixture(autouse=True)
     def import_catalogue(self):
-        from pyarchi.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
+        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
 
         self.catalogue = VIEWPOINT_CATALOGUE
 
@@ -134,7 +134,7 @@ class TestViewpointCatalogueSingleton:
 class TestOrganizationViewpoint:
     @pytest.fixture(autouse=True)
     def vp(self):
-        from pyarchi.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
+        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
 
         self.vp = VIEWPOINT_CATALOGUE["Organization"]
 
@@ -151,62 +151,62 @@ class TestOrganizationViewpoint:
         assert len(self.vp.permitted_concept_types) > 0
 
     def test_permitted_includes_business_actor(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor
+        from etcion.metamodel.business import BusinessActor
 
         assert BusinessActor in self.vp.permitted_concept_types
 
     def test_permitted_includes_business_role(self) -> None:
-        from pyarchi.metamodel.business import BusinessRole
+        from etcion.metamodel.business import BusinessRole
 
         assert BusinessRole in self.vp.permitted_concept_types
 
     def test_permitted_includes_business_collaboration(self) -> None:
-        from pyarchi.metamodel.business import BusinessCollaboration
+        from etcion.metamodel.business import BusinessCollaboration
 
         assert BusinessCollaboration in self.vp.permitted_concept_types
 
     def test_permitted_includes_business_interface(self) -> None:
-        from pyarchi.metamodel.business import BusinessInterface
+        from etcion.metamodel.business import BusinessInterface
 
         assert BusinessInterface in self.vp.permitted_concept_types
 
     def test_permitted_includes_location(self) -> None:
-        from pyarchi.metamodel.elements import Location
+        from etcion.metamodel.elements import Location
 
         assert Location in self.vp.permitted_concept_types
 
     def test_permitted_includes_composition(self) -> None:
-        from pyarchi.metamodel.relationships import Composition
+        from etcion.metamodel.relationships import Composition
 
         assert Composition in self.vp.permitted_concept_types
 
     def test_permitted_includes_aggregation(self) -> None:
-        from pyarchi.metamodel.relationships import Aggregation
+        from etcion.metamodel.relationships import Aggregation
 
         assert Aggregation in self.vp.permitted_concept_types
 
     def test_permitted_includes_assignment(self) -> None:
-        from pyarchi.metamodel.relationships import Assignment
+        from etcion.metamodel.relationships import Assignment
 
         assert Assignment in self.vp.permitted_concept_types
 
     def test_permitted_includes_serving(self) -> None:
-        from pyarchi.metamodel.relationships import Serving
+        from etcion.metamodel.relationships import Serving
 
         assert Serving in self.vp.permitted_concept_types
 
     def test_permitted_includes_association(self) -> None:
-        from pyarchi.metamodel.relationships import Association
+        from etcion.metamodel.relationships import Association
 
         assert Association in self.vp.permitted_concept_types
 
     def test_permitted_includes_specialization(self) -> None:
-        from pyarchi.metamodel.relationships import Specialization
+        from etcion.metamodel.relationships import Specialization
 
         assert Specialization in self.vp.permitted_concept_types
 
     def test_permitted_includes_realization(self) -> None:
-        from pyarchi.metamodel.relationships import Realization
+        from etcion.metamodel.relationships import Realization
 
         assert Realization in self.vp.permitted_concept_types
 
@@ -214,7 +214,7 @@ class TestOrganizationViewpoint:
 class TestApplicationCooperationViewpoint:
     @pytest.fixture(autouse=True)
     def vp(self):
-        from pyarchi.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
+        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
 
         self.vp = VIEWPOINT_CATALOGUE["Application Cooperation"]
 
@@ -231,102 +231,102 @@ class TestApplicationCooperationViewpoint:
         assert len(self.vp.permitted_concept_types) > 0
 
     def test_permitted_includes_application_component(self) -> None:
-        from pyarchi.metamodel.application import ApplicationComponent
+        from etcion.metamodel.application import ApplicationComponent
 
         assert ApplicationComponent in self.vp.permitted_concept_types
 
     def test_permitted_includes_application_collaboration(self) -> None:
-        from pyarchi.metamodel.application import ApplicationCollaboration
+        from etcion.metamodel.application import ApplicationCollaboration
 
         assert ApplicationCollaboration in self.vp.permitted_concept_types
 
     def test_permitted_includes_application_interface(self) -> None:
-        from pyarchi.metamodel.application import ApplicationInterface
+        from etcion.metamodel.application import ApplicationInterface
 
         assert ApplicationInterface in self.vp.permitted_concept_types
 
     def test_permitted_includes_application_function(self) -> None:
-        from pyarchi.metamodel.application import ApplicationFunction
+        from etcion.metamodel.application import ApplicationFunction
 
         assert ApplicationFunction in self.vp.permitted_concept_types
 
     def test_permitted_includes_application_interaction(self) -> None:
-        from pyarchi.metamodel.application import ApplicationInteraction
+        from etcion.metamodel.application import ApplicationInteraction
 
         assert ApplicationInteraction in self.vp.permitted_concept_types
 
     def test_permitted_includes_application_process(self) -> None:
-        from pyarchi.metamodel.application import ApplicationProcess
+        from etcion.metamodel.application import ApplicationProcess
 
         assert ApplicationProcess in self.vp.permitted_concept_types
 
     def test_permitted_includes_application_event(self) -> None:
-        from pyarchi.metamodel.application import ApplicationEvent
+        from etcion.metamodel.application import ApplicationEvent
 
         assert ApplicationEvent in self.vp.permitted_concept_types
 
     def test_permitted_includes_application_service(self) -> None:
-        from pyarchi.metamodel.application import ApplicationService
+        from etcion.metamodel.application import ApplicationService
 
         assert ApplicationService in self.vp.permitted_concept_types
 
     def test_permitted_includes_data_object(self) -> None:
-        from pyarchi.metamodel.application import DataObject
+        from etcion.metamodel.application import DataObject
 
         assert DataObject in self.vp.permitted_concept_types
 
     def test_permitted_includes_location(self) -> None:
-        from pyarchi.metamodel.elements import Location
+        from etcion.metamodel.elements import Location
 
         assert Location in self.vp.permitted_concept_types
 
     def test_permitted_includes_serving(self) -> None:
-        from pyarchi.metamodel.relationships import Serving
+        from etcion.metamodel.relationships import Serving
 
         assert Serving in self.vp.permitted_concept_types
 
     def test_permitted_includes_flow(self) -> None:
-        from pyarchi.metamodel.relationships import Flow
+        from etcion.metamodel.relationships import Flow
 
         assert Flow in self.vp.permitted_concept_types
 
     def test_permitted_includes_triggering(self) -> None:
-        from pyarchi.metamodel.relationships import Triggering
+        from etcion.metamodel.relationships import Triggering
 
         assert Triggering in self.vp.permitted_concept_types
 
     def test_permitted_includes_realization(self) -> None:
-        from pyarchi.metamodel.relationships import Realization
+        from etcion.metamodel.relationships import Realization
 
         assert Realization in self.vp.permitted_concept_types
 
     def test_permitted_includes_access(self) -> None:
-        from pyarchi.metamodel.relationships import Access
+        from etcion.metamodel.relationships import Access
 
         assert Access in self.vp.permitted_concept_types
 
     def test_permitted_includes_composition(self) -> None:
-        from pyarchi.metamodel.relationships import Composition
+        from etcion.metamodel.relationships import Composition
 
         assert Composition in self.vp.permitted_concept_types
 
     def test_permitted_includes_aggregation(self) -> None:
-        from pyarchi.metamodel.relationships import Aggregation
+        from etcion.metamodel.relationships import Aggregation
 
         assert Aggregation in self.vp.permitted_concept_types
 
     def test_permitted_includes_assignment(self) -> None:
-        from pyarchi.metamodel.relationships import Assignment
+        from etcion.metamodel.relationships import Assignment
 
         assert Assignment in self.vp.permitted_concept_types
 
     def test_permitted_includes_association(self) -> None:
-        from pyarchi.metamodel.relationships import Association
+        from etcion.metamodel.relationships import Association
 
         assert Association in self.vp.permitted_concept_types
 
     def test_permitted_includes_specialization(self) -> None:
-        from pyarchi.metamodel.relationships import Specialization
+        from etcion.metamodel.relationships import Specialization
 
         assert Specialization in self.vp.permitted_concept_types
 
@@ -334,7 +334,7 @@ class TestApplicationCooperationViewpoint:
 class TestMotivationViewpoint:
     @pytest.fixture(autouse=True)
     def vp(self):
-        from pyarchi.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
+        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
 
         self.vp = VIEWPOINT_CATALOGUE["Motivation"]
 
@@ -351,82 +351,82 @@ class TestMotivationViewpoint:
         assert len(self.vp.permitted_concept_types) > 0
 
     def test_permitted_includes_stakeholder(self) -> None:
-        from pyarchi.metamodel.motivation import Stakeholder
+        from etcion.metamodel.motivation import Stakeholder
 
         assert Stakeholder in self.vp.permitted_concept_types
 
     def test_permitted_includes_driver(self) -> None:
-        from pyarchi.metamodel.motivation import Driver
+        from etcion.metamodel.motivation import Driver
 
         assert Driver in self.vp.permitted_concept_types
 
     def test_permitted_includes_assessment(self) -> None:
-        from pyarchi.metamodel.motivation import Assessment
+        from etcion.metamodel.motivation import Assessment
 
         assert Assessment in self.vp.permitted_concept_types
 
     def test_permitted_includes_goal(self) -> None:
-        from pyarchi.metamodel.motivation import Goal
+        from etcion.metamodel.motivation import Goal
 
         assert Goal in self.vp.permitted_concept_types
 
     def test_permitted_includes_outcome(self) -> None:
-        from pyarchi.metamodel.motivation import Outcome
+        from etcion.metamodel.motivation import Outcome
 
         assert Outcome in self.vp.permitted_concept_types
 
     def test_permitted_includes_principle(self) -> None:
-        from pyarchi.metamodel.motivation import Principle
+        from etcion.metamodel.motivation import Principle
 
         assert Principle in self.vp.permitted_concept_types
 
     def test_permitted_includes_requirement(self) -> None:
-        from pyarchi.metamodel.motivation import Requirement
+        from etcion.metamodel.motivation import Requirement
 
         assert Requirement in self.vp.permitted_concept_types
 
     def test_permitted_includes_constraint(self) -> None:
-        from pyarchi.metamodel.motivation import Constraint
+        from etcion.metamodel.motivation import Constraint
 
         assert Constraint in self.vp.permitted_concept_types
 
     def test_permitted_includes_meaning(self) -> None:
-        from pyarchi.metamodel.motivation import Meaning
+        from etcion.metamodel.motivation import Meaning
 
         assert Meaning in self.vp.permitted_concept_types
 
     def test_permitted_includes_value(self) -> None:
-        from pyarchi.metamodel.motivation import Value
+        from etcion.metamodel.motivation import Value
 
         assert Value in self.vp.permitted_concept_types
 
     def test_permitted_includes_influence(self) -> None:
-        from pyarchi.metamodel.relationships import Influence
+        from etcion.metamodel.relationships import Influence
 
         assert Influence in self.vp.permitted_concept_types
 
     def test_permitted_includes_realization(self) -> None:
-        from pyarchi.metamodel.relationships import Realization
+        from etcion.metamodel.relationships import Realization
 
         assert Realization in self.vp.permitted_concept_types
 
     def test_permitted_includes_association(self) -> None:
-        from pyarchi.metamodel.relationships import Association
+        from etcion.metamodel.relationships import Association
 
         assert Association in self.vp.permitted_concept_types
 
     def test_permitted_includes_specialization(self) -> None:
-        from pyarchi.metamodel.relationships import Specialization
+        from etcion.metamodel.relationships import Specialization
 
         assert Specialization in self.vp.permitted_concept_types
 
     def test_permitted_includes_composition(self) -> None:
-        from pyarchi.metamodel.relationships import Composition
+        from etcion.metamodel.relationships import Composition
 
         assert Composition in self.vp.permitted_concept_types
 
     def test_permitted_includes_aggregation(self) -> None:
-        from pyarchi.metamodel.relationships import Aggregation
+        from etcion.metamodel.relationships import Aggregation
 
         assert Aggregation in self.vp.permitted_concept_types
 
@@ -434,7 +434,7 @@ class TestMotivationViewpoint:
 class TestStrategyViewpoint:
     @pytest.fixture(autouse=True)
     def vp(self):
-        from pyarchi.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
+        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
 
         self.vp = VIEWPOINT_CATALOGUE["Strategy"]
 
@@ -451,77 +451,77 @@ class TestStrategyViewpoint:
         assert len(self.vp.permitted_concept_types) > 0
 
     def test_permitted_includes_resource(self) -> None:
-        from pyarchi.metamodel.strategy import Resource
+        from etcion.metamodel.strategy import Resource
 
         assert Resource in self.vp.permitted_concept_types
 
     def test_permitted_includes_capability(self) -> None:
-        from pyarchi.metamodel.strategy import Capability
+        from etcion.metamodel.strategy import Capability
 
         assert Capability in self.vp.permitted_concept_types
 
     def test_permitted_includes_value_stream(self) -> None:
-        from pyarchi.metamodel.strategy import ValueStream
+        from etcion.metamodel.strategy import ValueStream
 
         assert ValueStream in self.vp.permitted_concept_types
 
     def test_permitted_includes_course_of_action(self) -> None:
-        from pyarchi.metamodel.strategy import CourseOfAction
+        from etcion.metamodel.strategy import CourseOfAction
 
         assert CourseOfAction in self.vp.permitted_concept_types
 
     def test_permitted_includes_composition(self) -> None:
-        from pyarchi.metamodel.relationships import Composition
+        from etcion.metamodel.relationships import Composition
 
         assert Composition in self.vp.permitted_concept_types
 
     def test_permitted_includes_aggregation(self) -> None:
-        from pyarchi.metamodel.relationships import Aggregation
+        from etcion.metamodel.relationships import Aggregation
 
         assert Aggregation in self.vp.permitted_concept_types
 
     def test_permitted_includes_assignment(self) -> None:
-        from pyarchi.metamodel.relationships import Assignment
+        from etcion.metamodel.relationships import Assignment
 
         assert Assignment in self.vp.permitted_concept_types
 
     def test_permitted_includes_realization(self) -> None:
-        from pyarchi.metamodel.relationships import Realization
+        from etcion.metamodel.relationships import Realization
 
         assert Realization in self.vp.permitted_concept_types
 
     def test_permitted_includes_serving(self) -> None:
-        from pyarchi.metamodel.relationships import Serving
+        from etcion.metamodel.relationships import Serving
 
         assert Serving in self.vp.permitted_concept_types
 
     def test_permitted_includes_flow(self) -> None:
-        from pyarchi.metamodel.relationships import Flow
+        from etcion.metamodel.relationships import Flow
 
         assert Flow in self.vp.permitted_concept_types
 
     def test_permitted_includes_triggering(self) -> None:
-        from pyarchi.metamodel.relationships import Triggering
+        from etcion.metamodel.relationships import Triggering
 
         assert Triggering in self.vp.permitted_concept_types
 
     def test_permitted_includes_access(self) -> None:
-        from pyarchi.metamodel.relationships import Access
+        from etcion.metamodel.relationships import Access
 
         assert Access in self.vp.permitted_concept_types
 
     def test_permitted_includes_influence(self) -> None:
-        from pyarchi.metamodel.relationships import Influence
+        from etcion.metamodel.relationships import Influence
 
         assert Influence in self.vp.permitted_concept_types
 
     def test_permitted_includes_association(self) -> None:
-        from pyarchi.metamodel.relationships import Association
+        from etcion.metamodel.relationships import Association
 
         assert Association in self.vp.permitted_concept_types
 
     def test_permitted_includes_specialization(self) -> None:
-        from pyarchi.metamodel.relationships import Specialization
+        from etcion.metamodel.relationships import Specialization
 
         assert Specialization in self.vp.permitted_concept_types
 
@@ -529,7 +529,7 @@ class TestStrategyViewpoint:
 class TestImplementationAndMigrationViewpoint:
     @pytest.fixture(autouse=True)
     def vp(self):
-        from pyarchi.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
+        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
 
         self.vp = VIEWPOINT_CATALOGUE["Implementation and Migration"]
 
@@ -546,77 +546,77 @@ class TestImplementationAndMigrationViewpoint:
         assert len(self.vp.permitted_concept_types) > 0
 
     def test_permitted_includes_work_package(self) -> None:
-        from pyarchi.metamodel.implementation_migration import WorkPackage
+        from etcion.metamodel.implementation_migration import WorkPackage
 
         assert WorkPackage in self.vp.permitted_concept_types
 
     def test_permitted_includes_deliverable(self) -> None:
-        from pyarchi.metamodel.implementation_migration import Deliverable
+        from etcion.metamodel.implementation_migration import Deliverable
 
         assert Deliverable in self.vp.permitted_concept_types
 
     def test_permitted_includes_implementation_event(self) -> None:
-        from pyarchi.metamodel.implementation_migration import ImplementationEvent
+        from etcion.metamodel.implementation_migration import ImplementationEvent
 
         assert ImplementationEvent in self.vp.permitted_concept_types
 
     def test_permitted_includes_plateau(self) -> None:
-        from pyarchi.metamodel.implementation_migration import Plateau
+        from etcion.metamodel.implementation_migration import Plateau
 
         assert Plateau in self.vp.permitted_concept_types
 
     def test_permitted_includes_gap(self) -> None:
-        from pyarchi.metamodel.implementation_migration import Gap
+        from etcion.metamodel.implementation_migration import Gap
 
         assert Gap in self.vp.permitted_concept_types
 
     def test_permitted_includes_location(self) -> None:
-        from pyarchi.metamodel.elements import Location
+        from etcion.metamodel.elements import Location
 
         assert Location in self.vp.permitted_concept_types
 
     def test_permitted_includes_composition(self) -> None:
-        from pyarchi.metamodel.relationships import Composition
+        from etcion.metamodel.relationships import Composition
 
         assert Composition in self.vp.permitted_concept_types
 
     def test_permitted_includes_aggregation(self) -> None:
-        from pyarchi.metamodel.relationships import Aggregation
+        from etcion.metamodel.relationships import Aggregation
 
         assert Aggregation in self.vp.permitted_concept_types
 
     def test_permitted_includes_assignment(self) -> None:
-        from pyarchi.metamodel.relationships import Assignment
+        from etcion.metamodel.relationships import Assignment
 
         assert Assignment in self.vp.permitted_concept_types
 
     def test_permitted_includes_realization(self) -> None:
-        from pyarchi.metamodel.relationships import Realization
+        from etcion.metamodel.relationships import Realization
 
         assert Realization in self.vp.permitted_concept_types
 
     def test_permitted_includes_serving(self) -> None:
-        from pyarchi.metamodel.relationships import Serving
+        from etcion.metamodel.relationships import Serving
 
         assert Serving in self.vp.permitted_concept_types
 
     def test_permitted_includes_triggering(self) -> None:
-        from pyarchi.metamodel.relationships import Triggering
+        from etcion.metamodel.relationships import Triggering
 
         assert Triggering in self.vp.permitted_concept_types
 
     def test_permitted_includes_flow(self) -> None:
-        from pyarchi.metamodel.relationships import Flow
+        from etcion.metamodel.relationships import Flow
 
         assert Flow in self.vp.permitted_concept_types
 
     def test_permitted_includes_association(self) -> None:
-        from pyarchi.metamodel.relationships import Association
+        from etcion.metamodel.relationships import Association
 
         assert Association in self.vp.permitted_concept_types
 
     def test_permitted_includes_specialization(self) -> None:
-        from pyarchi.metamodel.relationships import Specialization
+        from etcion.metamodel.relationships import Specialization
 
         assert Specialization in self.vp.permitted_concept_types
 
@@ -662,7 +662,7 @@ class TestAllViewpoints:
 
     @pytest.fixture(autouse=True)
     def catalogue(self):
-        from pyarchi.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
+        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
 
         self.catalogue = VIEWPOINT_CATALOGUE
 
@@ -763,18 +763,18 @@ def test_viewpoint_is_frozen(key: str) -> None:
 
 
 def test_catalogue_importable_from_top_level() -> None:
-    """VIEWPOINT_CATALOGUE is importable directly from pyarchi."""
-    import pyarchi
+    """VIEWPOINT_CATALOGUE is importable directly from etcion."""
+    import etcion
 
-    assert hasattr(pyarchi, "VIEWPOINT_CATALOGUE")
-    assert pyarchi.VIEWPOINT_CATALOGUE is VIEWPOINT_CATALOGUE
+    assert hasattr(etcion, "VIEWPOINT_CATALOGUE")
+    assert etcion.VIEWPOINT_CATALOGUE is VIEWPOINT_CATALOGUE
 
 
 def test_catalogue_in_all() -> None:
-    """VIEWPOINT_CATALOGUE is listed in pyarchi.__all__."""
-    import pyarchi
+    """VIEWPOINT_CATALOGUE is listed in etcion.__all__."""
+    import etcion
 
-    assert "VIEWPOINT_CATALOGUE" in pyarchi.__all__
+    assert "VIEWPOINT_CATALOGUE" in etcion.__all__
 
 
 # ---------------------------------------------------------------------------
@@ -784,7 +784,7 @@ def test_catalogue_in_all() -> None:
 
 def test_view_accepts_permitted_concept() -> None:
     """A View governed by the Organization viewpoint accepts a BusinessActor."""
-    from pyarchi import BusinessActor, Model, View
+    from etcion import BusinessActor, Model, View
 
     model = Model()
     actor = BusinessActor(name="Alice")
@@ -798,8 +798,8 @@ def test_view_accepts_permitted_concept() -> None:
 
 def test_view_rejects_unpermitted_concept() -> None:
     """A View governed by Organization viewpoint rejects a DataObject."""
-    from pyarchi import DataObject, Model, View
-    from pyarchi.exceptions import ValidationError
+    from etcion import DataObject, Model, View
+    from etcion.exceptions import ValidationError
 
     model = Model()
     obj = DataObject(name="Invoice")
@@ -817,8 +817,8 @@ def test_view_rejects_concept_not_in_model() -> None:
     This verifies the membership gate in View.add() works with catalogue
     viewpoints, even when the concept type itself would be permitted.
     """
-    from pyarchi import BusinessActor, Model, View
-    from pyarchi.exceptions import ValidationError
+    from etcion import BusinessActor, Model, View
+    from etcion.exceptions import ValidationError
 
     model = Model()
     orphan = BusinessActor(name="Orphan")

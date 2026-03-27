@@ -1,11 +1,11 @@
-"""Conformance test suite for pyarchi against the ArchiMate 3.2 specification.
+"""Conformance test suite for etcion against the ArchiMate 3.2 specification.
 
 Test Strategy
 -------------
 This file is an *executable specification* of the library's conformance
 requirements.  It does not test implementation behaviour (that is the
 responsibility of each epic's unit tests); it tests that the public API
-surface declared by :class:`pyarchi.ConformanceProfile` actually exists.
+surface declared by :class:`etcion.ConformanceProfile` actually exists.
 
 Marker Strategy
 ~~~~~~~~~~~~~~~
@@ -13,13 +13,13 @@ Marker Strategy
   once ``conformance.py`` (FEAT-01.1) is implemented.
 * **TestShallFeatures** -- ``@pytest.mark.xfail(strict=False)``.  Each test
   is expected to fail until the implementing epic exports the required types
-  from ``pyarchi.__init__``.  ``strict=False`` means an unexpected pass
+  from ``etcion.__init__``.  ``strict=False`` means an unexpected pass
   (xpass) is tolerated, allowing tests to silently transition to green.
 * **TestShouldFeatures** -- Same ``xfail`` pattern, with Phase 2 reasons.
 * **TestMayFeatures** -- ``@pytest.mark.skip``.  These features are out of
   scope and should never appear as expected failures.
 
-When an epic is complete and its types are exported from ``pyarchi.__init__``,
+When an epic is complete and its types are exported from ``etcion.__init__``,
 remove the ``xfail`` marker from the corresponding test so it appears as a
 normal ``PASSED`` result in the test report.
 """
@@ -30,8 +30,8 @@ import dataclasses
 
 import pytest
 
-import pyarchi
-from pyarchi import CONFORMANCE, SPEC_VERSION, ConformanceProfile
+import etcion
+from etcion import CONFORMANCE, SPEC_VERSION, ConformanceProfile
 
 # ---------------------------------------------------------------------------
 # TestConformanceProfile -- passes immediately once FEAT-01.1 is done
@@ -84,113 +84,113 @@ class TestConformanceProfile:
 class TestShallFeatures:
     """Assert that every shall-level feature is present in the public API.
 
-    Each test checks ``hasattr(pyarchi, "TypeName")`` for the types
+    Each test checks ``hasattr(etcion, "TypeName")`` for the types
     required by the corresponding :class:`ConformanceProfile` field.
     Tests are marked ``xfail(strict=False)`` until the implementing epic
-    exports the types from ``pyarchi.__init__``.
+    exports the types from ``etcion.__init__``.
     """
 
     def test_language_structure(self) -> None:
-        assert hasattr(pyarchi, "Layer")
-        assert hasattr(pyarchi, "Aspect")
+        assert hasattr(etcion, "Layer")
+        assert hasattr(etcion, "Aspect")
 
     def test_generic_metamodel(self) -> None:
-        assert hasattr(pyarchi, "Concept")
-        assert hasattr(pyarchi, "Element")
-        assert hasattr(pyarchi, "Relationship")
-        assert hasattr(pyarchi, "RelationshipConnector")
+        assert hasattr(etcion, "Concept")
+        assert hasattr(etcion, "Element")
+        assert hasattr(etcion, "Relationship")
+        assert hasattr(etcion, "RelationshipConnector")
 
     def test_strategy_elements(self) -> None:
-        assert hasattr(pyarchi, "Resource")
-        assert hasattr(pyarchi, "Capability")
-        assert hasattr(pyarchi, "ValueStream")
-        assert hasattr(pyarchi, "CourseOfAction")
+        assert hasattr(etcion, "Resource")
+        assert hasattr(etcion, "Capability")
+        assert hasattr(etcion, "ValueStream")
+        assert hasattr(etcion, "CourseOfAction")
 
     def test_motivation_elements(self) -> None:
-        assert hasattr(pyarchi, "Stakeholder")
-        assert hasattr(pyarchi, "Driver")
-        assert hasattr(pyarchi, "Assessment")
-        assert hasattr(pyarchi, "Goal")
-        assert hasattr(pyarchi, "Outcome")
-        assert hasattr(pyarchi, "Principle")
-        assert hasattr(pyarchi, "Requirement")
-        assert hasattr(pyarchi, "Constraint")
-        assert hasattr(pyarchi, "Meaning")
-        assert hasattr(pyarchi, "Value")
+        assert hasattr(etcion, "Stakeholder")
+        assert hasattr(etcion, "Driver")
+        assert hasattr(etcion, "Assessment")
+        assert hasattr(etcion, "Goal")
+        assert hasattr(etcion, "Outcome")
+        assert hasattr(etcion, "Principle")
+        assert hasattr(etcion, "Requirement")
+        assert hasattr(etcion, "Constraint")
+        assert hasattr(etcion, "Meaning")
+        assert hasattr(etcion, "Value")
 
     def test_business_elements(self) -> None:
-        assert hasattr(pyarchi, "BusinessActor")
-        assert hasattr(pyarchi, "BusinessRole")
-        assert hasattr(pyarchi, "BusinessCollaboration")
-        assert hasattr(pyarchi, "BusinessInterface")
-        assert hasattr(pyarchi, "BusinessProcess")
-        assert hasattr(pyarchi, "BusinessFunction")
-        assert hasattr(pyarchi, "BusinessInteraction")
-        assert hasattr(pyarchi, "BusinessEvent")
-        assert hasattr(pyarchi, "BusinessService")
-        assert hasattr(pyarchi, "BusinessObject")
-        assert hasattr(pyarchi, "Contract")
-        assert hasattr(pyarchi, "Representation")
-        assert hasattr(pyarchi, "Product")
+        assert hasattr(etcion, "BusinessActor")
+        assert hasattr(etcion, "BusinessRole")
+        assert hasattr(etcion, "BusinessCollaboration")
+        assert hasattr(etcion, "BusinessInterface")
+        assert hasattr(etcion, "BusinessProcess")
+        assert hasattr(etcion, "BusinessFunction")
+        assert hasattr(etcion, "BusinessInteraction")
+        assert hasattr(etcion, "BusinessEvent")
+        assert hasattr(etcion, "BusinessService")
+        assert hasattr(etcion, "BusinessObject")
+        assert hasattr(etcion, "Contract")
+        assert hasattr(etcion, "Representation")
+        assert hasattr(etcion, "Product")
 
     def test_application_elements(self) -> None:
-        assert hasattr(pyarchi, "ApplicationComponent")
-        assert hasattr(pyarchi, "ApplicationCollaboration")
-        assert hasattr(pyarchi, "ApplicationInterface")
-        assert hasattr(pyarchi, "ApplicationFunction")
-        assert hasattr(pyarchi, "ApplicationInteraction")
-        assert hasattr(pyarchi, "ApplicationProcess")
-        assert hasattr(pyarchi, "ApplicationEvent")
-        assert hasattr(pyarchi, "ApplicationService")
-        assert hasattr(pyarchi, "DataObject")
+        assert hasattr(etcion, "ApplicationComponent")
+        assert hasattr(etcion, "ApplicationCollaboration")
+        assert hasattr(etcion, "ApplicationInterface")
+        assert hasattr(etcion, "ApplicationFunction")
+        assert hasattr(etcion, "ApplicationInteraction")
+        assert hasattr(etcion, "ApplicationProcess")
+        assert hasattr(etcion, "ApplicationEvent")
+        assert hasattr(etcion, "ApplicationService")
+        assert hasattr(etcion, "DataObject")
 
     def test_technology_elements(self) -> None:
-        assert hasattr(pyarchi, "Node")
-        assert hasattr(pyarchi, "Device")
-        assert hasattr(pyarchi, "SystemSoftware")
-        assert hasattr(pyarchi, "TechnologyCollaboration")
-        assert hasattr(pyarchi, "TechnologyInterface")
-        assert hasattr(pyarchi, "Path")
-        assert hasattr(pyarchi, "CommunicationNetwork")
-        assert hasattr(pyarchi, "TechnologyFunction")
-        assert hasattr(pyarchi, "TechnologyProcess")
-        assert hasattr(pyarchi, "TechnologyInteraction")
-        assert hasattr(pyarchi, "TechnologyEvent")
-        assert hasattr(pyarchi, "TechnologyService")
-        assert hasattr(pyarchi, "Artifact")
+        assert hasattr(etcion, "Node")
+        assert hasattr(etcion, "Device")
+        assert hasattr(etcion, "SystemSoftware")
+        assert hasattr(etcion, "TechnologyCollaboration")
+        assert hasattr(etcion, "TechnologyInterface")
+        assert hasattr(etcion, "Path")
+        assert hasattr(etcion, "CommunicationNetwork")
+        assert hasattr(etcion, "TechnologyFunction")
+        assert hasattr(etcion, "TechnologyProcess")
+        assert hasattr(etcion, "TechnologyInteraction")
+        assert hasattr(etcion, "TechnologyEvent")
+        assert hasattr(etcion, "TechnologyService")
+        assert hasattr(etcion, "Artifact")
 
     def test_physical_elements(self) -> None:
-        assert hasattr(pyarchi, "Equipment")
-        assert hasattr(pyarchi, "Facility")
-        assert hasattr(pyarchi, "DistributionNetwork")
-        assert hasattr(pyarchi, "Material")
+        assert hasattr(etcion, "Equipment")
+        assert hasattr(etcion, "Facility")
+        assert hasattr(etcion, "DistributionNetwork")
+        assert hasattr(etcion, "Material")
 
     def test_implementation_migration_elements(self) -> None:
-        assert hasattr(pyarchi, "WorkPackage")
-        assert hasattr(pyarchi, "Deliverable")
-        assert hasattr(pyarchi, "ImplementationEvent")
-        assert hasattr(pyarchi, "Plateau")
-        assert hasattr(pyarchi, "Gap")
+        assert hasattr(etcion, "WorkPackage")
+        assert hasattr(etcion, "Deliverable")
+        assert hasattr(etcion, "ImplementationEvent")
+        assert hasattr(etcion, "Plateau")
+        assert hasattr(etcion, "Gap")
 
     def test_cross_layer_relationships(self) -> None:
-        assert hasattr(pyarchi, "Composition")
-        assert hasattr(pyarchi, "Aggregation")
-        assert hasattr(pyarchi, "Assignment")
-        assert hasattr(pyarchi, "Realization")
-        assert hasattr(pyarchi, "Serving")
-        assert hasattr(pyarchi, "Access")
-        assert hasattr(pyarchi, "Influence")
-        assert hasattr(pyarchi, "Association")
-        assert hasattr(pyarchi, "Triggering")
-        assert hasattr(pyarchi, "Flow")
-        assert hasattr(pyarchi, "Specialization")
-        assert hasattr(pyarchi, "Junction")
+        assert hasattr(etcion, "Composition")
+        assert hasattr(etcion, "Aggregation")
+        assert hasattr(etcion, "Assignment")
+        assert hasattr(etcion, "Realization")
+        assert hasattr(etcion, "Serving")
+        assert hasattr(etcion, "Access")
+        assert hasattr(etcion, "Influence")
+        assert hasattr(etcion, "Association")
+        assert hasattr(etcion, "Triggering")
+        assert hasattr(etcion, "Flow")
+        assert hasattr(etcion, "Specialization")
+        assert hasattr(etcion, "Junction")
 
     def test_relationship_permission_table(self) -> None:
-        assert hasattr(pyarchi, "is_permitted")
+        assert hasattr(etcion, "is_permitted")
 
     def test_iconography_metadata(self) -> None:
-        assert hasattr(pyarchi, "NotationMetadata")
+        assert hasattr(etcion, "NotationMetadata")
 
 
 # ---------------------------------------------------------------------------
@@ -206,10 +206,10 @@ class TestShouldFeatures:
     """
 
     def test_viewpoint_mechanism(self) -> None:
-        assert hasattr(pyarchi, "Viewpoint")
+        assert hasattr(etcion, "Viewpoint")
 
     def test_language_customization(self) -> None:
-        assert hasattr(pyarchi, "Profile")
+        assert hasattr(etcion, "Profile")
 
 
 # ---------------------------------------------------------------------------
@@ -243,21 +243,21 @@ class TestUndefinedTypeGuard:
 
     These tests are specified by ADR-005 and will pass once EPIC-002
     implements the Model container (FEAT-02.6) and Concept ABC (FEAT-02.1).
-    Until then, they fail with AttributeError (pyarchi.Model does not exist)
+    Until then, they fail with AttributeError (etcion.Model does not exist)
     which is absorbed by the xfail marker.
     """
 
     def test_dict_raises_type_error(self) -> None:
         with pytest.raises(TypeError):
-            pyarchi.Model().add({})  # type: ignore[arg-type]
+            etcion.Model().add({})  # type: ignore[arg-type]
 
     def test_arbitrary_object_raises_type_error(self) -> None:
         with pytest.raises(TypeError):
-            pyarchi.Model().add(object())  # type: ignore[arg-type]
+            etcion.Model().add(object())  # type: ignore[arg-type]
 
     def test_non_concept_class_raises_type_error(self) -> None:
         class Fake:
             pass
 
         with pytest.raises(TypeError):
-            pyarchi.Model().add(Fake())  # type: ignore[arg-type]
+            etcion.Model().add(Fake())  # type: ignore[arg-type]

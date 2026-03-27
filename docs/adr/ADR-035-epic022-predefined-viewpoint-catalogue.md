@@ -14,13 +14,13 @@ ADR-029 (Decision 7) explicitly deferred predefined viewpoint instances to a fut
 
 The ArchiMate 3.2 Specification Appendix C defines ~25 standard viewpoints, each with a name, purpose category, content category, and a set of permitted concept types. The Exchange Format XSD (`ViewpointsEnum`, lines 263-315) enumerates them. These viewpoints are **informative** (not normative), but they are essential for interoperability with tools like Archi that use the standard names.
 
-The `Viewpoint` class already exists in `src/pyarchi/metamodel/viewpoints.py` with `frozen=True`, `permitted_concept_types: frozenset[type[Concept]]`, and `purpose`/`content` enum fields. All concrete element and relationship types are exported from `pyarchi.__init__`. The infrastructure is complete; this epic populates it.
+The `Viewpoint` class already exists in `src/etcion/metamodel/viewpoints.py` with `frozen=True`, `permitted_concept_types: frozenset[type[Concept]]`, and `purpose`/`content` enum fields. All concrete element and relationship types are exported from `etcion.__init__`. The infrastructure is complete; this epic populates it.
 
 Prior decisions accepted without re-litigation:
 
 - `Viewpoint` is a frozen Pydantic `BaseModel`, not a `Concept` (ADR-029 Decision 2).
 - `permitted_concept_types` is `frozenset[type[Concept]]` using class references (ADR-029 Decision 3).
-- `PurposeCategory` and `ContentCategory` enums live in `src/pyarchi/enums.py` (ADR-029 Decision 5).
+- `PurposeCategory` and `ContentCategory` enums live in `src/etcion/enums.py` (ADR-029 Decision 5).
 - All concrete element and relationship classes are already in the public API (ADR-026, EPIC-014).
 
 ## Decisions
@@ -32,7 +32,7 @@ Prior decisions accepted without re-litigation:
 | Extend `metamodel/viewpoints.py` | Single file for viewpoint types and instances | Bloats mechanism module with ~25 data definitions; forces all concrete type imports into the mechanism module |
 | New `metamodel/viewpoint_catalogue.py` | Separates mechanism from data; import cost is opt-in | Extra module |
 
-**Decision:** New module `src/pyarchi/metamodel/viewpoint_catalogue.py`. The mechanism module (`viewpoints.py`) remains free of concrete type imports. The catalogue module imports all concrete types it needs; this is acceptable because the catalogue is a leaf module with no downstream dependents.
+**Decision:** New module `src/etcion/metamodel/viewpoint_catalogue.py`. The mechanism module (`viewpoints.py`) remains free of concrete type imports. The catalogue module imports all concrete types it needs; this is acceptable because the catalogue is a leaf module with no downstream dependents.
 
 ### 2. Representation: Lazy Registry, Not Constants
 
@@ -81,12 +81,12 @@ Each viewpoint's `purpose` and `content` fields are set per Appendix C Table C-1
 
 ### 6. Exports
 
-| Symbol | Exported from `pyarchi.__init__` | Rationale |
+| Symbol | Exported from `etcion.__init__` | Rationale |
 |---|---|---|
 | `VIEWPOINT_CATALOGUE` | Yes | Primary public API for accessing predefined viewpoints |
 | Individual viewpoint constants | No | Registry is the single access point; avoids 25 module-level names |
 
-Import path: `from pyarchi import VIEWPOINT_CATALOGUE` or `from pyarchi.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE`.
+Import path: `from etcion import VIEWPOINT_CATALOGUE` or `from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE`.
 
 ### 7. Testing Strategy
 

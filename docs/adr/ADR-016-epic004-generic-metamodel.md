@@ -31,7 +31,7 @@ Concrete element types (e.g., `BusinessActor`, `ApplicationProcess`) belong to l
 
 ### 2. Module Structure
 
-All abstract element classes are defined in `src/pyarchi/metamodel/elements.py` (new file). The two concrete classes (`Grouping`, `Location`) are defined in the same file rather than a separate `composites.py` module.
+All abstract element classes are defined in `src/etcion/metamodel/elements.py` (new file). The two concrete classes (`Grouping`, `Location`) are defined in the same file rather than a separate `composites.py` module.
 
 Rationale: splitting two concrete classes into their own module creates navigation overhead disproportionate to the content. `elements.py` is the natural home for all `Element` subclasses in the generic metamodel. When layer-specific concrete types arrive in later epics, they will occupy their own per-layer modules (e.g., `business.py`, `application.py`), at which point `Grouping` and `Location` may be extracted -- but that is a future concern.
 
@@ -65,7 +65,7 @@ Because `Interaction` is abstract (`_type_name` not implemented), the validator 
 
 ### 7. `__init__.py` Exports
 
-After EPIC-004, the following types are added to `src/pyarchi/__init__.py` and `__all__`:
+After EPIC-004, the following types are added to `src/etcion/__init__.py` and `__all__`:
 
 - Abstract ABCs: `StructureElement`, `ActiveStructureElement`, `InternalActiveStructureElement`, `ExternalActiveStructureElement`, `PassiveStructureElement`, `BehaviorElement`, `InternalBehaviorElement`, `Process`, `Function`, `Interaction`, `ExternalBehaviorElement`, `Event`, `MotivationElement`, `CompositeElement`.
 - Concrete classes: `Grouping`, `Location`.
@@ -84,7 +84,7 @@ Adding `Layer.CROSS_LAYER` or `Layer.ANY` was considered so that `Location` coul
 
 ### Separate `composites.py` Module
 
-Placing `Grouping` and `Location` in `src/pyarchi/metamodel/composites.py` was considered for organizational clarity. Rejected because two small concrete classes do not justify a separate module at this stage. The decision can be revisited when layer-specific modules are introduced.
+Placing `Grouping` and `Location` in `src/etcion/metamodel/composites.py` was considered for organizational clarity. Rejected because two small concrete classes do not justify a separate module at this stage. The decision can be revisited when layer-specific modules are introduced.
 
 ### Interaction Validation via Relationship Counting
 

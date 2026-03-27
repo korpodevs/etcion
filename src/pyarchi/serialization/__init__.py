@@ -1,1 +1,0 @@
-"""Serialization subsystem for pyarchi."""

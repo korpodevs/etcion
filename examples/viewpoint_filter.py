@@ -4,7 +4,7 @@
 Demonstrates VIEWPOINT_CATALOGUE, View creation, and type gates.
 """
 
-from pyarchi import (
+from etcion import (
     ApplicationComponent,
     BusinessActor,
     BusinessInterface,

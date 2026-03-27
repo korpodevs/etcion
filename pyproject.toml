@@ -3,14 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pyarchi"
+name = "etcion"
 version = "0.1.0"
 description = "A Python library implementing the ArchiMate 3.2 metamodel"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
 authors = [
-    { name = "pyarchi contributors" },
+    { name = "etcion contributors" },
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -44,14 +44,14 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pyarchi-org/pyarchi"
-Documentation = "https://pyarchi-org.github.io/pyarchi/"
-Repository = "https://github.com/pyarchi-org/pyarchi"
-Issues = "https://github.com/pyarchi-org/pyarchi/issues"
-Changelog = "https://github.com/pyarchi-org/pyarchi/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/korpodevs/etcion"
+Documentation = "https://korpodevs.github.io/etcion/"
+Repository = "https://github.com/korpodevs/etcion"
+Issues = "https://github.com/korpodevs/etcion/issues"
+Changelog = "https://github.com/korpodevs/etcion/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pyarchi"]
+packages = ["src/etcion"]
 
 [tool.pytest.ini_options]
 testpaths = ["test"]
@@ -94,5 +94,5 @@ module = "lxml.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "pyarchi.serialization.xml"
+module = "etcion.serialization.xml"
 disable_error_code = ["import-untyped"]

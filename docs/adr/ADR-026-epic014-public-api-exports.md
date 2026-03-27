@@ -10,9 +10,9 @@ ACCEPTED
 
 ## Context
 
-Phase 2 (EPICs 006--013) added seven layer modules with concrete element classes and layer-specific ABCs. None of these types are currently exported from `pyarchi.__init__`. Consumer code must use deep imports like `from pyarchi.metamodel.business import BusinessActor`, which is inconsistent with the Phase 1 pattern where all types are importable from the top-level package.
+Phase 2 (EPICs 006--013) added seven layer modules with concrete element classes and layer-specific ABCs. None of these types are currently exported from `etcion.__init__`. Consumer code must use deep imports like `from etcion.metamodel.business import BusinessActor`, which is inconsistent with the Phase 1 pattern where all types are importable from the top-level package.
 
-EPIC-014 is a single feature (FEAT-14.1) that adds Phase 2 types to `src/pyarchi/__init__.py` and `__all__`, plus a verification test.
+EPIC-014 is a single feature (FEAT-14.1) that adds Phase 2 types to `src/etcion/__init__.py` and `__all__`, plus a verification test.
 
 Prior decisions accepted without re-litigation:
 
@@ -24,7 +24,7 @@ Prior decisions accepted without re-litigation:
 
 ### 1. Single Feature, No New Modules
 
-FEAT-14.1 modifies exactly two files: `src/pyarchi/__init__.py` (imports and `__all__`) and a new test file. No new modules, enums, relationships, or validation changes.
+FEAT-14.1 modifies exactly two files: `src/etcion/__init__.py` (imports and `__all__`) and a new test file. No new modules, enums, relationships, or validation changes.
 
 ### 2. Export Scope
 
@@ -54,7 +54,7 @@ FEAT-14.1 modifies exactly two files: `src/pyarchi/__init__.py` (imports and `__
 
 ### 4. Import Block Organization
 
-Imports in `__init__.py` are grouped by layer module, one `from pyarchi.metamodel.<layer> import (...)` block per layer. This matches the per-layer module pattern established in Phase 2. Existing Phase 1 import blocks remain unchanged and appear first.
+Imports in `__init__.py` are grouped by layer module, one `from etcion.metamodel.<layer> import (...)` block per layer. This matches the per-layer module pattern established in Phase 2. Existing Phase 1 import blocks remain unchanged and appear first.
 
 ### 5. `__all__` Organization
 
@@ -62,13 +62,13 @@ Phase 2 entries are appended to `__all__` after the existing Phase 1 entries, gr
 
 ### 6. Test Approach
 
-A single parametrized test verifies every Phase 2 type name is accessible via `getattr(pyarchi, name)`. This follows the FEAT-05.11 export test pattern. The test parameter list is the set difference between the new `__all__` and the Phase 1 `__all__`.
+A single parametrized test verifies every Phase 2 type name is accessible via `getattr(etcion, name)`. This follows the FEAT-05.11 export test pattern. The test parameter list is the set difference between the new `__all__` and the Phase 1 `__all__`.
 
 ## Alternatives Considered
 
-### Separate `pyarchi.elements` Namespace
+### Separate `etcion.elements` Namespace
 
-Exporting Phase 2 types from a `pyarchi.elements` sub-namespace instead of the top-level package was considered. Rejected because it breaks the established Phase 1 convention and forces consumers to learn two import patterns.
+Exporting Phase 2 types from a `etcion.elements` sub-namespace instead of the top-level package was considered. Rejected because it breaks the established Phase 1 convention and forces consumers to learn two import patterns.
 
 ### Exporting Only Concrete Classes, Not ABCs
 
@@ -78,7 +78,7 @@ Omitting ABCs from the public API was considered. Rejected because consumer code
 
 ### Positive
 
-- All ArchiMate element types importable from `pyarchi` top-level, consistent with Phase 1 pattern.
+- All ArchiMate element types importable from `etcion` top-level, consistent with Phase 1 pattern.
 - ABCs available for type-safe `isinstance` checks without deep imports.
 - `__all__` serves as a single, auditable manifest of the public API surface.
 

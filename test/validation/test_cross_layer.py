@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from pyarchi.metamodel.application import (
+from etcion.metamodel.application import (
     ApplicationComponent,
     ApplicationFunction,
     ApplicationInteraction,
@@ -13,7 +13,7 @@ from pyarchi.metamodel.application import (
     ApplicationService,
     DataObject,
 )
-from pyarchi.metamodel.business import (
+from etcion.metamodel.business import (
     BusinessActor,
     BusinessCollaboration,
     BusinessFunction,
@@ -25,8 +25,8 @@ from pyarchi.metamodel.business import (
     BusinessService,
     Contract,
 )
-from pyarchi.metamodel.relationships import Realization, Serving
-from pyarchi.metamodel.technology import (
+from etcion.metamodel.relationships import Realization, Serving
+from etcion.metamodel.technology import (
     Artifact,
     Node,
     TechnologyFunction,
@@ -34,7 +34,7 @@ from pyarchi.metamodel.technology import (
     TechnologyProcess,
     TechnologyService,
 )
-from pyarchi.validation.permissions import is_permitted
+from etcion.validation.permissions import is_permitted
 
 
 class TestApplicationServingBusiness:

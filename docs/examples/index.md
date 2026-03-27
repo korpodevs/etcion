@@ -1,6 +1,6 @@
 # Examples
 
-Runnable example scripts demonstrating pyarchi features. All scripts are in the `examples/` directory and can be run directly:
+Runnable example scripts demonstrating etcion features. All scripts are in the `examples/` directory and can be run directly:
 
 ```bash
 python examples/quick_start.py

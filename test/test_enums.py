@@ -6,9 +6,9 @@ from typing import ClassVar
 
 import pytest
 
-import pyarchi
-from pyarchi.enums import Aspect, Layer, RelationshipCategory
-from pyarchi.metamodel.concepts import Element
+import etcion
+from etcion.enums import Aspect, Layer, RelationshipCategory
+from etcion.metamodel.concepts import Element
 
 
 class TestLayerEnum:
@@ -50,15 +50,15 @@ class TestLayerEnum:
     def test_implementation_migration_value(self) -> None:
         assert Layer.IMPLEMENTATION_MIGRATION.value == "Implementation and Migration"
 
-    def test_layer_importable_from_pyarchi(self) -> None:
-        """Layer is re-exported from the top-level pyarchi package."""
-        from pyarchi import Layer as TopLevelLayer
+    def test_layer_importable_from_etcion(self) -> None:
+        """Layer is re-exported from the top-level etcion package."""
+        from etcion import Layer as TopLevelLayer
 
         assert TopLevelLayer is Layer
 
-    def test_layer_in_pyarchi_all(self) -> None:
-        """Layer appears in pyarchi.__all__."""
-        assert "Layer" in pyarchi.__all__
+    def test_layer_in_etcion_all(self) -> None:
+        """Layer appears in etcion.__all__."""
+        assert "Layer" in etcion.__all__
 
     def test_enum_not_str_equal(self) -> None:
         """Layer uses enum.Enum, not StrEnum -- members do not equal plain strings."""
@@ -96,15 +96,15 @@ class TestAspectEnum:
     def test_composite_value(self) -> None:
         assert Aspect.COMPOSITE.value == "Composite"
 
-    def test_aspect_importable_from_pyarchi(self) -> None:
-        """Aspect is re-exported from the top-level pyarchi package."""
-        from pyarchi import Aspect as TopLevelAspect
+    def test_aspect_importable_from_etcion(self) -> None:
+        """Aspect is re-exported from the top-level etcion package."""
+        from etcion import Aspect as TopLevelAspect
 
         assert TopLevelAspect is Aspect
 
-    def test_aspect_in_pyarchi_all(self) -> None:
-        """Aspect appears in pyarchi.__all__."""
-        assert "Aspect" in pyarchi.__all__
+    def test_aspect_in_etcion_all(self) -> None:
+        """Aspect appears in etcion.__all__."""
+        assert "Aspect" in etcion.__all__
 
     def test_enum_not_str_equal(self) -> None:
         """Aspect uses enum.Enum, not StrEnum -- members do not equal plain strings."""

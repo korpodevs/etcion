@@ -65,7 +65,7 @@ class TestBuildSystem:
 class TestProjectMetadata:
     def test_project_name(self) -> None:
         data = _load_toml()
-        assert data["project"]["name"] == "pyarchi"
+        assert data["project"]["name"] == "etcion"
 
     def test_project_version(self) -> None:
         data = _load_toml()
@@ -98,35 +98,35 @@ class TestProjectMetadata:
 
 class TestPackageLayout:
     def test_init_py_exists(self) -> None:
-        assert (REPO_ROOT / "src" / "pyarchi" / "__init__.py").exists()
+        assert (REPO_ROOT / "src" / "etcion" / "__init__.py").exists()
 
     def test_py_typed_exists(self) -> None:
-        assert (REPO_ROOT / "src" / "pyarchi" / "py.typed").exists(), (
+        assert (REPO_ROOT / "src" / "etcion" / "py.typed").exists(), (
             "py.typed marker file (PEP 561) must exist"
         )
 
 
 class TestPackageImport:
-    def test_pyarchi_is_importable(self) -> None:
-        import pyarchi  # noqa: PLC0415
+    def test_etcion_is_importable(self) -> None:
+        import etcion  # noqa: PLC0415
 
-        assert pyarchi is not None
+        assert etcion is not None
 
     def test_spec_version_is_3_2(self) -> None:
-        import pyarchi  # noqa: PLC0415
+        import etcion  # noqa: PLC0415
 
-        assert pyarchi.SPEC_VERSION == "3.2"
+        assert etcion.SPEC_VERSION == "3.2"
 
     def test_all_is_defined(self) -> None:
-        import pyarchi  # noqa: PLC0415
+        import etcion  # noqa: PLC0415
 
-        assert hasattr(pyarchi, "__all__")
-        assert isinstance(pyarchi.__all__, list)
+        assert hasattr(etcion, "__all__")
+        assert isinstance(etcion.__all__, list)
 
     def test_spec_version_in_all(self) -> None:
-        import pyarchi  # noqa: PLC0415
+        import etcion  # noqa: PLC0415
 
-        assert "SPEC_VERSION" in pyarchi.__all__
+        assert "SPEC_VERSION" in etcion.__all__
 
 
 # ===========================================================================

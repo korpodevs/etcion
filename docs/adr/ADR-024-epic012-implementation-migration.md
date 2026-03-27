@@ -22,7 +22,7 @@ Prior decisions accepted without re-litigation:
 - Generic metamodel ABCs: `InternalBehaviorElement`, `PassiveStructureElement`, `Event`, `CompositeElement` (ADR-016).
 - `ClassVar[Layer]` and `ClassVar[Aspect]` on concrete element classes (ADR-014).
 - `ClassVar[NotationMetadata]` on concrete element classes (ADR-013).
-- `Layer.IMPLEMENTATION_MIGRATION` and all required `Aspect` members already exist in `src/pyarchi/enums.py` (ADR-011, ADR-012).
+- `Layer.IMPLEMENTATION_MIGRATION` and all required `Aspect` members already exist in `src/etcion/enums.py` (ADR-011, ADR-012).
 - Per-layer module pattern established by prior layer epics (ADR-018 through ADR-023).
 - `extra="forbid"` on `Concept.model_config` (ADR-006).
 - `Grouping(CompositeElement)` with `members: list[Concept]` as the existing composite pattern (ADR-016).
@@ -30,9 +30,9 @@ Prior decisions accepted without re-litigation:
 
 ## Decisions
 
-### 1. Module Placement: `src/pyarchi/metamodel/implementation_migration.py`
+### 1. Module Placement: `src/etcion/metamodel/implementation_migration.py`
 
-All EPIC-012 concrete classes are defined in a new module `src/pyarchi/metamodel/implementation_migration.py`. This continues the per-layer module pattern established in ADR-018 Decision 1.
+All EPIC-012 concrete classes are defined in a new module `src/etcion/metamodel/implementation_migration.py`. This continues the per-layer module pattern established in ADR-018 Decision 1.
 
 ### 2. No Layer-Specific ABCs
 
@@ -106,17 +106,17 @@ All five concrete classes carry `notation: ClassVar[NotationMetadata]`. The Impl
 
 ### 9. Cross-Layer Validation Deferred to FEAT-12.4
 
-FEAT-12.4 defines cross-layer validation rules: `DeprecationWarning` on `Realization(WorkPackage, Deliverable)`, Assignment/Triggering/Access permission entries for I&M elements. These are permission-table entries in `src/pyarchi/validation/permissions.py`, not element-class logic.
+FEAT-12.4 defines cross-layer validation rules: `DeprecationWarning` on `Realization(WorkPackage, Deliverable)`, Assignment/Triggering/Access permission entries for I&M elements. These are permission-table entries in `src/etcion/validation/permissions.py`, not element-class logic.
 
 Decision: the five concrete element classes carry no validation logic beyond Pydantic field requirements (e.g., `Gap`'s mandatory plateau fields). FEAT-12.4 updates the permission table independently, maintaining the separation between element definitions and relationship validation established in prior epics.
 
 ### 10. No New Enums Required
 
-`Layer.IMPLEMENTATION_MIGRATION` (ADR-011), `Aspect.BEHAVIOR`, `Aspect.PASSIVE_STRUCTURE`, and `Aspect.COMPOSITE` (ADR-012) already exist in `src/pyarchi/enums.py`. EPIC-012 introduces no new enum members or enum classes.
+`Layer.IMPLEMENTATION_MIGRATION` (ADR-011), `Aspect.BEHAVIOR`, `Aspect.PASSIVE_STRUCTURE`, and `Aspect.COMPOSITE` (ADR-012) already exist in `src/etcion/enums.py`. EPIC-012 introduces no new enum members or enum classes.
 
 ### 11. `__init__.py` Exports Deferred
 
-Exports of Implementation and Migration layer types to `src/pyarchi/__init__.py` are deferred to EPIC-014 (public API surface epic), consistent with ADR-016 Decision 7, ADR-018 Decision 8, ADR-019 Decision 11, ADR-020 Decision 11, ADR-021 Decision 13, ADR-022 Decision 7, and ADR-023 Decision 9. The types are importable via `from pyarchi.metamodel.implementation_migration import WorkPackage` immediately.
+Exports of Implementation and Migration layer types to `src/etcion/__init__.py` are deferred to EPIC-014 (public API surface epic), consistent with ADR-016 Decision 7, ADR-018 Decision 8, ADR-019 Decision 11, ADR-020 Decision 11, ADR-021 Decision 13, ADR-022 Decision 7, and ADR-023 Decision 9. The types are importable via `from etcion.metamodel.implementation_migration import WorkPackage` immediately.
 
 ## Alternatives Considered
 

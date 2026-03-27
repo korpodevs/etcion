@@ -7,7 +7,7 @@
 Return all elements of a given type (including subclasses):
 
 ```python
-from pyarchi import BusinessActor
+from etcion import BusinessActor
 
 actors = model.elements_of_type(BusinessActor)
 for actor in actors:
@@ -19,7 +19,7 @@ for actor in actors:
 Return all elements belonging to a specific layer:
 
 ```python
-from pyarchi import Layer
+from etcion import Layer
 
 business_elements = model.elements_by_layer(Layer.BUSINESS)
 tech_elements = model.elements_by_layer(Layer.TECHNOLOGY)
@@ -30,7 +30,7 @@ tech_elements = model.elements_by_layer(Layer.TECHNOLOGY)
 Return elements by their structural aspect:
 
 ```python
-from pyarchi import Aspect
+from etcion import Aspect
 
 active = model.elements_by_aspect(Aspect.ACTIVE)
 passive = model.elements_by_aspect(Aspect.PASSIVE)
@@ -56,7 +56,7 @@ results = model.elements_by_name(r"^CRM.*Service$", regex=True)
 Filter relationships by type:
 
 ```python
-from pyarchi import Serving
+from etcion import Serving
 
 servings = model.relationships_of_type(Serving)
 ```

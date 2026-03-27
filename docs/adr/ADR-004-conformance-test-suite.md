@@ -14,7 +14,7 @@ ADR-003 establishes `ConformanceProfile` as the library's machine-readable decla
 
 A dedicated conformance test file is needed, separate from the unit tests that will accompany each epic's implementation, for two reasons:
 
-1. **Specification-level tests vs. implementation-level tests**: Unit tests for EPIC-002 will verify that `BusinessActor` can be instantiated, has the correct fields, and validates correctly. Conformance tests verify a higher-level invariant: "the library exports a type called `BusinessActor` that is accessible via `pyarchi.BusinessActor`." These are different concerns. A conformance test can be written today (before `BusinessActor` exists) and will fail until EPIC-002 is complete. A unit test cannot be written until the class exists.
+1. **Specification-level tests vs. implementation-level tests**: Unit tests for EPIC-002 will verify that `BusinessActor` can be instantiated, has the correct fields, and validates correctly. Conformance tests verify a higher-level invariant: "the library exports a type called `BusinessActor` that is accessible via `etcion.BusinessActor`." These are different concerns. A conformance test can be written today (before `BusinessActor` exists) and will fail until EPIC-002 is complete. A unit test cannot be written until the class exists.
 2. **Living specification**: The conformance test file serves as an executable specification of the ArchiMate 3.2 standard's requirements on the library. Reading `test/test_conformance.py` tells a contributor exactly what public API surface the library must expose to be conformant.
 
 The phasing problem is central to this decision. Most `shall`-level features will not be implemented until EPIC-002 through EPIC-005. The conformance tests must be structured so that:
@@ -37,7 +37,7 @@ The file is organized into three test classes, one per conformance level:
 
 1. **`TestConformanceProfile`** -- Verifies the `CONFORMANCE` singleton itself: correct attribute values, correct types, frozen immutability. These tests pass immediately once FEAT-01.1 (`conformance.py`) is implemented.
 
-2. **`TestShallFeatures`** -- One test function per `shall`-level conformance attribute. Each test checks that the public API members required by that feature exist. For example, `test_business_elements` asserts that `pyarchi.BusinessActor`, `pyarchi.BusinessRole`, etc. are importable.
+2. **`TestShallFeatures`** -- One test function per `shall`-level conformance attribute. Each test checks that the public API members required by that feature exist. For example, `test_business_elements` asserts that `etcion.BusinessActor`, `etcion.BusinessRole`, etc. are importable.
 
 3. **`TestShouldFeatures`** -- Tests for `should`-level features (viewpoint mechanism, language customization).
 
@@ -50,9 +50,9 @@ Each `shall`-level test performs direct attribute existence checks:
 ```python
 @pytest.mark.xfail(reason="EPIC-002: Business layer elements not yet implemented", strict=False)
 def test_business_elements(self) -> None:
-    assert hasattr(pyarchi, "BusinessActor")
-    assert hasattr(pyarchi, "BusinessRole")
-    assert hasattr(pyarchi, "BusinessCollaboration")
+    assert hasattr(etcion, "BusinessActor")
+    assert hasattr(etcion, "BusinessRole")
+    assert hasattr(etcion, "BusinessCollaboration")
     # ... all Business layer types
 ```
 
@@ -71,7 +71,7 @@ The alternative of using `strict=True` was rejected because it would cause the t
 ```python
 @pytest.mark.xfail(reason="Phase 2: Viewpoint mechanism not yet implemented", strict=False)
 def test_viewpoint_mechanism(self) -> None:
-    assert hasattr(pyarchi, "Viewpoint")
+    assert hasattr(etcion, "Viewpoint")
 ```
 
 Using `pytest.warns(UserWarning)` was explicitly rejected. `pytest.warns` is designed to test that code emits Python `warnings.warn()` calls. It is not a mechanism for marking tests as "recommended but not required." The `should`/`may` distinction is about the test's importance to the project, not about runtime warning behavior.
@@ -83,7 +83,7 @@ Using `pytest.warns(UserWarning)` was explicitly rejected. `pytest.warns` is des
 ```python
 @pytest.mark.skip(reason="Appendix C example viewpoints are out of scope")
 def test_example_viewpoints(self) -> None:
-    assert hasattr(pyarchi, "BasicViewpoint")
+    assert hasattr(etcion, "BasicViewpoint")
 ```
 
 `skip` is chosen over `xfail` because these features are not planned. They should not appear as expected failures in the test report (which implies they will eventually pass). `skip` communicates "this is documented but intentionally not implemented."
@@ -106,14 +106,14 @@ This class verifies the `CONFORMANCE` object itself, independent of whether impl
 - All `should`-level fields are `True`.
 - `example_viewpoints` (the sole `may` field) is `False`.
 - `spec_version` equals `"3.2"`.
-- `spec_version` equals `pyarchi.SPEC_VERSION` (consistency check).
+- `spec_version` equals `etcion.SPEC_VERSION` (consistency check).
 - The dataclass is frozen: assigning to any field raises `FrozenInstanceError`.
 
 These tests pass as soon as FEAT-01.1 is implemented and remain green permanently.
 
 ### Marker Removal Policy
 
-When an epic is completed and all types for a `shall`-level feature are exported from `pyarchi.__init__`, the implementer must remove the `xfail` marker from the corresponding conformance test. This is documented as a checklist item in each epic's definition of done. Forgetting to remove the marker is harmless (`strict=False` tolerates xpass), but the marker should be removed for test report clarity.
+When an epic is completed and all types for a `shall`-level feature are exported from `etcion.__init__`, the implementer must remove the `xfail` marker from the corresponding conformance test. This is documented as a checklist item in each epic's definition of done. Forgetting to remove the marker is harmless (`strict=False` tolerates xpass), but the marker should be removed for test report clarity.
 
 ## Alternatives Considered
 
@@ -158,8 +158,8 @@ Using `@pytest.mark.parametrize` with a list of `(feature_name, expected_types)`
 ### Negative
 
 - **`xfail` marker maintenance**: Each conformance test starts with an `xfail` marker that should be removed when the implementing epic is complete. If markers are not cleaned up, the test report shows `XPASS` instead of `PASSED`, which is noisy but not harmful. Mitigated by including marker removal in each epic's definition of done.
-- **Tests are assertion-only, not behavioral**: Conformance tests check that types exist (`hasattr`), not that they behave correctly. A conformance test will pass if `pyarchi.BusinessActor` is a re-exported class, even if that class has no fields or validation. Behavioral correctness is the responsibility of each epic's unit tests, not the conformance suite.
-- **Tight coupling to `__init__.py` exports**: Conformance tests assert against `pyarchi.<TypeName>`, meaning every conformance-required type must be re-exported from `__init__.py`. This is intentional (the public API surface IS the conformance surface), but it means the `__init__.py` re-export list must grow in lockstep with implementation.
+- **Tests are assertion-only, not behavioral**: Conformance tests check that types exist (`hasattr`), not that they behave correctly. A conformance test will pass if `etcion.BusinessActor` is a re-exported class, even if that class has no fields or validation. Behavioral correctness is the responsibility of each epic's unit tests, not the conformance suite.
+- **Tight coupling to `__init__.py` exports**: Conformance tests assert against `etcion.<TypeName>`, meaning every conformance-required type must be re-exported from `__init__.py`. This is intentional (the public API surface IS the conformance surface), but it means the `__init__.py` re-export list must grow in lockstep with implementation.
 
 ## Compliance
 

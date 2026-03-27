@@ -17,7 +17,7 @@ from pathlib import Path
 # Ensure the src directory is importable
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from pyarchi.validation.permissions import PermissionRule, _PERMISSION_TABLE
+from etcion.validation.permissions import PermissionRule, _PERMISSION_TABLE
 
 
 def main() -> None:

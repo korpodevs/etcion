@@ -10,9 +10,9 @@ ACCEPTED
 
 ## Context
 
-FEAT-03.1 specifies a `Layer` enum with seven members representing the ArchiMate 3.2 framework layers: Strategy, Motivation, Business, Application, Technology, Physical, and Implementation and Migration. However, this enum was already implemented as part of FEAT-00.2 (ADR-002, module layout) in `src/pyarchi/enums.py`. The backlog stories for FEAT-03.1 were written before FEAT-00.2 was executed, creating a gap between the backlog's "To-Do" status and the actual codebase state.
+FEAT-03.1 specifies a `Layer` enum with seven members representing the ArchiMate 3.2 framework layers: Strategy, Motivation, Business, Application, Technology, Physical, and Implementation and Migration. However, this enum was already implemented as part of FEAT-00.2 (ADR-002, module layout) in `src/etcion/enums.py`. The backlog stories for FEAT-03.1 were written before FEAT-00.2 was executed, creating a gap between the backlog's "To-Do" status and the actual codebase state.
 
-This ADR serves to ratify the existing `Layer` implementation, confirm its design decisions align with EPIC-003's requirements, and address the remaining gap: `Layer` is not currently re-exported from `src/pyarchi/__init__.py`, which means `hasattr(pyarchi, "Layer")` returns `False`. The `language_structure` conformance test requires this attribute to be present on the package namespace.
+This ADR serves to ratify the existing `Layer` implementation, confirm its design decisions align with EPIC-003's requirements, and address the remaining gap: `Layer` is not currently re-exported from `src/etcion/__init__.py`, which means `hasattr(etcion, "Layer")` returns `False`. The `language_structure` conformance test requires this attribute to be present on the package namespace.
 
 The existing implementation defines `Layer` as a standard `enum.Enum` (not `enum.StrEnum`) with human-readable string values. This choice has implications for how downstream code compares and serializes layer values. With `enum.Enum`, `Layer.BUSINESS == "Business"` is `False` -- the string value is accessed via `.value`. With `enum.StrEnum` (Python 3.11+), `Layer.BUSINESS == "Business"` would be `True`, and the enum member could be used directly as a string argument. The `enum.Enum` choice was made in FEAT-00.2 and this ADR ratifies it.
 
@@ -22,7 +22,7 @@ Additionally, STORY-03.1.2 (tests asserting all seven values are present and acc
 
 ### Ratification of Existing Implementation
 
-The existing `Layer` enum in `src/pyarchi/enums.py` is ratified as the canonical implementation for FEAT-03.1:
+The existing `Layer` enum in `src/etcion/enums.py` is ratified as the canonical implementation for FEAT-03.1:
 
 ```python
 class Layer(Enum):
@@ -65,21 +65,21 @@ This is the correct choice because:
 2. **Serialization control**: When serializing to XML, the library must control the exact string representation. With `enum.Enum`, serialization code explicitly accesses `.value`, making the serialization point visible in the code. With `enum.StrEnum`, the enum member itself IS a string, and serialization happens implicitly anywhere the member is used in a string context.
 3. **Consistency**: All other enums in `enums.py` (`Aspect`, `RelationshipCategory`, `AccessMode`, etc.) use `enum.Enum`. Using `enum.StrEnum` for `Layer` alone would be inconsistent.
 
-### Module Location: `src/pyarchi/enums.py`
+### Module Location: `src/etcion/enums.py`
 
-`Layer` remains in `src/pyarchi/enums.py` as established in ADR-002. All enumerations live at the bottom of the dependency graph, importable by any sub-package without circular import risk. Moving `Layer` to a layer-specific module (e.g., `src/pyarchi/metamodel/layers.py`) would fragment the enum definitions and introduce a new module for a single 10-line class.
+`Layer` remains in `src/etcion/enums.py` as established in ADR-002. All enumerations live at the bottom of the dependency graph, importable by any sub-package without circular import risk. Moving `Layer` to a layer-specific module (e.g., `src/etcion/metamodel/layers.py`) would fragment the enum definitions and introduce a new module for a single 10-line class.
 
 ### `__init__.py` Re-export
 
-`Layer` must be added to `src/pyarchi/__init__.py` as a re-export and included in `__all__`. The import statement and `__all__` entry are:
+`Layer` must be added to `src/etcion/__init__.py` as a re-export and included in `__all__`. The import statement and `__all__` entry are:
 
 ```python
-from pyarchi.enums import Layer
+from etcion.enums import Layer
 # in __all__:
 "Layer",
 ```
 
-This satisfies the `language_structure` conformance test requirement that `hasattr(pyarchi, "Layer")` returns `True` and enables the consumer import path `from pyarchi import Layer`.
+This satisfies the `language_structure` conformance test requirement that `hasattr(etcion, "Layer")` returns `True` and enables the consumer import path `from etcion import Layer`.
 
 ### Remaining Work: Tests (STORY-03.1.2)
 
@@ -93,7 +93,7 @@ STORY-03.1.2 requires a test asserting all seven `Layer` members are present and
 
 ### Re-implement Layer in a New Module
 
-Defining a new `Layer` enum in `src/pyarchi/metamodel/notation.py` or a dedicated `src/pyarchi/metamodel/classification.py` was considered, on the rationale that EPIC-003 should own its types. This was rejected because:
+Defining a new `Layer` enum in `src/etcion/metamodel/notation.py` or a dedicated `src/etcion/metamodel/classification.py` was considered, on the rationale that EPIC-003 should own its types. This was rejected because:
 
 1. `Layer` already exists in `enums.py` with the correct members and values. Re-implementing it would create a duplicate that must be kept in sync with the original, or the original must be deleted, breaking the existing import chain.
 2. ADR-002 established `enums.py` as the canonical location for all enumerations. Overriding this decision for one enum would create precedent for scattering enums across the codebase.
@@ -128,5 +128,5 @@ This ADR provides the architectural rationale for each story in FEAT-03.1:
 
 | Story | Decision Implemented |
 |---|---|
-| STORY-03.1.1 | Ratified: `Layer` enum defined in `src/pyarchi/enums.py` with seven members (`STRATEGY`, `MOTIVATION`, `BUSINESS`, `APPLICATION`, `TECHNOLOGY`, `PHYSICAL`, `IMPLEMENTATION_MIGRATION`) and their specification-defined string values. `Layer` re-exported from `__init__.py`. |
+| STORY-03.1.1 | Ratified: `Layer` enum defined in `src/etcion/enums.py` with seven members (`STRATEGY`, `MOTIVATION`, `BUSINESS`, `APPLICATION`, `TECHNOLOGY`, `PHYSICAL`, `IMPLEMENTATION_MIGRATION`) and their specification-defined string values. `Layer` re-exported from `__init__.py`. |
 | STORY-03.1.2 | Test not yet written; ADR specifies the three assertions required (member count, name accessibility, value correctness). |

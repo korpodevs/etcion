@@ -1,14 +1,14 @@
 # Extending
 
-pyarchi supports custom validation rules and element type registration for extending the metamodel.
+etcion supports custom validation rules and element type registration for extending the metamodel.
 
 ## Custom Validators
 
 Implement the `ValidationRule` protocol to add domain-specific checks:
 
 ```python
-from pyarchi import ValidationRule, Model
-from pyarchi.exceptions import ValidationError
+from etcion import ValidationRule, Model
+from etcion.exceptions import ValidationError
 
 class NamingConvention:
     """Enforce a naming convention on all elements."""
@@ -52,8 +52,8 @@ Custom rules run after the built-in permission checks. In strict mode, the first
 You can subclass existing element types to create domain-specific specializations. Use the `register_element_type()` function to make them serializable:
 
 ```python
-from pyarchi import TechnologyService
-from pyarchi.serialization.registry import register_element_type
+from etcion import TechnologyService
+from etcion.serialization.registry import register_element_type
 
 class CloudService(TechnologyService):
     """A cloud-hosted technology service."""

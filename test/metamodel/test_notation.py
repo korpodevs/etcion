@@ -8,15 +8,15 @@ from typing import ClassVar
 import pytest
 from pydantic import BaseModel, ValidationError
 
-import pyarchi
-from pyarchi.enums import RelationshipCategory
-from pyarchi.metamodel.concepts import (
+import etcion
+from etcion.enums import RelationshipCategory
+from etcion.metamodel.concepts import (
     Concept,
     Element,
     Relationship,
     RelationshipConnector,
 )
-from pyarchi.metamodel.notation import NotationMetadata
+from etcion.metamodel.notation import NotationMetadata
 
 
 class TestNotationMetadataInstantiation:
@@ -113,20 +113,20 @@ class TestNotationMetadataHashable:
 
 
 class TestNotationMetadataTopLevelExport:
-    """NotationMetadata is importable from pyarchi top-level."""
+    """NotationMetadata is importable from etcion top-level."""
 
-    def test_importable_from_pyarchi(self) -> None:
-        from pyarchi import NotationMetadata as TopLevelNotationMetadata
+    def test_importable_from_etcion(self) -> None:
+        from etcion import NotationMetadata as TopLevelNotationMetadata
 
         assert TopLevelNotationMetadata is NotationMetadata
 
-    def test_in_pyarchi_all(self) -> None:
-        """'NotationMetadata' appears in pyarchi.__all__."""
-        assert "NotationMetadata" in pyarchi.__all__
+    def test_in_etcion_all(self) -> None:
+        """'NotationMetadata' appears in etcion.__all__."""
+        assert "NotationMetadata" in etcion.__all__
 
-    def test_hasattr_pyarchi(self) -> None:
-        """hasattr(pyarchi, 'NotationMetadata') is True."""
-        assert hasattr(pyarchi, "NotationMetadata")
+    def test_hasattr_etcion(self) -> None:
+        """hasattr(etcion, 'NotationMetadata') is True."""
+        assert hasattr(etcion, "NotationMetadata")
 
 
 class TestClassVarPattern:
@@ -297,7 +297,7 @@ class TestIsNestedOnStructuralRelationship:
 
     def test_composition_accepts_is_nested_true(self) -> None:
         """Composition(is_nested=True) must not raise ValidationError."""
-        from pyarchi import Composition
+        from etcion import Composition
 
         source = _StubElement(name="whole")
         target = _StubElement(name="part")
@@ -306,7 +306,7 @@ class TestIsNestedOnStructuralRelationship:
 
     def test_composition_is_nested_defaults_false(self) -> None:
         """Composition() without is_nested must default to False."""
-        from pyarchi import Composition
+        from etcion import Composition
 
         source = _StubElement(name="whole")
         target = _StubElement(name="part")
@@ -327,7 +327,7 @@ class TestIsNestedRejectedOnNonStructural:
 
     def test_triggering_rejects_is_nested(self) -> None:
         """Triggering(is_nested=True) must raise ValidationError."""
-        from pyarchi import Triggering
+        from etcion import Triggering
 
         source = _StubElement(name="src")
         target = _StubElement(name="tgt")

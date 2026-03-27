@@ -14,7 +14,7 @@ The ArchiMate 3.2 specification defines a standard graphical notation for each e
 
 The library needs a type to carry these rendering hints so that downstream tools (diagram renderers, export formatters, conformance visualizers) can query the standard notation for any element type without hardcoding specification knowledge. FEAT-03.3 requires a `NotationMetadata` type with three fields: `corner_shape`, `layer_color`, and `badge_letter`.
 
-The stub module `src/pyarchi/metamodel/notation.py` already exists with a TODO comment for EPIC-003. This is the designated location.
+The stub module `src/etcion/metamodel/notation.py` already exists with a TODO comment for EPIC-003. This is the designated location.
 
 The design question is what kind of Python type `NotationMetadata` should be. The candidates are:
 
@@ -29,7 +29,7 @@ The choice depends on `NotationMetadata`'s role in the library. It is NOT a doma
 
 ### Implementation: `@dataclass(frozen=True)`
 
-`NotationMetadata` is defined in `src/pyarchi/metamodel/notation.py` as a frozen dataclass:
+`NotationMetadata` is defined in `src/etcion/metamodel/notation.py` as a frozen dataclass:
 
 ```python
 @dataclass(frozen=True)
@@ -83,11 +83,11 @@ Key design points:
 
 ### Module Location
 
-`NotationMetadata` is defined in `src/pyarchi/metamodel/notation.py`, replacing the existing TODO stub. This module is dedicated to rendering and notation concerns, keeping them separate from the core metamodel types in `concepts.py`. The separation reflects the conceptual boundary: `concepts.py` defines what ArchiMate types ARE; `notation.py` defines how they LOOK.
+`NotationMetadata` is defined in `src/etcion/metamodel/notation.py`, replacing the existing TODO stub. This module is dedicated to rendering and notation concerns, keeping them separate from the core metamodel types in `concepts.py`. The separation reflects the conceptual boundary: `concepts.py` defines what ArchiMate types ARE; `notation.py` defines how they LOOK.
 
 ### `__init__.py` Re-export
 
-`NotationMetadata` is re-exported from `src/pyarchi/__init__.py` and added to `__all__`. This satisfies the `iconography_metadata` conformance test requirement and enables the consumer import path `from pyarchi import NotationMetadata`.
+`NotationMetadata` is re-exported from `src/etcion/__init__.py` and added to `__all__`. This satisfies the `iconography_metadata` conformance test requirement and enables the consumer import path `from etcion import NotationMetadata`.
 
 ## Alternatives Considered
 

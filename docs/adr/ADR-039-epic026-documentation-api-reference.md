@@ -2,7 +2,7 @@
 
 ## Context
 
-pyarchi has 31 source modules, 58 element types, 11 relationship types, 2460 tests, and production-grade features (validation, serialization, viewpoints, profiles, querying, diffing). The only user-facing documentation is `README.md` and inline docstrings. There is no auto-generated API reference, no user guide, and no architecture overview. This blocks adoption.
+etcion has 31 source modules, 58 element types, 11 relationship types, 2460 tests, and production-grade features (validation, serialization, viewpoints, profiles, querying, diffing). The only user-facing documentation is `README.md` and inline docstrings. There is no auto-generated API reference, no user guide, and no architecture overview. This blocks adoption.
 
 EPIC-026 covers three feature areas:
 - **FEAT-26.1** -- API reference generation from docstrings

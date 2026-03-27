@@ -1,3 +1,3 @@
 # Enums
 
-::: pyarchi.enums
+::: etcion.enums

@@ -29,7 +29,7 @@ Prior decisions accepted without re-litigation:
 
 ### 1. No New Files
 
-All EPIC-013 work is additions to `src/pyarchi/validation/permissions.py` (rule blocks) and `test/`. No new element classes, modules, enums, or `__init__.py` changes. Exports are deferred to EPIC-014.
+All EPIC-013 work is additions to `src/etcion/validation/permissions.py` (rule blocks) and `test/`. No new element classes, modules, enums, or `__init__.py` changes. Exports are deferred to EPIC-014.
 
 ### 2. Rule-Based `issubclass` Pattern Continues
 

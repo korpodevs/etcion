@@ -6,10 +6,10 @@ import json
 
 import pytest
 
-from pyarchi.comparison import ConceptChange, FieldChange, ModelDiff, diff_models
-from pyarchi.metamodel.business import BusinessActor, BusinessRole
-from pyarchi.metamodel.model import Model
-from pyarchi.metamodel.relationships import Association
+from etcion.comparison import ConceptChange, FieldChange, ModelDiff, diff_models
+from etcion.metamodel.business import BusinessActor, BusinessRole
+from etcion.metamodel.model import Model
+from etcion.metamodel.relationships import Association
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -315,27 +315,27 @@ class TestBool:
 
 
 # ---------------------------------------------------------------------------
-# Exports from pyarchi.__init__
+# Exports from etcion.__init__
 # ---------------------------------------------------------------------------
 
 
 class TestExports:
     def test_field_change_importable(self) -> None:
-        from pyarchi import FieldChange as FC
+        from etcion import FieldChange as FC
 
         assert FC is FieldChange
 
     def test_concept_change_importable(self) -> None:
-        from pyarchi import ConceptChange as CC
+        from etcion import ConceptChange as CC
 
         assert CC is ConceptChange
 
     def test_model_diff_importable(self) -> None:
-        from pyarchi import ModelDiff as MD
+        from etcion import ModelDiff as MD
 
         assert MD is ModelDiff
 
     def test_diff_models_importable(self) -> None:
-        from pyarchi import diff_models as dm
+        from etcion import diff_models as dm
 
         assert dm is diff_models

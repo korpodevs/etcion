@@ -4,7 +4,7 @@
 Demonstrates Model query methods (no QueryBuilder class -- methods are on Model directly).
 """
 
-from pyarchi import (
+from etcion import (
     ApplicationComponent,
     ApplicationService,
     Assignment,

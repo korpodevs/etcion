@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-import pyarchi
-from pyarchi.enums import Aspect, Layer, RelationshipCategory
-from pyarchi.exceptions import ValidationError
-from pyarchi.metamodel.application import (
+import etcion
+from etcion.enums import Aspect, Layer, RelationshipCategory
+from etcion.exceptions import ValidationError
+from etcion.metamodel.application import (
     ApplicationComponent,
     ApplicationService,
 )
-from pyarchi.metamodel.business import (
+from etcion.metamodel.business import (
     BusinessActor,
     BusinessFunction,
     BusinessObject,
@@ -20,14 +20,14 @@ from pyarchi.metamodel.business import (
     BusinessService,
     Product,
 )
-from pyarchi.metamodel.concepts import (
+from etcion.metamodel.concepts import (
     Concept,
     Element,
     Relationship,
     RelationshipConnector,
 )
-from pyarchi.metamodel.model import Model
-from pyarchi.metamodel.relationships import (
+from etcion.metamodel.model import Model
+from etcion.metamodel.relationships import (
     Assignment,
     Serving,
     Specialization,
@@ -264,29 +264,29 @@ class TestModelProperties:
 
 
 class TestModelExports:
-    def test_model_in_pyarchi_all(self) -> None:
-        """'Model' is in pyarchi.__all__."""
-        assert "Model" in pyarchi.__all__
+    def test_model_in_etcion_all(self) -> None:
+        """'Model' is in etcion.__all__."""
+        assert "Model" in etcion.__all__
 
-    def test_concept_in_pyarchi_all(self) -> None:
-        """'Concept' is in pyarchi.__all__."""
-        assert "Concept" in pyarchi.__all__
+    def test_concept_in_etcion_all(self) -> None:
+        """'Concept' is in etcion.__all__."""
+        assert "Concept" in etcion.__all__
 
-    def test_element_in_pyarchi_all(self) -> None:
-        """'Element' is in pyarchi.__all__."""
-        assert "Element" in pyarchi.__all__
+    def test_element_in_etcion_all(self) -> None:
+        """'Element' is in etcion.__all__."""
+        assert "Element" in etcion.__all__
 
-    def test_relationship_in_pyarchi_all(self) -> None:
-        """'Relationship' is in pyarchi.__all__."""
-        assert "Relationship" in pyarchi.__all__
+    def test_relationship_in_etcion_all(self) -> None:
+        """'Relationship' is in etcion.__all__."""
+        assert "Relationship" in etcion.__all__
 
-    def test_relationship_connector_in_pyarchi_all(self) -> None:
-        """'RelationshipConnector' is in pyarchi.__all__."""
-        assert "RelationshipConnector" in pyarchi.__all__
+    def test_relationship_connector_in_etcion_all(self) -> None:
+        """'RelationshipConnector' is in etcion.__all__."""
+        assert "RelationshipConnector" in etcion.__all__
 
-    def test_import_from_pyarchi(self) -> None:
-        """from pyarchi import Model, Concept, Element, Relationship, RelationshipConnector."""
-        from pyarchi import (  # noqa: PLC0415
+    def test_import_from_etcion(self) -> None:
+        """from etcion import Model, Concept, Element, Relationship, RelationshipConnector."""
+        from etcion import (  # noqa: PLC0415
             Concept,
             Element,
             Model,
@@ -388,13 +388,13 @@ class TestElementsOfType:
     def test_subclass_included(self, model: Model) -> None:
         """BusinessObject is parent of Contract; but here we just check
         that isinstance-based matching works with the hierarchy."""
-        from pyarchi.metamodel.concepts import Element
+        from etcion.metamodel.concepts import Element
 
         result = model.elements_of_type(Element)
         assert len(result) == len(model.elements)
 
     def test_no_matches(self, model: Model) -> None:
-        from pyarchi.metamodel.technology import Node
+        from etcion.metamodel.technology import Node
 
         assert model.elements_of_type(Node) == []
 
@@ -501,7 +501,7 @@ class TestComposition:
         assert result[0].name == "HR Service"
 
     def test_type_then_aspect(self, model: Model) -> None:
-        from pyarchi.metamodel.concepts import Element
+        from etcion.metamodel.concepts import Element
 
         active = model.elements_by_aspect(Aspect.ACTIVE_STRUCTURE)
         biz_active = [e for e in active if getattr(type(e), "layer", None) is Layer.BUSINESS]
@@ -602,7 +602,7 @@ class TestSourcesOf:
     def test_returns_concepts_not_relationships(self, populated_model: Model) -> None:
         role = _by_name(populated_model, "Manager")
         result = populated_model.sources_of(role)
-        from pyarchi.metamodel.concepts import Concept, Relationship
+        from etcion.metamodel.concepts import Concept, Relationship
 
         assert all(isinstance(c, Concept) for c in result)
         assert not any(isinstance(c, Relationship) for c in result)
@@ -717,7 +717,7 @@ class TestRelationshipsOfType:
         assert len(result) == 4
 
     def test_no_matches(self, full_model: Model) -> None:
-        from pyarchi.metamodel.relationships import Composition
+        from etcion.metamodel.relationships import Composition
 
         assert full_model.relationships_of_type(Composition) == []
 

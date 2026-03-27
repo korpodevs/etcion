@@ -26,7 +26,7 @@ A `ConformanceProfile` is needed now -- before the metamodel types exist -- for 
 2. **Machine-readable spec version**: The profile carries `spec_version = "3.2"`, making the targeted specification version available to tooling, serialization logic, and compatibility checks.
 3. **Test-driven development anchor**: FEAT-01.2 (Conformance Test Suite) will write assertions against this profile. The profile must exist before the tests can be written.
 
-The module placement question is critical. `conformance.py` should NOT live inside `metamodel/` because it describes the library's contract, not the ArchiMate type hierarchy. It should NOT live inside `validation/` because it is not a runtime validation mechanism for user-constructed models. It belongs at the `src/pyarchi/` package root, at the same dependency level as `enums.py` and `exceptions.py`. Its only internal import is `SPEC_VERSION` from `pyarchi.__init__` (or it could define its own default; see Decision below) and optionally `Layer` from `pyarchi.enums` for documentation cross-referencing.
+The module placement question is critical. `conformance.py` should NOT live inside `metamodel/` because it describes the library's contract, not the ArchiMate type hierarchy. It should NOT live inside `validation/` because it is not a runtime validation mechanism for user-constructed models. It belongs at the `src/etcion/` package root, at the same dependency level as `enums.py` and `exceptions.py`. Its only internal import is `SPEC_VERSION` from `etcion.__init__` (or it could define its own default; see Decision below) and optionally `Layer` from `etcion.enums` for documentation cross-referencing.
 
 There is a design tension between making conformance queryable at runtime versus simply documenting it in prose. A prose-only approach (README, specification document) cannot be tested programmatically and drifts out of sync with the code. A runtime-queryable `ConformanceProfile` dataclass can be asserted against in CI, ensuring the declaration stays honest as implementation progresses.
 
@@ -34,10 +34,10 @@ There is a design tension between making conformance queryable at runtime versus
 
 ### Module Location
 
-Create `src/pyarchi/conformance.py` at the package root. It imports from `pyarchi` (for `SPEC_VERSION`) only. No imports from `metamodel/`, `validation/`, or `derivation/`. This places it at the bottom of the dependency graph alongside `enums.py` and `exceptions.py`, importable by any sub-package without circular import risk.
+Create `src/etcion/conformance.py` at the package root. It imports from `etcion` (for `SPEC_VERSION`) only. No imports from `metamodel/`, `validation/`, or `derivation/`. This places it at the bottom of the dependency graph alongside `enums.py` and `exceptions.py`, importable by any sub-package without circular import risk.
 
 ```
-src/pyarchi/
+src/etcion/
     exceptions.py        (no internal imports)
     enums.py             (no internal imports)
     conformance.py       (imports: SPEC_VERSION from __init__)
@@ -114,11 +114,11 @@ A module-level constant is exported from `conformance.py`:
 CONFORMANCE: ConformanceProfile = ConformanceProfile()
 ```
 
-This is the single instance that consumers and the test suite inspect. Because the dataclass is frozen and all fields have defaults, the default-constructed instance represents the library's full conformance declaration. Consumers query it as `pyarchi.CONFORMANCE.business_elements`.
+This is the single instance that consumers and the test suite inspect. Because the dataclass is frozen and all fields have defaults, the default-constructed instance represents the library's full conformance declaration. Consumers query it as `etcion.CONFORMANCE.business_elements`.
 
 ### `__init__.py` Re-export
 
-Both `ConformanceProfile` and `CONFORMANCE` are re-exported from `src/pyarchi/__init__.py` and added to `__all__`. This gives consumers the import path `from pyarchi import CONFORMANCE, ConformanceProfile`.
+Both `ConformanceProfile` and `CONFORMANCE` are re-exported from `src/etcion/__init__.py` and added to `__all__`. This gives consumers the import path `from etcion import CONFORMANCE, ConformanceProfile`.
 
 ## Alternatives Considered
 
@@ -128,7 +128,7 @@ Using a Pydantic `BaseModel` for `ConformanceProfile` was considered for consist
 
 ### Runtime Capability Check Instead of Declared Intent
 
-An alternative design would have each `shall`-level field default to `False` and flip to `True` only when the implementing code is actually importable (e.g., `business_elements` becomes `True` only when `pyarchi.BusinessActor` exists). This was rejected for two reasons:
+An alternative design would have each `shall`-level field default to `False` and flip to `True` only when the implementing code is actually importable (e.g., `business_elements` becomes `True` only when `etcion.BusinessActor` exists). This was rejected for two reasons:
 
 1. It conflates "what the library commits to" with "what is implemented so far," making the profile useless for planning and roadmap communication.
 2. It would require import-time introspection logic (try/except around imports) inside a module that should be dependency-free.
@@ -151,7 +151,7 @@ An alternative used a `ComplianceLevel` enum (`SHALL`, `SHOULD`, `MAY`) and a di
 
 ### Positive
 
-- **Machine-readable contract**: The library's conformance commitment is inspectable at runtime via `pyarchi.CONFORMANCE`, not buried in documentation that drifts from reality.
+- **Machine-readable contract**: The library's conformance commitment is inspectable at runtime via `etcion.CONFORMANCE`, not buried in documentation that drifts from reality.
 - **Self-documenting**: The dataclass fields, their names, types, defaults, and docstrings serve as a structured summary of the ArchiMate 3.2 specification's conformance requirements.
 - **Testable**: FEAT-01.2 can write direct assertions against `CONFORMANCE` attribute values. The `TestConformanceProfile` test class will pass as soon as `conformance.py` is implemented, providing immediate green tests.
 - **Zero-cost at runtime**: A frozen dataclass with no imports beyond the standard library adds negligible overhead to library initialization.
@@ -160,7 +160,7 @@ An alternative used a `ComplianceLevel` enum (`SHALL`, `SHOULD`, `MAY`) and a di
 ### Negative
 
 - **`True` fields may misrepresent incomplete implementation**: Until EPIC-002 through EPIC-005 are complete, `CONFORMANCE.business_elements = True` is a promise, not a fact. A consumer inspecting the profile could incorrectly conclude that Business layer types are already available. This risk is mitigated by the conformance test suite (FEAT-01.2), which will fail in CI until the implementing code exists, making the gap between declaration and reality visible.
-- **Dual `SPEC_VERSION` definition**: Both `__init__.py` and `conformance.py` define the string `"3.2"` independently to avoid circular imports. If the spec version changes, both locations must be updated. This is a minor maintenance cost, mitigated by the fact that specification version changes are rare and will be caught by the test suite (which asserts `CONFORMANCE.spec_version == pyarchi.SPEC_VERSION`).
+- **Dual `SPEC_VERSION` definition**: Both `__init__.py` and `conformance.py` define the string `"3.2"` independently to avoid circular imports. If the spec version changes, both locations must be updated. This is a minor maintenance cost, mitigated by the fact that specification version changes are rare and will be caught by the test suite (which asserts `CONFORMANCE.spec_version == etcion.SPEC_VERSION`).
 - **Static profile**: The profile cannot express partial implementation (e.g., "3 of 13 Business layer elements are implemented"). It is all-or-nothing per feature area. This is acceptable because the profile's purpose is to declare the library's target scope, not to report implementation progress. Build status is tracked in `BACKLOG.md` and CI test results.
 
 ## Compliance
@@ -169,7 +169,7 @@ This ADR provides the architectural rationale for each story in FEAT-01.1:
 
 | Story | Decision Implemented |
 |---|---|
-| STORY-01.1.1 | `ConformanceProfile` as a `@dataclass(frozen=True)` in `src/pyarchi/conformance.py` |
+| STORY-01.1.1 | `ConformanceProfile` as a `@dataclass(frozen=True)` in `src/etcion/conformance.py` |
 | STORY-01.1.2 | All 16 attributes defined: `spec_version`, 12 `shall`-level booleans, 2 `should`-level booleans, 1 `may`-level boolean |
 | STORY-01.1.3 | `spec_version` field defaults to `"3.2"`; `SPEC_VERSION` in `__init__.py` already exists; test suite will assert equality |
 | STORY-01.1.4 | `example_viewpoints` field defaults to `False` with `may` designation; does not affect conformance checks |

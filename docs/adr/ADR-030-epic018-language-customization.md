@@ -10,7 +10,7 @@ PROPOSED
 
 ## Context
 
-The ArchiMate 3.2 specification (Section 14) defines a language customization mechanism that allows users to specialize existing element types and attach additional attributes. The `test_language_customization` conformance test (`test/test_conformance.py:219`) is currently `xfail`-ed, expecting `pyarchi.Profile` to exist in the public API. No profile or specialization types exist in the codebase today.
+The ArchiMate 3.2 specification (Section 14) defines a language customization mechanism that allows users to specialize existing element types and attach additional attributes. The `test_language_customization` conformance test (`test/test_conformance.py:219`) is currently `xfail`-ed, expecting `etcion.Profile` to exist in the public API. No profile or specialization types exist in the codebase today.
 
 A Profile is *not* an ArchiMate Concept. Like Viewpoint (ADR-029), it is metamodel-level metadata that extends the language rather than describing an architecture. This distinction drives the central design question: how do specializations manifest at runtime?
 
@@ -30,7 +30,7 @@ Spec reference: `assets/archimate-spec-3.2/ch-language-customization.html` [Arch
 
 | Artifact | Location |
 |---|---|
-| `Profile` | `src/pyarchi/metamodel/profiles.py` |
+| `Profile` | `src/etcion/metamodel/profiles.py` |
 
 Profiles are metamodel infrastructure, not layer-specific elements. A single module is sufficient; the type is self-contained.
 
@@ -88,7 +88,7 @@ This avoids mutating Pydantic model schemas at runtime while still providing a s
 
 ### 8. Exports Deferred to EPIC-020
 
-Consistent with ADR-026 and ADR-029, `Profile` is not added to `pyarchi.__init__.__all__` in EPIC-018. The `test_language_customization` xfail will be resolved when EPIC-020 wires the exports.
+Consistent with ADR-026 and ADR-029, `Profile` is not added to `etcion.__init__.__all__` in EPIC-018. The `test_language_customization` xfail will be resolved when EPIC-020 wires the exports.
 
 ## Alternatives Considered
 
@@ -125,4 +125,4 @@ Keeping elements unmodified and storing extended attributes in `Model._extended_
 
 - Adding `specialization` and `extended_attributes` fields to `Element` increases the base class surface area for all elements, even those that never use profiles. The fields default to `None` and `{}` respectively, so memory overhead is minimal.
 - Deferred validation of specialization consistency (in `Model.validate()` rather than `Model.add()`) means invalid specialization strings are not caught until validation is explicitly invoked. This is a deliberate trade-off for profile application order flexibility.
-- Deferring exports to EPIC-020 means the `test_language_customization` xfail remains unresolved after EPIC-018 ships. Integration tests can import directly from `pyarchi.metamodel.profiles` in the interim.
+- Deferring exports to EPIC-020 means the `test_language_customization` xfail remains unresolved after EPIC-018 ships. Integration tests can import directly from `etcion.metamodel.profiles` in the interim.

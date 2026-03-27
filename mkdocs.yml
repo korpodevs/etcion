@@ -1,6 +1,6 @@
-site_name: pyarchi
+site_name: etcion
 site_description: Python implementation of the ArchiMate 3.2 metamodel
-repo_url: https://github.com/korpodevs/pyarchi
+repo_url: https://github.com/korpodevs/etcion
 exclude_docs: |
   adr/
 theme:

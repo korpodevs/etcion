@@ -7,10 +7,10 @@ from typing import Any
 import pytest
 from pydantic import ValidationError as PydanticValidationError
 
-from pyarchi.exceptions import ValidationError
-from pyarchi.metamodel.concepts import Element, Relationship
-from pyarchi.metamodel.model import Model
-from pyarchi.metamodel.profiles import Profile
+from etcion.exceptions import ValidationError
+from etcion.metamodel.concepts import Element, Relationship
+from etcion.metamodel.model import Model
+from etcion.metamodel.profiles import Profile
 
 # ---------------------------------------------------------------------------
 # Helpers -- concrete Element stub for testing
@@ -67,7 +67,7 @@ class TestProfileInstantiation:
 
     def test_profile_is_not_concept(self) -> None:
         """Profile does not inherit from Concept."""
-        from pyarchi.metamodel.concepts import Concept
+        from etcion.metamodel.concepts import Concept
 
         p = Profile(name="Test")
         assert not isinstance(p, Concept)

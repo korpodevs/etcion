@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from pyarchi.serialization.registry import (
+from etcion.serialization.registry import (
     ARCHIMATE_NS,
     NSMAP,
     TYPE_REGISTRY,
@@ -42,14 +42,14 @@ class TestTypeRegistry:
         assert len(TYPE_REGISTRY) > 0
 
     def test_all_element_types_registered(self):
-        from pyarchi.metamodel.application import DataObject
-        from pyarchi.metamodel.business import BusinessActor
-        from pyarchi.metamodel.elements import Grouping
-        from pyarchi.metamodel.implementation_migration import Plateau
-        from pyarchi.metamodel.motivation import Goal
-        from pyarchi.metamodel.physical import Equipment
-        from pyarchi.metamodel.strategy import Capability
-        from pyarchi.metamodel.technology import Artifact
+        from etcion.metamodel.application import DataObject
+        from etcion.metamodel.business import BusinessActor
+        from etcion.metamodel.elements import Grouping
+        from etcion.metamodel.implementation_migration import Plateau
+        from etcion.metamodel.motivation import Goal
+        from etcion.metamodel.physical import Equipment
+        from etcion.metamodel.strategy import Capability
+        from etcion.metamodel.technology import Artifact
 
         for cls in [
             BusinessActor,
@@ -64,7 +64,7 @@ class TestTypeRegistry:
             assert cls in TYPE_REGISTRY, f"{cls.__name__} not in registry"
 
     def test_all_relationship_types_registered(self):
-        from pyarchi.metamodel.relationships import (
+        from etcion.metamodel.relationships import (
             Access,
             Composition,
             Flow,
@@ -76,20 +76,20 @@ class TestTypeRegistry:
             assert cls in TYPE_REGISTRY, f"{cls.__name__} not in registry"
 
     def test_access_has_extra_attrs(self):
-        from pyarchi.metamodel.relationships import Access
+        from etcion.metamodel.relationships import Access
 
         desc = TYPE_REGISTRY[Access]
         assert "accessType" in desc.extra_attrs
 
     def test_influence_has_modifier_and_strength(self):
-        from pyarchi.metamodel.relationships import Influence
+        from etcion.metamodel.relationships import Influence
 
         desc = TYPE_REGISTRY[Influence]
         assert "modifier" in desc.extra_attrs
         assert "strength" in desc.extra_attrs
 
     def test_junction_has_type_attr(self):
-        from pyarchi.metamodel.relationships import Junction
+        from etcion.metamodel.relationships import Junction
 
         desc = TYPE_REGISTRY[Junction]
         assert "type" in desc.extra_attrs
@@ -99,6 +99,6 @@ class TestTypeRegistry:
         assert len(TYPE_REGISTRY) >= 57
 
     def test_xml_tag_matches_class_name_for_simple_types(self):
-        from pyarchi.metamodel.business import BusinessActor
+        from etcion.metamodel.business import BusinessActor
 
         assert TYPE_REGISTRY[BusinessActor].xml_tag == "BusinessActor"

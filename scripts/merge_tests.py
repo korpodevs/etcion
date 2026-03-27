@@ -165,7 +165,7 @@ def merge_files(sources: list[Path], target: Path) -> None:
         norm = normalize_import(imp)
         if "__future__" in norm:
             future_imports.append(imp)
-        elif any(norm.startswith(f"from pyarchi") or norm.startswith(f"import pyarchi") for _ in [1]):
+        elif any(norm.startswith(f"from etcion") or norm.startswith(f"import etcion") for _ in [1]):
             local_imports.append(imp)
         elif any(norm.startswith(f"from {pkg}") or norm.startswith(f"import {pkg}")
                for pkg in ["pytest", "lxml", "hypothesis"]):

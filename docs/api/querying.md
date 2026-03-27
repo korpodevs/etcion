@@ -1,3 +1,3 @@
 # Querying
 
-::: pyarchi.metamodel.model
+::: etcion.metamodel.model

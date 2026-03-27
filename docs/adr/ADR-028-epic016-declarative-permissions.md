@@ -10,7 +10,7 @@ PROPOSED
 
 ## Context
 
-The `is_permitted()` function in `src/pyarchi/validation/permissions.py` has grown to 260+ lines of procedural `if`/`issubclass` rules accumulated across seven features (FEAT-05.11, FEAT-11.4, FEAT-12.4, FEAT-13.1--13.4, FEAT-15.1, FEAT-15.2, FEAT-15.6). ADR-025 identified growing cyclomatic complexity and fragile ordering dependencies (prohibitions must precede permissions) as consequences. ADR-027 reiterated the concern and noted the function "should be monitored for refactoring into a rule-registry pattern in a future epic."
+The `is_permitted()` function in `src/etcion/validation/permissions.py` has grown to 260+ lines of procedural `if`/`issubclass` rules accumulated across seven features (FEAT-05.11, FEAT-11.4, FEAT-12.4, FEAT-13.1--13.4, FEAT-15.1, FEAT-15.2, FEAT-15.6). ADR-025 identified growing cyclomatic complexity and fragile ordering dependencies (prohibitions must precede permissions) as consequences. ADR-027 reiterated the concern and noted the function "should be monitored for refactoring into a rule-registry pattern in a future epic."
 
 The function's problems are structural:
 
@@ -24,7 +24,7 @@ Prior decisions accepted without re-litigation:
 - `is_permitted()` as the single centralized permission lookup (ADR-017 ss7).
 - Signature: `is_permitted(rel_type, source_type, target_type) -> bool` with class references, not strings.
 - Construction-time leniency; permission checking at `Model.validate()` time only (ADR-017 ss6, ADR-027 Decision 1).
-- `pyarchi.exceptions.ValidationError` for metamodel violations (ADR-027 Decision 7).
+- `etcion.exceptions.ValidationError` for metamodel violations (ADR-027 Decision 7).
 - `DerivationEngine` is layer-agnostic and unchanged (ADR-025 Decision 8).
 
 ## Decisions

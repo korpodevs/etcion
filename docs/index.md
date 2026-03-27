@@ -1,4 +1,4 @@
-# pyarchi
+# etcion
 
 A Python library implementing the ArchiMate 3.2 metamodel.
 
@@ -6,7 +6,7 @@ A Python library implementing the ArchiMate 3.2 metamodel.
 
 [ArchiMate 3.2](https://pubs.opengroup.org/architecture/archimate32-doc/) is The Open Group's enterprise architecture modeling language. It provides a uniform representation for diagrams that describe enterprise architectures across business, application, technology, and other domains.
 
-**pyarchi** provides a complete, type-safe Python implementation of the ArchiMate 3.2 metamodel. It lets you programmatically create, validate, and serialize architecture models using plain Python objects backed by Pydantic.
+**etcion** provides a complete, type-safe Python implementation of the ArchiMate 3.2 metamodel. It lets you programmatically create, validate, and serialize architecture models using plain Python objects backed by Pydantic.
 
 ## Features
 
@@ -23,13 +23,13 @@ A Python library implementing the ArchiMate 3.2 metamodel.
 ## Installation
 
 ```bash
-pip install pyarchi
+pip install etcion
 ```
 
 For XML serialization support (requires `lxml`):
 
 ```bash
-pip install pyarchi[xml]
+pip install etcion[xml]
 ```
 
 **Requires Python 3.12 or later.**
@@ -37,7 +37,7 @@ pip install pyarchi[xml]
 ## Quick Start
 
 ```python
-from pyarchi import (
+from etcion import (
     ApplicationComponent,
     ApplicationService,
     Assignment,
@@ -46,7 +46,7 @@ from pyarchi import (
     Model,
     Serving,
 )
-from pyarchi.serialization.xml import write_model
+from etcion.serialization.xml import write_model
 
 # Create elements from different layers
 order_process = BusinessProcess(name="Order Handling")

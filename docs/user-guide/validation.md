@@ -22,7 +22,7 @@ Validation checks include:
 Use `strict=True` to raise a `ValidationError` on the first violation:
 
 ```python
-from pyarchi import ValidationError
+from etcion import ValidationError
 
 try:
     model.validate(strict=True)
@@ -35,7 +35,7 @@ except ValidationError as e:
 Check whether a relationship type is allowed between two element types without building a model:
 
 ```python
-from pyarchi import is_permitted, Serving, ApplicationService, BusinessService
+from etcion import is_permitted, Serving, ApplicationService, BusinessService
 
 is_permitted(Serving, ApplicationService, BusinessService)  # True
 is_permitted(Serving, BusinessActor, Node)                  # False
@@ -56,8 +56,8 @@ for err in errors:
 Implement the `ValidationRule` protocol to add your own checks:
 
 ```python
-from pyarchi import ValidationRule, Model
-from pyarchi.exceptions import ValidationError
+from etcion import ValidationRule, Model
+from etcion.exceptions import ValidationError
 
 class RequireDocumentation:
     """Every element must have a description."""

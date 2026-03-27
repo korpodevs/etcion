@@ -20,14 +20,14 @@ Prior decisions accepted without re-litigation:
 - `StructureElement(Element)` and `BehaviorElement(Element)` as the generic metamodel branch points (ADR-016).
 - `ClassVar[Layer]` and `ClassVar[Aspect]` on concrete element classes (ADR-014).
 - `ClassVar[NotationMetadata]` on concrete element classes (ADR-013).
-- `Layer.STRATEGY`, `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR` already exist in `src/pyarchi/enums.py` (ADR-011, ADR-012).
+- `Layer.STRATEGY`, `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR` already exist in `src/etcion/enums.py` (ADR-011, ADR-012).
 - `extra="forbid"` on `Concept.model_config` (ADR-006).
 
 ## Decisions
 
-### 1. Module Placement: `src/pyarchi/metamodel/strategy.py`
+### 1. Module Placement: `src/etcion/metamodel/strategy.py`
 
-All EPIC-006 classes (two ABCs and four concrete types) are defined in a new module `src/pyarchi/metamodel/strategy.py`. This follows the per-layer module pattern established in ADR-016 Decision 2, which anticipated that layer-specific concrete types would occupy their own modules (e.g., `business.py`, `application.py`).
+All EPIC-006 classes (two ABCs and four concrete types) are defined in a new module `src/etcion/metamodel/strategy.py`. This follows the per-layer module pattern established in ADR-016 Decision 2, which anticipated that layer-specific concrete types would occupy their own modules (e.g., `business.py`, `application.py`).
 
 ### 2. Layer-Specific ABCs: Hierarchy and Purpose
 
@@ -85,15 +85,15 @@ The exact `corner_shape` values are determined by the spec's graphical notation 
 
 ### 6. No New Enums Required
 
-`Layer.STRATEGY` (ADR-011), `Aspect.ACTIVE_STRUCTURE`, and `Aspect.BEHAVIOR` (ADR-012) already exist in `src/pyarchi/enums.py`. EPIC-006 introduces no new enum members or enum classes. This is ratified.
+`Layer.STRATEGY` (ADR-011), `Aspect.ACTIVE_STRUCTURE`, and `Aspect.BEHAVIOR` (ADR-012) already exist in `src/etcion/enums.py`. EPIC-006 introduces no new enum members or enum classes. This is ratified.
 
 ### 7. `Resource` Name: No Collision, Explicit Scope
 
-Python's standard library has no `Resource` class at module scope that would conflict. However, the name is generic enough to warrant a note: `Resource` in pyarchi refers exclusively to the ArchiMate Strategy Resource element [ArchiMate 3.2 Section 12.1], not a generic programming resource concept. The fully qualified import path `pyarchi.metamodel.strategy.Resource` disambiguates in any context where collision with third-party libraries might arise.
+Python's standard library has no `Resource` class at module scope that would conflict. However, the name is generic enough to warrant a note: `Resource` in etcion refers exclusively to the ArchiMate Strategy Resource element [ArchiMate 3.2 Section 12.1], not a generic programming resource concept. The fully qualified import path `etcion.metamodel.strategy.Resource` disambiguates in any context where collision with third-party libraries might arise.
 
 ### 8. `__init__.py` Exports Deferred
 
-Exports of Strategy layer types to `src/pyarchi/__init__.py` are deferred to EPIC-014 (public API surface epic), following the same pattern as EPIC-004 (ADR-016 Decision 7) and EPIC-005 (ADR-017 Decision 10). The types are importable via their module path (`from pyarchi.metamodel.strategy import Resource`) immediately, but are not added to the top-level `__all__` in this epic.
+Exports of Strategy layer types to `src/etcion/__init__.py` are deferred to EPIC-014 (public API surface epic), following the same pattern as EPIC-004 (ADR-016 Decision 7) and EPIC-005 (ADR-017 Decision 10). The types are importable via their module path (`from etcion.metamodel.strategy import Resource`) immediately, but are not added to the top-level `__all__` in this epic.
 
 ## Alternatives Considered
 
@@ -107,7 +107,7 @@ Placing `CourseOfAction` under `StrategyBehaviorElement` for uniform layer typin
 
 ### All Strategy Classes in `elements.py`
 
-Co-locating Strategy types in the existing `src/pyarchi/metamodel/elements.py` was considered. Rejected because:
+Co-locating Strategy types in the existing `src/etcion/metamodel/elements.py` was considered. Rejected because:
 
 1. `elements.py` is scoped to the generic metamodel (ADR-016 Decision 2). Mixing layer-specific types into it would blur the boundary between the generic hierarchy and layer-specific extensions.
 2. As more layer epics land (Business, Application, Technology, Physical, Implementation and Migration), `elements.py` would grow to contain the entire metamodel. Per-layer modules keep file sizes manageable and imports focused.

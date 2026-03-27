@@ -15,7 +15,7 @@ from pathlib import Path
 # Constants
 # ---------------------------------------------------------------------------
 
-SRC_ROOT = Path(__file__).parent.parent / "src" / "pyarchi"
+SRC_ROOT = Path(__file__).parent.parent / "src" / "etcion"
 
 METAMODEL_PKG = SRC_ROOT / "metamodel"
 VALIDATION_PKG = SRC_ROOT / "validation"
@@ -28,7 +28,7 @@ DERIVATION_PKG = SRC_ROOT / "derivation"
 
 
 class TestMetamodelSubPackage:
-    """STORY-00.2.1 -- src/pyarchi/metamodel/ sub-package exists and is importable."""
+    """STORY-00.2.1 -- src/etcion/metamodel/ sub-package exists and is importable."""
 
     def test_metamodel_init_exists(self) -> None:
         assert (METAMODEL_PKG / "__init__.py").is_file()
@@ -46,7 +46,7 @@ class TestMetamodelSubPackage:
         assert (METAMODEL_PKG / "notation.py").is_file()
 
     def test_metamodel_importable(self) -> None:
-        mod = importlib.import_module("pyarchi.metamodel")
+        mod = importlib.import_module("etcion.metamodel")
         assert mod is not None
 
 
@@ -56,13 +56,13 @@ class TestMetamodelSubPackage:
 
 
 class TestEnumsModule:
-    """STORY-00.2.2 -- src/pyarchi/enums.py exists and exposes all 7 enumerations."""
+    """STORY-00.2.2 -- src/etcion/enums.py exists and exposes all 7 enumerations."""
 
     def test_enums_file_exists(self) -> None:
         assert (SRC_ROOT / "enums.py").is_file()
 
     def test_all_enums_importable(self) -> None:
-        from pyarchi.enums import (  # noqa: F401
+        from etcion.enums import (  # noqa: F401
             AccessMode,
             Aspect,
             AssociationDirection,
@@ -75,12 +75,12 @@ class TestEnumsModule:
     # --- Layer ---
 
     def test_layer_has_seven_members(self) -> None:
-        from pyarchi.enums import Layer
+        from etcion.enums import Layer
 
         assert len(Layer) == 7
 
     def test_layer_member_names(self) -> None:
-        from pyarchi.enums import Layer
+        from etcion.enums import Layer
 
         expected = {
             "STRATEGY",
@@ -96,12 +96,12 @@ class TestEnumsModule:
     # --- Aspect ---
 
     def test_aspect_has_five_members(self) -> None:
-        from pyarchi.enums import Aspect
+        from etcion.enums import Aspect
 
         assert len(Aspect) == 5
 
     def test_aspect_member_names(self) -> None:
-        from pyarchi.enums import Aspect
+        from etcion.enums import Aspect
 
         expected = {
             "ACTIVE_STRUCTURE",
@@ -115,12 +115,12 @@ class TestEnumsModule:
     # --- RelationshipCategory ---
 
     def test_relationship_category_has_four_members(self) -> None:
-        from pyarchi.enums import RelationshipCategory
+        from etcion.enums import RelationshipCategory
 
         assert len(RelationshipCategory) == 4
 
     def test_relationship_category_member_names(self) -> None:
-        from pyarchi.enums import RelationshipCategory
+        from etcion.enums import RelationshipCategory
 
         expected = {"STRUCTURAL", "DEPENDENCY", "DYNAMIC", "OTHER"}
         assert {m.name for m in RelationshipCategory} == expected
@@ -128,38 +128,38 @@ class TestEnumsModule:
     # --- AccessMode ---
 
     def test_access_mode_has_four_members(self) -> None:
-        from pyarchi.enums import AccessMode
+        from etcion.enums import AccessMode
 
         assert len(AccessMode) == 4
 
     # --- InfluenceSign ---
 
     def test_influence_sign_has_five_members(self) -> None:
-        from pyarchi.enums import InfluenceSign
+        from etcion.enums import InfluenceSign
 
         assert len(InfluenceSign) == 5
 
     def test_influence_sign_strong_positive_value(self) -> None:
-        from pyarchi.enums import InfluenceSign
+        from etcion.enums import InfluenceSign
 
         assert InfluenceSign.STRONG_POSITIVE.value == "++"
 
     def test_influence_sign_strong_negative_value(self) -> None:
-        from pyarchi.enums import InfluenceSign
+        from etcion.enums import InfluenceSign
 
         assert InfluenceSign.STRONG_NEGATIVE.value == "--"
 
     # --- AssociationDirection ---
 
     def test_association_direction_has_two_members(self) -> None:
-        from pyarchi.enums import AssociationDirection
+        from etcion.enums import AssociationDirection
 
         assert len(AssociationDirection) == 2
 
     # --- JunctionType ---
 
     def test_junction_type_has_two_members(self) -> None:
-        from pyarchi.enums import JunctionType
+        from etcion.enums import JunctionType
 
         assert len(JunctionType) == 2
 
@@ -170,7 +170,7 @@ class TestEnumsModule:
 
 
 class TestValidationSubPackage:
-    """STORY-00.2.3 -- src/pyarchi/validation/ sub-package exists and is importable."""
+    """STORY-00.2.3 -- src/etcion/validation/ sub-package exists and is importable."""
 
     def test_validation_init_exists(self) -> None:
         assert (VALIDATION_PKG / "__init__.py").is_file()
@@ -179,7 +179,7 @@ class TestValidationSubPackage:
         assert (VALIDATION_PKG / "permissions.py").is_file()
 
     def test_validation_importable(self) -> None:
-        mod = importlib.import_module("pyarchi.validation")
+        mod = importlib.import_module("etcion.validation")
         assert mod is not None
 
 
@@ -189,7 +189,7 @@ class TestValidationSubPackage:
 
 
 class TestDerivationSubPackage:
-    """STORY-00.2.4 -- src/pyarchi/derivation/ sub-package exists and is importable."""
+    """STORY-00.2.4 -- src/etcion/derivation/ sub-package exists and is importable."""
 
     def test_derivation_init_exists(self) -> None:
         assert (DERIVATION_PKG / "__init__.py").is_file()
@@ -198,7 +198,7 @@ class TestDerivationSubPackage:
         assert (DERIVATION_PKG / "engine.py").is_file()
 
     def test_derivation_importable(self) -> None:
-        mod = importlib.import_module("pyarchi.derivation")
+        mod = importlib.import_module("etcion.derivation")
         assert mod is not None
 
 
@@ -208,41 +208,41 @@ class TestDerivationSubPackage:
 
 
 class TestExceptionsModule:
-    """STORY-00.2.5 -- src/pyarchi/exceptions.py exists with correct hierarchy."""
+    """STORY-00.2.5 -- src/etcion/exceptions.py exists with correct hierarchy."""
 
     def test_exceptions_file_exists(self) -> None:
         assert (SRC_ROOT / "exceptions.py").is_file()
 
     def test_all_exceptions_importable(self) -> None:
-        from pyarchi.exceptions import (  # noqa: F401
+        from etcion.exceptions import (  # noqa: F401
             ConformanceError,
             DerivationError,
             PyArchiError,
             ValidationError,
         )
 
-    def test_pyarchi_error_is_exception_subclass(self) -> None:
-        from pyarchi.exceptions import PyArchiError
+    def test_etcion_error_is_exception_subclass(self) -> None:
+        from etcion.exceptions import PyArchiError
 
         assert issubclass(PyArchiError, Exception)
 
-    def test_validation_error_is_pyarchi_error_subclass(self) -> None:
-        from pyarchi.exceptions import PyArchiError, ValidationError
+    def test_validation_error_is_etcion_error_subclass(self) -> None:
+        from etcion.exceptions import PyArchiError, ValidationError
 
         assert issubclass(ValidationError, PyArchiError)
 
-    def test_derivation_error_is_pyarchi_error_subclass(self) -> None:
-        from pyarchi.exceptions import DerivationError, PyArchiError
+    def test_derivation_error_is_etcion_error_subclass(self) -> None:
+        from etcion.exceptions import DerivationError, PyArchiError
 
         assert issubclass(DerivationError, PyArchiError)
 
-    def test_conformance_error_is_pyarchi_error_subclass(self) -> None:
-        from pyarchi.exceptions import ConformanceError, PyArchiError
+    def test_conformance_error_is_etcion_error_subclass(self) -> None:
+        from etcion.exceptions import ConformanceError, PyArchiError
 
         assert issubclass(ConformanceError, PyArchiError)
 
     def test_validation_error_is_exception_subclass(self) -> None:
-        from pyarchi.exceptions import ValidationError
+        from etcion.exceptions import ValidationError
 
         assert issubclass(ValidationError, Exception)
 
@@ -253,30 +253,30 @@ class TestExceptionsModule:
 
 
 class TestPackageInitExports:
-    """Verify that pyarchi.__init__ re-exports all four exception classes."""
+    """Verify that etcion.__init__ re-exports all four exception classes."""
 
-    def test_validation_error_importable_from_pyarchi(self) -> None:
-        from pyarchi import ValidationError  # noqa: F401
+    def test_validation_error_importable_from_etcion(self) -> None:
+        from etcion import ValidationError  # noqa: F401
 
-    def test_pyarchi_error_in_all(self) -> None:
-        import pyarchi
+    def test_etcion_error_in_all(self) -> None:
+        import etcion
 
-        assert "PyArchiError" in pyarchi.__all__
+        assert "PyArchiError" in etcion.__all__
 
     def test_validation_error_in_all(self) -> None:
-        import pyarchi
+        import etcion
 
-        assert "ValidationError" in pyarchi.__all__
+        assert "ValidationError" in etcion.__all__
 
     def test_derivation_error_in_all(self) -> None:
-        import pyarchi
+        import etcion
 
-        assert "DerivationError" in pyarchi.__all__
+        assert "DerivationError" in etcion.__all__
 
     def test_conformance_error_in_all(self) -> None:
-        import pyarchi
+        import etcion
 
-        assert "ConformanceError" in pyarchi.__all__
+        assert "ConformanceError" in etcion.__all__
 
 
 # ---------------------------------------------------------------------------
@@ -322,26 +322,26 @@ class TestDependencyGraph:
         return list(pkg.glob("*.py"))
 
     def test_metamodel_does_not_import_validation(self) -> None:
-        forbidden = ["pyarchi.validation", "pyarchi.validation.permissions"]
+        forbidden = ["etcion.validation", "etcion.validation.permissions"]
         # model.py is allowed to import validation for Model.validate() (ADR-027).
         allowed = {"model.py"}
         for f in self._py_files(METAMODEL_PKG):
             if f.name in allowed:
                 continue
             assert not _imports_any(f, forbidden), (
-                f"{f.name} must not import from pyarchi.validation"
+                f"{f.name} must not import from etcion.validation"
             )
 
     def test_metamodel_does_not_import_derivation(self) -> None:
-        forbidden = ["pyarchi.derivation", "pyarchi.derivation.engine"]
+        forbidden = ["etcion.derivation", "etcion.derivation.engine"]
         for f in self._py_files(METAMODEL_PKG):
             assert not _imports_any(f, forbidden), (
-                f"{f.name} must not import from pyarchi.derivation"
+                f"{f.name} must not import from etcion.derivation"
             )
 
     def test_validation_does_not_import_derivation(self) -> None:
-        forbidden = ["pyarchi.derivation", "pyarchi.derivation.engine"]
+        forbidden = ["etcion.derivation", "etcion.derivation.engine"]
         for f in self._py_files(VALIDATION_PKG):
             assert not _imports_any(f, forbidden), (
-                f"{f.name} must not import from pyarchi.derivation"
+                f"{f.name} must not import from etcion.derivation"
             )

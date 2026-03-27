@@ -1,3 +1,3 @@
 # Relationships
 
-::: pyarchi.metamodel.relationships
+::: etcion.metamodel.relationships

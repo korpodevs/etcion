@@ -1,17 +1,17 @@
 # Elements
 
-::: pyarchi.metamodel.elements
+::: etcion.metamodel.elements
 
-::: pyarchi.metamodel.business
+::: etcion.metamodel.business
 
-::: pyarchi.metamodel.application
+::: etcion.metamodel.application
 
-::: pyarchi.metamodel.technology
+::: etcion.metamodel.technology
 
-::: pyarchi.metamodel.physical
+::: etcion.metamodel.physical
 
-::: pyarchi.metamodel.strategy
+::: etcion.metamodel.strategy
 
-::: pyarchi.metamodel.motivation
+::: etcion.metamodel.motivation
 
-::: pyarchi.metamodel.implementation_migration
+::: etcion.metamodel.implementation_migration

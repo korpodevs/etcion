@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from pyarchi.enums import Aspect, Layer
-from pyarchi.metamodel.elements import (
+from etcion.enums import Aspect, Layer
+from etcion.metamodel.elements import (
     ActiveStructureElement,
     InternalActiveStructureElement,
     PassiveStructureElement,
 )
-from pyarchi.metamodel.physical import (
+from etcion.metamodel.physical import (
     DistributionNetwork,
     Equipment,
     Facility,

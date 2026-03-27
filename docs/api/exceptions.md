@@ -1,3 +1,3 @@
 # Exceptions
 
-::: pyarchi.exceptions
+::: etcion.exceptions

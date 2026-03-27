@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from pyarchi.enums import Aspect, Layer
-from pyarchi.metamodel.business import (
+from etcion.enums import Aspect, Layer
+from etcion.metamodel.business import (
     BusinessActor,
     BusinessCollaboration,
     BusinessRole,
 )
-from pyarchi.metamodel.elements import MotivationElement
-from pyarchi.metamodel.motivation import (
+from etcion.metamodel.elements import MotivationElement
+from etcion.metamodel.motivation import (
     Assessment,
     Constraint,
     Driver,
@@ -23,8 +23,8 @@ from pyarchi.metamodel.motivation import (
     Stakeholder,
     Value,
 )
-from pyarchi.metamodel.relationships import Assignment, Influence, Realization
-from pyarchi.validation.permissions import is_permitted
+from etcion.metamodel.relationships import Assignment, Influence, Realization
+from etcion.validation.permissions import is_permitted
 
 ALL_INTENTIONAL = [Stakeholder, Driver, Assessment]
 
@@ -234,7 +234,7 @@ class TestMotivationModuleComplete:
     """Verify all 10 Motivation concrete types are importable."""
 
     def test_all_ten_importable(self) -> None:
-        from pyarchi.metamodel.motivation import (
+        from etcion.metamodel.motivation import (
             Assessment,
             Constraint,
             Driver,

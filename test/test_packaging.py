@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-import pyarchi
+import etcion
 
 # ---------------------------------------------------------------------------
 # Resolve the repository root relative to this test file.
@@ -16,16 +16,16 @@ _REPO_ROOT = Path(__file__).parent.parent
 
 
 class TestVersionExposed:
-    """pyarchi.__version__ is publicly accessible and correct."""
+    """etcion.__version__ is publicly accessible and correct."""
 
     def test_version_exposed(self) -> None:
-        assert pyarchi.__version__ == "0.1.0"
+        assert etcion.__version__ == "0.1.0"
 
     def test_version_is_string(self) -> None:
-        assert isinstance(pyarchi.__version__, str)
+        assert isinstance(etcion.__version__, str)
 
     def test_version_in_all(self) -> None:
-        assert "__version__" in pyarchi.__all__
+        assert "__version__" in etcion.__all__
 
 
 class TestChangelogExists:

@@ -12,7 +12,7 @@ PROPOSED
 
 EPIC-020 is a wiring and cleanup epic. No new domain types, modules, or classes are introduced. The metamodel is complete through EPIC-018 (language customization) and the serialization layer shipped in EPIC-019. What remains is:
 
-1. Two conformance xfails in `test_conformance.py` (`test_viewpoint_mechanism`, `test_language_customization`) that exist only because the implementing types have not yet been exported from `pyarchi.__init__`.
+1. Two conformance xfails in `test_conformance.py` (`test_viewpoint_mechanism`, `test_language_customization`) that exist only because the implementing types have not yet been exported from `etcion.__init__`.
 2. Six deferred-validation xfails across Phase 1 test files (`test_feat052`, `test_feat053`, `test_feat054`, `test_feat058`, `test_feat046`) that were stubbed under ADR-017 ss6 and never rewritten after the validation engine (EPIC-015) shipped.
 3. Phase 3 types (`Viewpoint`, `View`, `Concern`, `Profile`, `PurposeCategory`, `ContentCategory`) missing from `__init__.py` exports.
 4. The `test_feat012_structure.py::test_functional_outcome` assertion counts are stale.
@@ -20,7 +20,7 @@ EPIC-020 is a wiring and cleanup epic. No new domain types, modules, or classes 
 Prior decisions accepted without re-litigation:
 
 - Exports follow the pattern established in ADR-026 (EPIC-014): domain types added to `__init__.py` imports and `__all__`.
-- Serialization functions are NOT exported to `__init__` (ADR-031 Decision 11); users import from `pyarchi.serialization.xml` / `pyarchi.serialization.json` directly.
+- Serialization functions are NOT exported to `__init__` (ADR-031 Decision 11); users import from `etcion.serialization.xml` / `etcion.serialization.json` directly.
 - `TestShouldFeaturesMarkers` currently enforces that ALL methods in `TestShouldFeatures` carry `xfail`. This meta-test must be updated when the xfails are removed.
 
 ## Decisions
@@ -29,10 +29,10 @@ Prior decisions accepted without re-litigation:
 
 | Test | Blocking dependency | Resolution |
 |---|---|---|
-| `TestShouldFeatures.test_viewpoint_mechanism` | `Viewpoint` not in `pyarchi.__init__` | Export `Viewpoint` from `viewpoints.py`; remove `xfail` decorator |
-| `TestShouldFeatures.test_language_customization` | `Profile` not in `pyarchi.__init__` | Export `Profile` from `profiles.py`; remove `xfail` decorator |
+| `TestShouldFeatures.test_viewpoint_mechanism` | `Viewpoint` not in `etcion.__init__` | Export `Viewpoint` from `viewpoints.py`; remove `xfail` decorator |
+| `TestShouldFeatures.test_language_customization` | `Profile` not in `etcion.__init__` | Export `Profile` from `profiles.py`; remove `xfail` decorator |
 
-Both tests assert `hasattr(pyarchi, "TypeName")`. No behavioral changes are required -- the classes already exist and are fully tested. Once exported, the tests pass as-is.
+Both tests assert `hasattr(etcion, "TypeName")`. No behavioral changes are required -- the classes already exist and are fully tested. Once exported, the tests pass as-is.
 
 Consequence: `TestShouldFeaturesMarkers` in `test_feat012_structure.py` must be restructured. It currently asserts that every method in `TestShouldFeatures` has an `xfail` marker. After this epic, zero methods will have `xfail`. The marker class either gains a `_PROMOTED` set (mirroring `TestShallFeaturesMarkers`) or is replaced with assertions that no xfail decorators remain.
 
@@ -54,12 +54,12 @@ Principle: if an equivalent assertion already exists in the FEAT-15.x test suite
 
 | Symbol | Source module | Kind |
 |---|---|---|
-| `Viewpoint` | `pyarchi.metamodel.viewpoints` | Class |
-| `View` | `pyarchi.metamodel.viewpoints` | Class |
-| `Concern` | `pyarchi.metamodel.viewpoints` | Class |
-| `Profile` | `pyarchi.metamodel.profiles` | Class |
-| `PurposeCategory` | `pyarchi.enums` | Enum |
-| `ContentCategory` | `pyarchi.enums` | Enum |
+| `Viewpoint` | `etcion.metamodel.viewpoints` | Class |
+| `View` | `etcion.metamodel.viewpoints` | Class |
+| `Concern` | `etcion.metamodel.viewpoints` | Class |
+| `Profile` | `etcion.metamodel.profiles` | Class |
+| `PurposeCategory` | `etcion.enums` | Enum |
+| `ContentCategory` | `etcion.enums` | Enum |
 
 These are appended to the existing `__init__.py` imports and `__all__` list, grouped under a `# Phase 3` comment following the established pattern.
 
@@ -73,9 +73,9 @@ The `_PROMOTED` set in `TestShallFeaturesMarkers` is already complete -- all `Te
 
 ### 5. No New Modules or Classes
 
-This epic creates no new files under `src/pyarchi/`. All work is confined to:
+This epic creates no new files under `src/etcion/`. All work is confined to:
 
-- `src/pyarchi/__init__.py` (import additions)
+- `src/etcion/__init__.py` (import additions)
 - `test/test_conformance.py` (xfail removal)
 - `test/test_feat012_structure.py` (marker class and outcome count updates)
 - `test/test_feat05x` and `test/test_feat046_validation.py` (xfail removal or rewrite)
@@ -85,7 +85,7 @@ This epic creates no new files under `src/pyarchi/`. All work is confined to:
 ### Positive
 
 - The conformance test suite reaches full green (zero xfails, zero unexpected failures), providing a clean baseline for any future Phase 4 work.
-- All Phase 3 types are discoverable via `pyarchi.__init__` and IDE autocompletion.
+- All Phase 3 types are discoverable via `etcion.__init__` and IDE autocompletion.
 - Eliminating stale xfail stubs removes false confidence -- tests that were silently passing as xfail-strict-false are either confirmed covered or explicitly rewritten.
 
 ### Negative

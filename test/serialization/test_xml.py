@@ -12,23 +12,23 @@ from lxml import etree
 
 lxml = pytest.importorskip("lxml")
 
-from pyarchi.enums import AccessMode, InfluenceSign  # noqa: E402
-from pyarchi.metamodel.application import (  # noqa: E402
+from etcion.enums import AccessMode, InfluenceSign  # noqa: E402
+from etcion.metamodel.application import (  # noqa: E402
     ApplicationComponent,
     DataObject,  # noqa: E402
 )
-from pyarchi.metamodel.business import (  # noqa: E402  # noqa: E402
+from etcion.metamodel.business import (  # noqa: E402  # noqa: E402
     BusinessActor,  # noqa: E402
     BusinessProcess,
     BusinessService,
 )
-from pyarchi.metamodel.model import Model  # noqa: E402
-from pyarchi.metamodel.motivation import (  # noqa: E402
+from etcion.metamodel.model import Model  # noqa: E402
+from etcion.metamodel.motivation import (  # noqa: E402
     Driver,
     Goal,  # noqa: E402
     Stakeholder,
 )
-from pyarchi.metamodel.relationships import (  # noqa: E402
+from etcion.metamodel.relationships import (  # noqa: E402
     Access,
     Association,
     Composition,
@@ -36,11 +36,11 @@ from pyarchi.metamodel.relationships import (  # noqa: E402
     Influence,  # noqa: E402
     Serving,  # noqa: E402
 )
-from pyarchi.serialization.registry import (  # noqa: E402
+from etcion.serialization.registry import (  # noqa: E402
     ARCHIMATE_NS,  # noqa: E402
     XSI_NS,
 )
-from pyarchi.serialization.xml import (  # noqa: E402  # noqa: E402  # noqa: E402  # noqa: E402  # noqa: E402
+from etcion.serialization.xml import (  # noqa: E402  # noqa: E402  # noqa: E402  # noqa: E402  # noqa: E402
     _from_exchange_id,
     _to_exchange_id,
     deserialize_model,
@@ -110,7 +110,7 @@ class TestSerializeElement:
 
     def test_unregistered_type_raises_key_error(self):
         """A type not in the registry should raise KeyError."""
-        from pyarchi.metamodel.concepts import Element
+        from etcion.metamodel.concepts import Element
 
         # Element is abstract, so we can't instantiate it.
         # This test documents the expected failure mode.
@@ -182,7 +182,7 @@ class TestSerializeRelationshipExtraAttrs:
         assert el.get("flowType") == "data"
 
     def test_association_is_directed(self):
-        from pyarchi.enums import AssociationDirection
+        from etcion.enums import AssociationDirection
 
         a = BusinessActor(name="A")
         b = BusinessActor(name="B")
@@ -350,7 +350,7 @@ class TestReadModel:
 class TestUnknownElements:
     def test_unknown_type_warns(self):
         """Manually build XML with an unknown element type."""
-        from pyarchi.serialization.registry import ARCHIMATE_NS, NSMAP, XSI_NS
+        from etcion.serialization.registry import ARCHIMATE_NS, NSMAP, XSI_NS
 
         root = etree.Element(f"{{{ARCHIMATE_NS}}}model", nsmap=NSMAP)
         elems = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}elements")
@@ -422,13 +422,13 @@ class TestOpaqueXmlPreservation:
 
 class TestValidateExchangeFormat:
     def test_function_exists(self):
-        from pyarchi.serialization.xml import validate_exchange_format
+        from etcion.serialization.xml import validate_exchange_format
 
         assert callable(validate_exchange_format)
 
     def test_returns_list(self):
         """Without bundled XSD, expect FileNotFoundError or a list."""
-        from pyarchi.serialization.xml import validate_exchange_format
+        from etcion.serialization.xml import validate_exchange_format
 
         m = Model()
         m.add(BusinessActor(name="A"))
@@ -443,7 +443,7 @@ class TestValidateExchangeFormat:
 NS = {"a": ARCHIMATE_NS}
 XML_NS = "http://www.w3.org/XML/1998/namespace"
 XSD_DIR = (
-    Path(__file__).resolve().parent.parent.parent / "src" / "pyarchi" / "serialization" / "schema"
+    Path(__file__).resolve().parent.parent.parent / "src" / "etcion" / "serialization" / "schema"
 )
 
 
@@ -565,7 +565,7 @@ class TestXsdBundled:
 
 class TestDeserializerTolerance:
     def test_round_trip_with_lang(self, simple_model: Model) -> None:
-        from pyarchi.serialization.xml import deserialize_model
+        from etcion.serialization.xml import deserialize_model
 
         tree = serialize_model(simple_model, model_name="Test")
         rt_model = deserialize_model(tree)
@@ -586,7 +586,7 @@ class TestXsdValidation:
     def test_validate_raises_if_xsd_missing(
         self, simple_model: Model, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import pyarchi.serialization.xml as xml_mod
+        import etcion.serialization.xml as xml_mod
 
         monkeypatch.setattr(xml_mod, "_XSD_PATH", tmp_path / "nonexistent.xsd")
         tree = serialize_model(simple_model)

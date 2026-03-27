@@ -74,7 +74,7 @@ type already implies filtering by category.  Not worth a dedicated method.
 ### D7 -- No new public exports
 
 All methods are on `Model`, which is already exported.  No new classes or
-functions are added to `pyarchi.__init__`.
+functions are added to `etcion.__init__`.
 
 ## Backlog Impact
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from pyarchi.enums import Aspect, Layer
-from pyarchi.metamodel.application import (
+from etcion.enums import Aspect, Layer
+from etcion.metamodel.application import (
     ApplicationCollaboration,
     ApplicationComponent,
     ApplicationEvent,
@@ -19,7 +19,7 @@ from pyarchi.metamodel.application import (
     ApplicationService,
     DataObject,
 )
-from pyarchi.metamodel.elements import (
+from etcion.metamodel.elements import (
     Event,
     ExternalActiveStructureElement,
     ExternalBehaviorElement,

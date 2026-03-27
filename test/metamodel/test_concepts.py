@@ -7,14 +7,14 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from pyarchi.enums import RelationshipCategory
-from pyarchi.metamodel.concepts import (
+from etcion.enums import RelationshipCategory
+from etcion.metamodel.concepts import (
     Concept,
     Element,
     Relationship,
     RelationshipConnector,
 )
-from pyarchi.metamodel.mixins import AttributeMixin
+from etcion.metamodel.mixins import AttributeMixin
 
 
 # Minimal concrete subclass for testing — defined in test file only

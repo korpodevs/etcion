@@ -6,8 +6,8 @@ import pytest
 from pydantic import ValidationError
 from pydantic import ValidationError as PydanticValidationError
 
-from pyarchi.enums import Aspect, Layer
-from pyarchi.metamodel.business import (
+from etcion.enums import Aspect, Layer
+from etcion.metamodel.business import (
     BusinessActor,
     BusinessCollaboration,
     BusinessEvent,
@@ -25,7 +25,7 @@ from pyarchi.metamodel.business import (
     Product,
     Representation,
 )
-from pyarchi.metamodel.elements import (
+from etcion.metamodel.elements import (
     BehaviorElement,
     CompositeElement,
     Event,
@@ -207,7 +207,7 @@ class TestTypeNames_2:
         assert BusinessFunction(name="x")._type_name == "BusinessFunction"
 
     def test_business_interaction(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor
+        from etcion.metamodel.business import BusinessActor
 
         a1 = BusinessActor(name="a")
         a2 = BusinessActor(name="b")
@@ -327,7 +327,7 @@ class TestBusinessInteractionValidator:
             BusinessInteraction(name="x", assigned_elements=[])
 
     def test_one_assigned_element_raises(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor
+        from etcion.metamodel.business import BusinessActor
 
         with pytest.raises(ValidationError, match="requires >= 2"):
             BusinessInteraction(name="x", assigned_elements=[BusinessActor(name="a")])

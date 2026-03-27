@@ -1,4 +1,4 @@
-# pyarchi
+# etcion
 
 A Python library implementing the ArchiMate 3.2 metamodel.
 
@@ -6,7 +6,7 @@ A Python library implementing the ArchiMate 3.2 metamodel.
 
 [ArchiMate 3.2](https://pubs.opengroup.org/architecture/archimate32-doc/) is The Open Group's enterprise architecture modeling language. It provides a uniform representation for diagrams that describe enterprise architectures across business, application, technology, and other domains.
 
-**pyarchi** provides a complete, type-safe Python implementation of the ArchiMate 3.2 metamodel. It lets you programmatically create, validate, and serialize architecture models using plain Python objects backed by Pydantic.
+**etcion** provides a complete, type-safe Python implementation of the ArchiMate 3.2 metamodel. It lets you programmatically create, validate, and serialize architecture models using plain Python objects backed by Pydantic.
 
 ## Features
 
@@ -24,13 +24,13 @@ A Python library implementing the ArchiMate 3.2 metamodel.
 Install the core library:
 
 ```bash
-pip install pyarchi
+pip install etcion
 ```
 
 For XML serialization support (requires `lxml`):
 
 ```bash
-pip install pyarchi[xml]
+pip install etcion[xml]
 ```
 
 **Requires Python 3.12 or later.**
@@ -38,7 +38,7 @@ pip install pyarchi[xml]
 ## Quick Start
 
 ```python
-from pyarchi import (
+from etcion import (
     ApplicationComponent,
     ApplicationService,
     BusinessProcess,
@@ -48,7 +48,7 @@ from pyarchi import (
     Realization,
     Flow,
 )
-from pyarchi.serialization.xml import write_model
+from etcion.serialization.xml import write_model
 
 # Create elements from different layers
 order_process = BusinessProcess(name="Order Handling")
@@ -99,38 +99,38 @@ All 11 relationship types are supported: Composition, Aggregation, Assignment, R
 Export and import models in the Open Group ArchiMate Model Exchange File Format. Output files are compatible with [Archi](https://www.archimatetool.com/) and other tools that support the exchange format.
 
 ```python
-from pyarchi.serialization.xml import write_model, read_model
+from etcion.serialization.xml import write_model, read_model
 
 write_model(model, "model.xml", model_name="My Model")
 loaded = read_model("model.xml")
 ```
 
-Requires the `xml` extra: `pip install pyarchi[xml]`
+Requires the `xml` extra: `pip install etcion[xml]`
 
 ### Archi Compatibility
 
-pyarchi produces XML files that can be imported directly into [Archi](https://www.archimatetool.com/), the popular open-source ArchiMate modeling tool.
+etcion produces XML files that can be imported directly into [Archi](https://www.archimatetool.com/), the popular open-source ArchiMate modeling tool.
 
-**Importing a pyarchi model into Archi:**
+**Importing a etcion model into Archi:**
 
 1. Export your model: `write_model(model, "model.xml", model_name="My Model")`
 2. In Archi, go to **File > Import > Open Exchange XML Model**
 3. Select the `.xml` file -- all elements and relationships will appear in the model tree
 
-**Importing an Archi model into pyarchi:**
+**Importing an Archi model into etcion:**
 
 1. In Archi, go to **File > Export > Open Exchange XML Model**
 2. Save as `.xml`
 3. Load in Python: `model = read_model("exported.xml")`
 
-Diagram layouts, visual styles, and folder organization are preserved as opaque XML during round-trip -- they will survive a pyarchi read/write cycle even though pyarchi does not interpret them.
+Diagram layouts, visual styles, and folder organization are preserved as opaque XML during round-trip -- they will survive a etcion read/write cycle even though etcion does not interpret them.
 
 ### JSON
 
 A lightweight JSON format for integration with web applications and data pipelines:
 
 ```python
-from pyarchi.serialization.json import model_to_dict, model_from_dict
+from etcion.serialization.json import model_to_dict, model_from_dict
 
 data = model_to_dict(model)
 loaded = model_from_dict(data)
@@ -152,7 +152,7 @@ Validation also covers Junction homogeneity rules and Profile constraints (speci
 For individual relationship checks without a model:
 
 ```python
-from pyarchi import is_permitted, Serving, ApplicationService, BusinessService
+from etcion import is_permitted, Serving, ApplicationService, BusinessService
 
 is_permitted(Serving, ApplicationService, BusinessService)  # True
 ```
@@ -162,8 +162,8 @@ is_permitted(Serving, ApplicationService, BusinessService)  # True
 ### Setup
 
 ```bash
-git clone https://github.com/pyarchi/pyarchi.git
-cd pyarchi
+git clone https://github.com/korpodevs/etcion.git
+cd etcion
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
@@ -195,7 +195,7 @@ The project uses strict mypy configuration with the Pydantic plugin.
 
 ## Project Status
 
-pyarchi targets full compliance with the ArchiMate 3.2 specification.
+etcion targets full compliance with the ArchiMate 3.2 specification.
 
 - **Phase 1** (Core metamodel) -- Complete. Root type hierarchy, all 11 relationships, Junction, derivation engine.
 - **Phase 2** (Layer elements) -- Complete. All 7 layers with 58 concrete element types, cross-layer relationship rules, public API.

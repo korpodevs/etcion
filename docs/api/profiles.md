@@ -1,3 +1,3 @@
 # Profiles
 
-::: pyarchi.metamodel.profiles
+::: etcion.metamodel.profiles

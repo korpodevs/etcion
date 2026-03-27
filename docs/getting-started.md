@@ -1,29 +1,29 @@
 # Getting Started
 
-This guide walks you through installing pyarchi, creating your first model, validating it, and exporting to XML.
+This guide walks you through installing etcion, creating your first model, validating it, and exporting to XML.
 
 ## Installation
 
 Install the core library:
 
 ```bash
-pip install pyarchi
+pip install etcion
 ```
 
 For XML serialization (requires `lxml`):
 
 ```bash
-pip install pyarchi[xml]
+pip install etcion[xml]
 ```
 
-pyarchi requires **Python 3.12 or later**.
+etcion requires **Python 3.12 or later**.
 
 ## Your First Model
 
 Create a simple model with a business actor, a business service, and a serving relationship:
 
 ```python
-from pyarchi import BusinessActor, BusinessService, Serving, Model
+from etcion import BusinessActor, BusinessService, Serving, Model
 
 # Create elements
 customer = BusinessActor(name="Customer")
@@ -67,7 +67,7 @@ model.validate(strict=True)  # raises ValidationError on first violation
 You can also check individual relationships without a model:
 
 ```python
-from pyarchi import is_permitted, Serving, ApplicationService, BusinessService
+from etcion import is_permitted, Serving, ApplicationService, BusinessService
 
 is_permitted(Serving, ApplicationService, BusinessService)  # True
 ```
@@ -77,7 +77,7 @@ is_permitted(Serving, ApplicationService, BusinessService)  # True
 Export to the Open Group ArchiMate Exchange Format:
 
 ```python
-from pyarchi.serialization.xml import write_model
+from etcion.serialization.xml import write_model
 
 write_model(model, "my_model.xml", model_name="My Architecture")
 ```
@@ -90,7 +90,7 @@ For lightweight integrations, use JSON:
 
 ```python
 import json
-from pyarchi.serialization.json import model_to_dict
+from etcion.serialization.json import model_to_dict
 
 data = model_to_dict(model)
 print(json.dumps(data, indent=2))

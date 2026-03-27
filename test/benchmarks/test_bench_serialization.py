@@ -9,8 +9,8 @@ import pytest
 
 lxml = pytest.importorskip("lxml")
 
-from pyarchi import BusinessActor, Model  # noqa: E402 -- after importorskip
-from pyarchi.serialization.xml import deserialize_model, serialize_model  # noqa: E402
+from etcion import BusinessActor, Model  # noqa: E402 -- after importorskip
+from etcion.serialization.xml import deserialize_model, serialize_model  # noqa: E402
 
 from .conftest import _timed  # noqa: E402
 

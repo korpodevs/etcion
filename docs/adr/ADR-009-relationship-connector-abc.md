@@ -31,7 +31,7 @@ The specification does not give RelationshipConnectors the shared descriptive at
 
 ### Class Definition
 
-`RelationshipConnector` is defined in `src/pyarchi/metamodel/concepts.py` as:
+`RelationshipConnector` is defined in `src/etcion/metamodel/concepts.py` as:
 
 ```python
 class RelationshipConnector(Concept):
@@ -59,11 +59,11 @@ These implications are correct per the ArchiMate specification and require no sp
 
 ### Module Location
 
-`RelationshipConnector` is defined in `src/pyarchi/metamodel/concepts.py` alongside `Concept`, `Element`, and `Relationship`. The four root ABCs belong together because they define the top of the type hierarchy and are mutually referential in documentation and design rationale. The concrete `Junction` class will be defined in `src/pyarchi/metamodel/relationships/connector.py` when EPIC-05 is implemented, per the layout established in ADR-002.
+`RelationshipConnector` is defined in `src/etcion/metamodel/concepts.py` alongside `Concept`, `Element`, and `Relationship`. The four root ABCs belong together because they define the top of the type hierarchy and are mutually referential in documentation and design rationale. The concrete `Junction` class will be defined in `src/etcion/metamodel/relationships/connector.py` when EPIC-05 is implemented, per the layout established in ADR-002.
 
 ### `__init__.py` Re-exports
 
-`RelationshipConnector` is re-exported from `src/pyarchi/__init__.py` and added to `__all__`. This supports the `generic_metamodel` conformance test (which asserts that all four root ABCs are importable from `pyarchi`) and gives consumers the import path `from pyarchi import RelationshipConnector`.
+`RelationshipConnector` is re-exported from `src/etcion/__init__.py` and added to `__all__`. This supports the `generic_metamodel` conformance test (which asserts that all four root ABCs are importable from `etcion`) and gives consumers the import path `from etcion import RelationshipConnector`.
 
 ## Alternatives Considered
 
@@ -85,7 +85,7 @@ Applying `AttributeMixin` to give Junctions a name and description was considere
 
 ### Separate `connectors.py` Module
 
-Placing `RelationshipConnector` in a separate `src/pyarchi/metamodel/connectors.py` module was considered. This was rejected because:
+Placing `RelationshipConnector` in a separate `src/etcion/metamodel/connectors.py` module was considered. This was rejected because:
 
 1. `RelationshipConnector` is a root ABC, not a concrete implementation. Root ABCs belong in `concepts.py` per the module layout (ADR-002).
 2. The concrete `Junction` class will live in `metamodel/relationships/connector.py` when implemented. Having both a `connectors.py` at the metamodel level and a `connector.py` inside `relationships/` would create confusing naming.

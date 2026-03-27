@@ -1,6 +1,6 @@
 # Architecture Overview
 
-This page provides a high-level map of the pyarchi codebase and its class
+This page provides a high-level map of the etcion codebase and its class
 hierarchy.  For full API details see the [API Reference](../api/index.md).
 
 ## Module Map

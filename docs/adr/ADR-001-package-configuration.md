@@ -10,7 +10,7 @@ ACCEPTED
 
 ## Context
 
-pyarchi is a greenfield Python library implementing the ArchiMate 3.2 metamodel. The repository skeleton exists with `src/`, `test/`, `docs/`, and `etc/` directories, a Python 3.12.3 virtual environment, and no source code or build configuration. Before any metamodel work can begin, the project needs a fully configured build system, package layout, test runner, linter, and type checker.
+etcion is a greenfield Python library implementing the ArchiMate 3.2 metamodel. The repository skeleton exists with `src/`, `test/`, `docs/`, and `etc/` directories, a Python 3.12.3 virtual environment, and no source code or build configuration. Before any metamodel work can begin, the project needs a fully configured build system, package layout, test runner, linter, and type checker.
 
 The library will model a complex, deeply nested type hierarchy (abstract base classes, mixins, enums, validation rules) derived from a formal specification. This places unusually high demands on static analysis tooling: every element type, relationship category, and validation constraint must be expressible through the type system and verifiable at both development time and CI time. The library will also depend on Pydantic v2 for runtime data validation of model instances, making type-checker compatibility with Pydantic a hard requirement.
 
@@ -26,11 +26,11 @@ Use a single `pyproject.toml` as the sole configuration file for project metadat
 
 Set `requires-python = ">=3.12"`. Python 3.12 provides the full set of modern typing features needed by the library: `type` statement (PEP 695), improved error messages, and performance improvements to `dataclasses` and `typing`. Requiring 3.12 as the floor avoids conditional compatibility code and lets the library use the latest typing syntax natively.
 
-### Package Layout: `src/pyarchi/`
+### Package Layout: `src/etcion/`
 
-Use the `src/` layout where the importable package lives at `src/pyarchi/`. This layout prevents accidental imports of the package from the project root during testing (a common source of "it works on my machine" bugs), enforces that tests always run against the installed package, and is the recommended layout by the Python Packaging Authority (PyPA).
+Use the `src/` layout where the importable package lives at `src/etcion/`. This layout prevents accidental imports of the package from the project root during testing (a common source of "it works on my machine" bugs), enforces that tests always run against the installed package, and is the recommended layout by the Python Packaging Authority (PyPA).
 
-The `__init__.py` at `src/pyarchi/` will serve as the public API surface, re-exporting the key types that downstream consumers need: `Model`, core element base classes, relationship types, and enums.
+The `__init__.py` at `src/etcion/` will serve as the public API surface, re-exporting the key types that downstream consumers need: `Model`, core element base classes, relationship types, and enums.
 
 ### Runtime Dependency: Pydantic v2
 
@@ -128,7 +128,7 @@ This ADR provides the architectural rationale for each story in FEAT-00.1:
 | Story | Decision Implemented |
 |---|---|
 | STORY-00.1.1 | `pyproject.toml` with Hatchling backend, PEP 621 metadata, `requires-python >= 3.12`, `pydantic>=2.0,<3.0` |
-| STORY-00.1.2 | `src/pyarchi/` layout with `__init__.py` re-exporting the public API surface |
+| STORY-00.1.2 | `src/etcion/` layout with `__init__.py` re-exporting the public API surface |
 | STORY-00.1.3 | pytest configured in `[tool.pytest.ini_options]`, `test/conftest.py` for shared fixtures |
 | STORY-00.1.4 | Ruff configured in `[tool.ruff]` with PEP 8, import, annotation, and bugbear rule sets |
 | STORY-00.1.5 | mypy configured in `[tool.mypy]` with `strict = true` and `pydantic.mypy` plugin |

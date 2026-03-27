@@ -89,11 +89,11 @@ model_config = ConfigDict(arbitrary_types_allowed=True)
 
 ### Module Location
 
-`Concept` is defined in `src/pyarchi/metamodel/concepts.py`, as established in ADR-002 (STORY-00.2.1). This module will also contain `Element`, `Relationship`, and `RelationshipConnector` (see ADR-007 and ADR-009), keeping the root type hierarchy in a single file. The four root ABCs together will total fewer than 100 lines; splitting them across files would scatter tightly coupled definitions without adding navigational benefit.
+`Concept` is defined in `src/etcion/metamodel/concepts.py`, as established in ADR-002 (STORY-00.2.1). This module will also contain `Element`, `Relationship`, and `RelationshipConnector` (see ADR-007 and ADR-009), keeping the root type hierarchy in a single file. The four root ABCs together will total fewer than 100 lines; splitting them across files would scatter tightly coupled definitions without adding navigational benefit.
 
 ### `__init__.py` Re-exports
 
-`Concept` is re-exported from `src/pyarchi/__init__.py` and added to `__all__`. This supports the conformance test for `generic_metamodel` (which asserts `hasattr(pyarchi, "Concept")`) and gives consumers the import path `from pyarchi import Concept`.
+`Concept` is re-exported from `src/etcion/__init__.py` and added to `__all__`. This supports the conformance test for `generic_metamodel` (which asserts `hasattr(etcion, "Concept")`) and gives consumers the import path `from etcion import Concept`.
 
 ## Alternatives Considered
 
@@ -147,6 +147,6 @@ This ADR provides the architectural rationale for each story in FEAT-02.1:
 
 | Story | Decision Implemented |
 |---|---|
-| STORY-02.1.1 | `Concept` defined as `class Concept(abc.ABC, BaseModel)` in `src/pyarchi/metamodel/concepts.py` with `_type_name` abstract property preventing direct instantiation |
+| STORY-02.1.1 | `Concept` defined as `class Concept(abc.ABC, BaseModel)` in `src/etcion/metamodel/concepts.py` with `_type_name` abstract property preventing direct instantiation |
 | STORY-02.1.2 | `id: str = Field(default_factory=lambda: str(uuid.uuid4()))` with no format enforcement; supports Archi-standard `id-<uuid>` format via plain string acceptance |
 | STORY-02.1.3 | `TypeError` on `Concept()` guaranteed by `abc.ABC` with `_type_name` abstract property; test asserts this behavior |

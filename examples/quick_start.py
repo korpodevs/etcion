@@ -4,7 +4,7 @@
 Demonstrates creating elements, relationships, and running validation.
 """
 
-from pyarchi import (
+from etcion import (
     ApplicationComponent,
     ApplicationService,
     Assignment,

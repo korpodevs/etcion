@@ -26,7 +26,7 @@ The mixin must be designed so that:
 
 ### Implementation: Plain Python Class
 
-`AttributeMixin` is defined in `src/pyarchi/metamodel/mixins.py` as a plain Python class with annotated attributes:
+`AttributeMixin` is defined in `src/etcion/metamodel/mixins.py` as a plain Python class with annotated attributes:
 
 ```python
 class AttributeMixin:
@@ -84,7 +84,7 @@ This ordering ensures that `AttributeMixin`'s annotations are processed before `
 
 ### Not Exported from `__init__.py`
 
-`AttributeMixin` is NOT re-exported from `src/pyarchi/__init__.py`. It is an internal implementation detail of the metamodel hierarchy. Consumers interact with `Element` and `Relationship`, which carry the mixin's fields. There is no use case for importing `AttributeMixin` directly -- it cannot be instantiated (it is a plain class with no `__init__`), and it provides no methods or behavior.
+`AttributeMixin` is NOT re-exported from `src/etcion/__init__.py`. It is an internal implementation detail of the metamodel hierarchy. Consumers interact with `Element` and `Relationship`, which carry the mixin's fields. There is no use case for importing `AttributeMixin` directly -- it cannot be instantiated (it is a plain class with no `__init__`), and it provides no methods or behavior.
 
 If a future need arises for consumers to check whether a class has the shared attributes (e.g., `isinstance(obj, AttributeMixin)`), the mixin can be exported at that point. For now, YAGNI applies.
 
@@ -142,5 +142,5 @@ This ADR provides the architectural rationale for each story in FEAT-02.5:
 
 | Story | Decision Implemented |
 |---|---|
-| STORY-02.5.1 | `AttributeMixin` defined in `src/pyarchi/metamodel/mixins.py` as a plain class with `name: str`, `description: str \| None = None`, `documentation_url: str \| None = None` |
+| STORY-02.5.1 | `AttributeMixin` defined in `src/etcion/metamodel/mixins.py` as a plain class with `name: str`, `description: str \| None = None`, `documentation_url: str \| None = None` |
 | STORY-02.5.2 | Mixin is applied to both `Element` and `Relationship` via MRO inheritance; test confirms fields are present on concrete instances of both |

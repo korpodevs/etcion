@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from pyarchi import (
+from etcion import (
     ApplicationComponent,
     BusinessActor,
     BusinessProcess,
@@ -66,7 +66,7 @@ def model_with_rels_10k():
 @pytest.fixture
 def model_10k_varied():
     """Model with 10000 elements using varied types for realistic MRO diversity."""
-    from pyarchi import (
+    from etcion import (
         ApplicationComponent,
         ApplicationService,
         BusinessActor,

@@ -7,11 +7,11 @@ from typing import ClassVar
 
 import pytest
 
-import pyarchi.validation.permissions as _perm_mod
-import pyarchi.validation.permissions as _perm_module
-from pyarchi import BusinessActor, BusinessRole, Serving, warm_cache
-from pyarchi.enums import Aspect, Layer
-from pyarchi.metamodel.application import (
+import etcion.validation.permissions as _perm_mod
+import etcion.validation.permissions as _perm_module
+from etcion import BusinessActor, BusinessRole, Serving, warm_cache
+from etcion.enums import Aspect, Layer
+from etcion.metamodel.application import (
     ApplicationCollaboration,
     ApplicationComponent,
     ApplicationEvent,
@@ -22,7 +22,7 @@ from pyarchi.metamodel.application import (
     ApplicationService,
     DataObject,
 )
-from pyarchi.metamodel.business import (
+from etcion.metamodel.business import (
     BusinessCollaboration,
     BusinessEvent,
     BusinessFunction,
@@ -35,16 +35,16 @@ from pyarchi.metamodel.business import (
     Product,
     Representation,
 )
-from pyarchi.metamodel.concepts import Element, Relationship
-from pyarchi.metamodel.elements import ActiveStructureElement, BehaviorElement
-from pyarchi.metamodel.implementation_migration import (
+from etcion.metamodel.concepts import Element, Relationship
+from etcion.metamodel.elements import ActiveStructureElement, BehaviorElement
+from etcion.metamodel.implementation_migration import (
     Deliverable,
     Gap,
     ImplementationEvent,
     Plateau,
     WorkPackage,
 )
-from pyarchi.metamodel.motivation import (
+from etcion.metamodel.motivation import (
     Assessment,
     Constraint,
     Driver,
@@ -56,13 +56,13 @@ from pyarchi.metamodel.motivation import (
     Stakeholder,
     Value,
 )
-from pyarchi.metamodel.physical import (
+from etcion.metamodel.physical import (
     DistributionNetwork,
     Equipment,
     Facility,
     Material,
 )
-from pyarchi.metamodel.relationships import (
+from etcion.metamodel.relationships import (
     Access,
     Aggregation,
     Assignment,
@@ -75,13 +75,13 @@ from pyarchi.metamodel.relationships import (
     Specialization,
     Triggering,
 )
-from pyarchi.metamodel.strategy import (
+from etcion.metamodel.strategy import (
     Capability,
     CourseOfAction,
     Resource,
     ValueStream,
 )
-from pyarchi.metamodel.technology import (
+from etcion.metamodel.technology import (
     Artifact,
     CommunicationNetwork,
     Device,
@@ -96,7 +96,7 @@ from pyarchi.metamodel.technology import (
     TechnologyProcess,
     TechnologyService,
 )
-from pyarchi.validation.permissions import (
+from etcion.validation.permissions import (
     _PERMISSION_TABLE,
     _UNIVERSAL_SAME_TYPE,
     PermissionRule,
@@ -206,9 +206,9 @@ class TestExports:
         ],
     )
     def test_public_api_export(self, name: str) -> None:
-        import pyarchi
+        import etcion
 
-        assert hasattr(pyarchi, name), f"{name} not exported from pyarchi"
+        assert hasattr(etcion, name), f"{name} not exported from etcion"
 
 
 class TestPermissionRuleNamedTuple:
@@ -273,38 +273,38 @@ class TestUniversalShortCircuits:
     """Universal rules remain unchanged from pre-FEAT-16.1 behavior."""
 
     def test_composition_same_type(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor
+        from etcion.metamodel.business import BusinessActor
 
         assert is_permitted(Composition, BusinessActor, BusinessActor) is True
 
     def test_composition_different_type(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.business import BusinessActor, BusinessRole
 
         assert is_permitted(Composition, BusinessActor, BusinessRole) is False
 
     def test_aggregation_same_type(self) -> None:
-        from pyarchi.metamodel.business import BusinessRole
+        from etcion.metamodel.business import BusinessRole
 
         assert is_permitted(Aggregation, BusinessRole, BusinessRole) is True
 
     def test_specialization_same_type(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor
+        from etcion.metamodel.business import BusinessActor
 
         assert is_permitted(Specialization, BusinessActor, BusinessActor) is True
 
     def test_specialization_different_type(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.business import BusinessActor, BusinessRole
 
         assert is_permitted(Specialization, BusinessActor, BusinessRole) is False
 
     def test_association_always_true(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor
-        from pyarchi.metamodel.technology import Artifact
+        from etcion.metamodel.business import BusinessActor
+        from etcion.metamodel.technology import Artifact
 
         assert is_permitted(Association, BusinessActor, Artifact) is True
 
     def test_composite_element_to_relationship(self) -> None:
-        from pyarchi.metamodel.elements import Grouping
+        from etcion.metamodel.elements import Grouping
 
         assert is_permitted(Composition, Grouping, Assignment) is True
 
@@ -313,7 +313,7 @@ class TestDeprecationSpecialCase:
     """Realization(WorkPackage, Deliverable) returns True with DeprecationWarning."""
 
     def test_permitted_with_warning(self) -> None:
-        from pyarchi.metamodel.implementation_migration import Deliverable, WorkPackage
+        from etcion.metamodel.implementation_migration import Deliverable, WorkPackage
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -327,62 +327,62 @@ class TestCachedLookup:
     """Table-based rules resolve correctly via the cache."""
 
     def test_assignment_business_active_to_behavior(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor, BusinessProcess
+        from etcion.metamodel.business import BusinessActor, BusinessProcess
 
         assert is_permitted(Assignment, BusinessActor, BusinessProcess) is True
 
     def test_assignment_passive_to_behavior_prohibited(self) -> None:
-        from pyarchi.metamodel.business import BusinessObject, BusinessProcess
+        from etcion.metamodel.business import BusinessObject, BusinessProcess
 
         assert is_permitted(Assignment, BusinessObject, BusinessProcess) is False
 
     def test_serving_app_to_business(self) -> None:
-        from pyarchi.metamodel.application import ApplicationService
-        from pyarchi.metamodel.business import BusinessProcess
+        from etcion.metamodel.application import ApplicationService
+        from etcion.metamodel.business import BusinessProcess
 
         assert is_permitted(Serving, ApplicationService, BusinessProcess) is True
 
     def test_serving_passive_source_prohibited(self) -> None:
-        from pyarchi.metamodel.application import DataObject
-        from pyarchi.metamodel.business import BusinessProcess
+        from etcion.metamodel.application import DataObject
+        from etcion.metamodel.business import BusinessProcess
 
         assert is_permitted(Serving, DataObject, BusinessProcess) is False
 
     def test_realization_app_behavior_to_business_behavior(self) -> None:
-        from pyarchi.metamodel.application import ApplicationFunction
-        from pyarchi.metamodel.business import BusinessProcess
+        from etcion.metamodel.application import ApplicationFunction
+        from etcion.metamodel.business import BusinessProcess
 
         assert is_permitted(Realization, ApplicationFunction, BusinessProcess) is True
 
     def test_realization_target_business_active_prohibited(self) -> None:
-        from pyarchi.metamodel.application import ApplicationFunction
-        from pyarchi.metamodel.business import BusinessActor
+        from etcion.metamodel.application import ApplicationFunction
+        from etcion.metamodel.business import BusinessActor
 
         assert is_permitted(Realization, ApplicationFunction, BusinessActor) is False
 
     def test_influence_motivation_to_motivation(self) -> None:
-        from pyarchi.metamodel.motivation import Driver, Goal
+        from etcion.metamodel.motivation import Driver, Goal
 
         assert is_permitted(Influence, Driver, Goal) is True
 
     def test_triggering_business_intra_layer(self) -> None:
-        from pyarchi.metamodel.business import BusinessFunction, BusinessProcess
+        from etcion.metamodel.business import BusinessFunction, BusinessProcess
 
         assert is_permitted(Triggering, BusinessProcess, BusinessFunction) is True
 
     def test_flow_app_intra_layer(self) -> None:
-        from pyarchi.metamodel.application import ApplicationFunction, ApplicationProcess
+        from etcion.metamodel.application import ApplicationFunction, ApplicationProcess
 
         assert is_permitted(Flow, ApplicationProcess, ApplicationFunction) is True
 
     def test_access_active_to_passive(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor, BusinessObject
+        from etcion.metamodel.business import BusinessActor, BusinessObject
 
         assert is_permitted(Access, BusinessActor, BusinessObject) is True
 
     def test_unknown_triple_returns_false(self) -> None:
-        from pyarchi.metamodel.motivation import Goal
-        from pyarchi.metamodel.technology import Artifact
+        from etcion.metamodel.motivation import Goal
+        from etcion.metamodel.technology import Artifact
 
         assert is_permitted(Triggering, Goal, Artifact) is False
 
@@ -410,7 +410,7 @@ class TestHierarchicalResolution:
         ],
     )
     def test_assignment_business_active_covers_all_concrete(self, src: str) -> None:
-        import pyarchi.metamodel.business as biz
+        import etcion.metamodel.business as biz
 
         src_cls = getattr(biz, src)
         assert is_permitted(Assignment, src_cls, biz.BusinessProcess) is True
@@ -424,8 +424,8 @@ class TestHierarchicalResolution:
         ],
     )
     def test_assignment_targets_all_business_behaviors(self, tgt: str) -> None:
-        import pyarchi.metamodel.business as biz
-        from pyarchi.metamodel.business import BusinessActor
+        import etcion.metamodel.business as biz
+        from etcion.metamodel.business import BusinessActor
 
         tgt_cls = getattr(biz, tgt)
         assert is_permitted(Assignment, BusinessActor, tgt_cls) is True
@@ -443,7 +443,7 @@ class TestHierarchicalResolution:
     )
     def test_tech_active_deep_hierarchy(self, src: str) -> None:
         """Device/SystemSoftware -> Node -> TechInternalActive must all match."""
-        import pyarchi.metamodel.technology as tech
+        import etcion.metamodel.technology as tech
 
         src_cls = getattr(tech, src)
         assert is_permitted(Assignment, src_cls, tech.TechnologyFunction) is True
@@ -458,19 +458,19 @@ class TestHierarchicalResolution:
     )
     def test_access_passive_prohibition_covers_descendants(self, passive: str) -> None:
         """PassiveStructureElement prohibition covers BusinessObject, Contract, etc."""
-        import pyarchi.metamodel.business as biz
+        import etcion.metamodel.business as biz
 
         src_cls = getattr(biz, passive)
         assert is_permitted(Access, src_cls, biz.BusinessObject) is False
 
     def test_business_event_not_matched_by_internal_behavior(self) -> None:
         """BusinessEvent is NOT a BusinessInternalBehaviorElement subclass."""
-        from pyarchi.metamodel.business import BusinessEvent, BusinessInternalBehaviorElement
+        from etcion.metamodel.business import BusinessEvent, BusinessInternalBehaviorElement
 
         assert not issubclass(BusinessEvent, BusinessInternalBehaviorElement)
 
     def test_business_event_triggering_explicit_entry(self) -> None:
-        from pyarchi.metamodel.business import BusinessEvent, BusinessProcess
+        from etcion.metamodel.business import BusinessEvent, BusinessProcess
 
         assert is_permitted(Triggering, BusinessEvent, BusinessProcess) is True
 
@@ -480,56 +480,56 @@ class TestStrategyLayerRules:
 
     # St1: Resource -> Capability via Assignment
     def test_resource_assigned_to_capability(self) -> None:
-        from pyarchi.metamodel.strategy import Capability, Resource
+        from etcion.metamodel.strategy import Capability, Resource
 
         assert is_permitted(Assignment, Resource, Capability) is True
 
     # St2: Resource -> ValueStream via Assignment
     def test_resource_assigned_to_value_stream(self) -> None:
-        from pyarchi.metamodel.strategy import Resource, ValueStream
+        from etcion.metamodel.strategy import Resource, ValueStream
 
         assert is_permitted(Assignment, Resource, ValueStream) is True
 
     # St3: Resource -> CourseOfAction via Assignment
     def test_resource_assigned_to_course_of_action(self) -> None:
-        from pyarchi.metamodel.strategy import CourseOfAction, Resource
+        from etcion.metamodel.strategy import CourseOfAction, Resource
 
         assert is_permitted(Assignment, Resource, CourseOfAction) is True
 
     # St4: Capability -> Capability via Serving
     def test_capability_serves_capability(self) -> None:
-        from pyarchi.metamodel.strategy import Capability
+        from etcion.metamodel.strategy import Capability
 
         assert is_permitted(Serving, Capability, Capability) is True
 
     # St5: ValueStream -> Capability via Serving
     def test_value_stream_serves_capability(self) -> None:
-        from pyarchi.metamodel.strategy import Capability, ValueStream
+        from etcion.metamodel.strategy import Capability, ValueStream
 
         assert is_permitted(Serving, ValueStream, Capability) is True
 
     # St6: Capability -> Capability via Triggering
     def test_capability_triggers_capability(self) -> None:
-        from pyarchi.metamodel.strategy import Capability
+        from etcion.metamodel.strategy import Capability
 
         assert is_permitted(Triggering, Capability, Capability) is True
 
     # St7: ValueStream -> ValueStream via Triggering
     def test_value_stream_triggers_value_stream(self) -> None:
-        from pyarchi.metamodel.strategy import ValueStream
+        from etcion.metamodel.strategy import ValueStream
 
         assert is_permitted(Triggering, ValueStream, ValueStream) is True
 
     # St8: ValueStream -> ValueStream via Flow
     def test_value_stream_flow(self) -> None:
-        from pyarchi.metamodel.strategy import ValueStream
+        from etcion.metamodel.strategy import ValueStream
 
         assert is_permitted(Flow, ValueStream, ValueStream) is True
 
     # St9: CourseOfAction -> MotivationElement via Realization
     def test_course_of_action_realizes_motivation(self) -> None:
-        from pyarchi.metamodel.motivation import Goal
-        from pyarchi.metamodel.strategy import CourseOfAction
+        from etcion.metamodel.motivation import Goal
+        from etcion.metamodel.strategy import CourseOfAction
 
         assert is_permitted(Realization, CourseOfAction, Goal) is True
 
@@ -537,29 +537,29 @@ class TestStrategyLayerRules:
 class TestPhysicalLayerRules:
     # Ph2: PhysicalActiveStructureElement -> Material via Access
     def test_equipment_access_material(self) -> None:
-        from pyarchi.metamodel.physical import Equipment, Material
+        from etcion.metamodel.physical import Equipment, Material
 
         assert is_permitted(Access, Equipment, Material) is True
 
     def test_facility_access_material(self) -> None:
-        from pyarchi.metamodel.physical import Facility, Material
+        from etcion.metamodel.physical import Facility, Material
 
         assert is_permitted(Access, Facility, Material) is True
 
     def test_distribution_network_access_material(self) -> None:
-        from pyarchi.metamodel.physical import DistributionNetwork, Material
+        from etcion.metamodel.physical import DistributionNetwork, Material
 
         assert is_permitted(Access, DistributionNetwork, Material) is True
 
     # Ph3: Equipment -> Equipment via Serving
     def test_equipment_serves_equipment(self) -> None:
-        from pyarchi.metamodel.physical import Equipment
+        from etcion.metamodel.physical import Equipment
 
         assert is_permitted(Serving, Equipment, Equipment) is True
 
     # Ph4: Facility -> Facility via Serving
     def test_facility_serves_facility(self) -> None:
-        from pyarchi.metamodel.physical import Facility
+        from etcion.metamodel.physical import Facility
 
         assert is_permitted(Serving, Facility, Facility) is True
 
@@ -569,30 +569,30 @@ class TestCrossLayerStrategyRules:
 
     # X1: BehaviorElement -> Capability via Realization
     def test_behavior_realizes_capability(self) -> None:
-        from pyarchi.metamodel.business import BusinessProcess
-        from pyarchi.metamodel.strategy import Capability
+        from etcion.metamodel.business import BusinessProcess
+        from etcion.metamodel.strategy import Capability
 
         assert is_permitted(Realization, BusinessProcess, Capability) is True
 
     # X2: BehaviorElement -> ValueStream via Realization
     def test_behavior_realizes_value_stream(self) -> None:
-        from pyarchi.metamodel.business import BusinessProcess
-        from pyarchi.metamodel.strategy import ValueStream
+        from etcion.metamodel.business import BusinessProcess
+        from etcion.metamodel.strategy import ValueStream
 
         assert is_permitted(Realization, BusinessProcess, ValueStream) is True
 
     # X3: StructureElement -> Resource via Realization
     def test_structure_realizes_resource(self) -> None:
-        from pyarchi.metamodel.business import BusinessActor
-        from pyarchi.metamodel.strategy import Resource
+        from etcion.metamodel.business import BusinessActor
+        from etcion.metamodel.strategy import Resource
 
         assert is_permitted(Realization, BusinessActor, Resource) is True
 
     # X4: CourseOfAction -> MotivationElement via Realization (same as St9,
     # verified here in the cross-layer context)
     def test_course_of_action_cross_layer_realization(self) -> None:
-        from pyarchi.metamodel.motivation import Principle
-        from pyarchi.metamodel.strategy import CourseOfAction
+        from etcion.metamodel.motivation import Principle
+        from etcion.metamodel.strategy import CourseOfAction
 
         assert is_permitted(Realization, CourseOfAction, Principle) is True
 
@@ -872,7 +872,7 @@ class TestPositiveAuditFlow:
 
 
 class TestProhibitedPairs:
-    """Triples that must return False per Appendix B or pyarchi prohibitions."""
+    """Triples that must return False per Appendix B or etcion prohibitions."""
 
     @pytest.mark.parametrize("passive", BUSINESS_PASSIVE)
     def test_passive_cannot_assign_behavior(self, passive: type) -> None:
@@ -1022,17 +1022,17 @@ class TestWarmCacheRebuildAfterReset:
         # Serving(BusinessActor -> BusinessRole) should be False.
         assert is_permitted(Serving, BusinessActor, BusinessRole) is False
 
-    def test_warm_cache_exported_from_pyarchi(self):
-        """warm_cache must be importable directly from pyarchi top-level."""
+    def test_warm_cache_exported_from_etcion(self):
+        """warm_cache must be importable directly from etcion top-level."""
         # The import at the top of this module already validates this, but we
         # add an explicit assertion for test-report clarity.
-        import pyarchi
+        import etcion
 
-        assert hasattr(pyarchi, "warm_cache")
-        assert callable(pyarchi.warm_cache)
+        assert hasattr(etcion, "warm_cache")
+        assert callable(etcion.warm_cache)
 
     def test_warm_cache_in_dunder_all(self):
-        """warm_cache must appear in pyarchi.__all__."""
-        import pyarchi
+        """warm_cache must appear in etcion.__all__."""
+        import etcion
 
-        assert "warm_cache" in pyarchi.__all__
+        assert "warm_cache" in etcion.__all__

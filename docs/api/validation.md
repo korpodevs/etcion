@@ -1,5 +1,5 @@
 # Validation
 
-::: pyarchi.validation.permissions
+::: etcion.validation.permissions
 
-::: pyarchi.validation.rules
+::: etcion.validation.rules

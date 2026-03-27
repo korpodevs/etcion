@@ -7,7 +7,7 @@ Demonstrates write_model, read_model, and diff_models for verification.
 import tempfile
 from pathlib import Path
 
-from pyarchi import (
+from etcion import (
     ApplicationComponent,
     ApplicationService,
     Assignment,
@@ -16,7 +16,7 @@ from pyarchi import (
     Serving,
     diff_models,
 )
-from pyarchi.serialization.xml import read_model, write_model
+from etcion.serialization.xml import read_model, write_model
 
 
 def main() -> None:

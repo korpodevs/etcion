@@ -30,7 +30,7 @@ Prior decisions accepted without re-litigation:
 
 - `is_permitted()` as centralized permission lookup (ADR-017 ss7).
 - `issubclass`-based rule pattern in `is_permitted()` (ADR-023, ADR-024, ADR-025).
-- `pyarchi.exceptions.ValidationError` as distinct from `pydantic.ValidationError` (exceptions.py).
+- `etcion.exceptions.ValidationError` as distinct from `pydantic.ValidationError` (exceptions.py).
 - `DerivationEngine.derive()` returns new objects without mutating the model (ADR-017 ss8).
 - `Relationship.source` and `Relationship.target` typed as `Concept` (ADR-007).
 
@@ -56,9 +56,9 @@ def validate(self, *, strict: bool = False) -> list[ValidationError]: ...
 The method lives on `Model` directly, not on a separate `ModelValidator` class. Rationale: `Model` already owns the concept registry (`_concepts`); a separate class would need the same access and adds indirection without benefit. The implementation delegates to private rule functions for testability, but the public surface is a single method.
 
 - `strict=False` (default): collects all violations and returns them.
-- `strict=True`: raises `pyarchi.exceptions.ValidationError` on the first violation encountered.
+- `strict=True`: raises `etcion.exceptions.ValidationError` on the first violation encountered.
 
-The return type is `list[pyarchi.exceptions.ValidationError]`, not `list[pydantic.ValidationError]`. Pydantic's `ValidationError` is for schema violations at construction time; `pyarchi.exceptions.ValidationError` is for metamodel constraint violations. The existing xfail tests expect the latter.
+The return type is `list[etcion.exceptions.ValidationError]`, not `list[pydantic.ValidationError]`. Pydantic's `ValidationError` is for schema violations at construction time; `etcion.exceptions.ValidationError` is for metamodel constraint violations. The existing xfail tests expect the latter.
 
 ### 3. Relationship Direction and Permission Enforcement via `is_permitted()`
 
@@ -95,9 +95,9 @@ if rel_type is Assignment:
 
 This keeps the rule co-located with other Assignment permission logic and is checked automatically by `Model.validate()` via Decision 3.
 
-### 7. Error Identity: `pyarchi.exceptions.ValidationError`
+### 7. Error Identity: `etcion.exceptions.ValidationError`
 
-All model-level validation errors use `pyarchi.exceptions.ValidationError`. Each instance carries a human-readable message identifying the violating concept ID, the constraint name, and the relevant types. No structured error codes or error-object subclasses are introduced in EPIC-015; the message string is the interface.
+All model-level validation errors use `etcion.exceptions.ValidationError`. Each instance carries a human-readable message identifying the violating concept ID, the constraint name, and the relevant types. No structured error codes or error-object subclasses are introduced in EPIC-015; the message string is the interface.
 
 Construction-time validators (`model_validator`) continue to raise `ValueError` (caught and wrapped by Pydantic into `pydantic.ValidationError`). This is unchanged.
 
@@ -115,7 +115,7 @@ Adding `model_validator(mode="after")` to `Assignment`, `Serving`, `Access`, `Re
 
 ### Separate `ModelValidator` Class
 
-Extracting validation into `src/pyarchi/validation/model_validator.py` with `ModelValidator(model).run() -> list[ValidationError]`. Rejected because `Model` already holds the concept registry and a separate class adds indirection. If `Model.validate()` grows too complex, the internal rule functions can be extracted to a module without changing the public API.
+Extracting validation into `src/etcion/validation/model_validator.py` with `ModelValidator(model).run() -> list[ValidationError]`. Rejected because `Model` already holds the concept registry and a separate class adds indirection. If `Model.validate()` grows too complex, the internal rule functions can be extracted to a module without changing the public API.
 
 ### Structured Error Objects with Codes
 

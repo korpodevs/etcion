@@ -7,7 +7,7 @@ Compare two model versions to find additions, removals, and field-level changes.
 `diff_models()` compares a baseline model against a revised model:
 
 ```python
-from pyarchi import diff_models
+from etcion import diff_models
 
 diff = diff_models(model_v1, model_v2)
 print(diff.summary())

@@ -20,7 +20,7 @@ Prior decisions accepted without re-litigation:
 - Generic metamodel ABCs: `InternalActiveStructureElement`, `InternalBehaviorElement`, `PassiveStructureElement`, `Process`, `Function`, `Interaction`, `Event`, `ExternalActiveStructureElement`, `ExternalBehaviorElement` (ADR-016).
 - `ClassVar[Layer]` and `ClassVar[Aspect]` on concrete element classes (ADR-014).
 - `ClassVar[NotationMetadata]` on concrete element classes (ADR-013).
-- `Layer.APPLICATION`, `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, `Aspect.PASSIVE_STRUCTURE` already exist in `src/pyarchi/enums.py` (ADR-011, ADR-012).
+- `Layer.APPLICATION`, `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, `Aspect.PASSIVE_STRUCTURE` already exist in `src/etcion/enums.py` (ADR-011, ADR-012).
 - Per-layer module pattern established by `strategy.py` (ADR-018) and `business.py` (ADR-019).
 - `extra="forbid"` on `Concept.model_config` (ADR-006).
 - Multiple inheritance MRO pattern for behavior elements (ADR-019 Decision 5).
@@ -28,9 +28,9 @@ Prior decisions accepted without re-litigation:
 
 ## Decisions
 
-### 1. Module Placement: `src/pyarchi/metamodel/application.py`
+### 1. Module Placement: `src/etcion/metamodel/application.py`
 
-All EPIC-008 classes (two ABCs and nine concrete types) are defined in a new module `src/pyarchi/metamodel/application.py`. This continues the per-layer module pattern established in ADR-018 Decision 1 and ADR-019 Decision 1.
+All EPIC-008 classes (two ABCs and nine concrete types) are defined in a new module `src/etcion/metamodel/application.py`. This continues the per-layer module pattern established in ADR-018 Decision 1 and ADR-019 Decision 1.
 
 ### 2. Layer-Specific ABCs: Two Internal Branches (Not Three)
 
@@ -127,11 +127,11 @@ The `"#B5FFFF"` color is the standard ArchiMate light-blue for the Application l
 
 ### 10. No New Enums Required
 
-`Layer.APPLICATION` (ADR-011), `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, and `Aspect.PASSIVE_STRUCTURE` (ADR-012) already exist in `src/pyarchi/enums.py`. EPIC-008 introduces no new enum members or enum classes. This is ratified.
+`Layer.APPLICATION` (ADR-011), `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, and `Aspect.PASSIVE_STRUCTURE` (ADR-012) already exist in `src/etcion/enums.py`. EPIC-008 introduces no new enum members or enum classes. This is ratified.
 
 ### 11. `__init__.py` Exports Deferred
 
-Exports of Application layer types to `src/pyarchi/__init__.py` are deferred to EPIC-014 (public API surface epic), consistent with ADR-016 Decision 7, ADR-017 Decision 10, ADR-018 Decision 8, and ADR-019 Decision 11. The types are importable via `from pyarchi.metamodel.application import ApplicationComponent` immediately.
+Exports of Application layer types to `src/etcion/__init__.py` are deferred to EPIC-014 (public API surface epic), consistent with ADR-016 Decision 7, ADR-017 Decision 10, ADR-018 Decision 8, and ADR-019 Decision 11. The types are importable via `from etcion.metamodel.application import ApplicationComponent` immediately.
 
 ## Alternatives Considered
 

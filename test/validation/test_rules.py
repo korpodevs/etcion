@@ -6,21 +6,21 @@ import warnings
 
 import pytest
 
-import pyarchi.validation.permissions as perm_mod
-from pyarchi.exceptions import ValidationError
-from pyarchi.metamodel.business import BusinessActor, BusinessRole
-from pyarchi.metamodel.concepts import Concept, Element
-from pyarchi.metamodel.model import Model
-from pyarchi.metamodel.relationships import Serving
-from pyarchi.serialization.registry import TYPE_REGISTRY, TypeDescriptor, register_element_type
-from pyarchi.validation.permissions import (
+import etcion.validation.permissions as perm_mod
+from etcion.exceptions import ValidationError
+from etcion.metamodel.business import BusinessActor, BusinessRole
+from etcion.metamodel.concepts import Concept, Element
+from etcion.metamodel.model import Model
+from etcion.metamodel.relationships import Serving
+from etcion.serialization.registry import TYPE_REGISTRY, TypeDescriptor, register_element_type
+from etcion.validation.permissions import (
     _PERMISSION_TABLE,
     PermissionRule,
     _cache,
     is_permitted,
     register_permission_rule,
 )
-from pyarchi.validation.rules import ValidationRule
+from etcion.validation.rules import ValidationRule
 
 # ---------------------------------------------------------------------------
 # Fixtures

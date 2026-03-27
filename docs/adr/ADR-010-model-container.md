@@ -39,7 +39,7 @@ The central design question is whether `Model` should be a Pydantic `BaseModel` 
 
 ### Plain Python Class, Not Pydantic BaseModel
 
-`Model` is a plain Python class defined in `src/pyarchi/metamodel/model.py`:
+`Model` is a plain Python class defined in `src/etcion/metamodel/model.py`:
 
 ```python
 class Model:
@@ -187,7 +187,7 @@ A `connectors` property returning `list[RelationshipConnector]` is NOT provided.
 
 ### `__init__.py` Re-exports
 
-`Model` is re-exported from `src/pyarchi/__init__.py` and added to `__all__`. The primary consumer import path is `from pyarchi import Model`.
+`Model` is re-exported from `src/etcion/__init__.py` and added to `__all__`. The primary consumer import path is `from etcion import Model`.
 
 ## Alternatives Considered
 

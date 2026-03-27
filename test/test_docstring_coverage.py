@@ -1,4 +1,4 @@
-"""Docstring coverage tests for the pyarchi public API (STORY-26.1.4).
+"""Docstring coverage tests for the etcion public API (STORY-26.1.4).
 
 These tests are informational: they print coverage percentages and collect
 missing-docstring details rather than asserting 100% coverage.  This allows
@@ -20,7 +20,7 @@ from typing import Any
 
 import pytest
 
-import pyarchi
+import etcion
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -70,13 +70,13 @@ def _has_docstring(obj: Any) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Test 1: every symbol in pyarchi.__all__ has a class/function docstring
+# Test 1: every symbol in etcion.__all__ has a class/function docstring
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.slow
 def test_all_public_symbols_have_docstrings() -> None:
-    """Report docstring coverage for every name listed in pyarchi.__all__.
+    """Report docstring coverage for every name listed in etcion.__all__.
 
     This test never fails — it prints a summary table and the coverage
     percentage, then passes unconditionally.  A future story (STORY-26.1.2)
@@ -85,8 +85,8 @@ def test_all_public_symbols_have_docstrings() -> None:
     missing: list[str] = []
     total = 0
 
-    for name in pyarchi.__all__:
-        obj = getattr(pyarchi, name, None)
+    for name in etcion.__all__:
+        obj = getattr(etcion, name, None)
         if obj is None:
             continue
         total += 1
@@ -115,7 +115,7 @@ def test_all_public_symbols_have_docstrings() -> None:
 
 @pytest.mark.slow
 def test_all_public_methods_have_docstrings() -> None:
-    """Report docstring coverage for public methods on classes in pyarchi.__all__.
+    """Report docstring coverage for public methods on classes in etcion.__all__.
 
     Skips Pydantic-generated methods (``model_*``, ``schema``, etc.) and all
     dunder methods.  Informational only — always passes.
@@ -123,8 +123,8 @@ def test_all_public_methods_have_docstrings() -> None:
     missing: list[str] = []
     total = 0
 
-    for sym_name in pyarchi.__all__:
-        obj = getattr(pyarchi, sym_name, None)
+    for sym_name in etcion.__all__:
+        obj = getattr(etcion, sym_name, None)
         if obj is None or not inspect.isclass(obj):
             continue
         for method_name, method_obj in _public_methods(obj):
@@ -148,7 +148,7 @@ def test_all_public_methods_have_docstrings() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test 3: every .py module under src/pyarchi/ has a module-level docstring
+# Test 3: every .py module under src/etcion/ has a module-level docstring
 # ---------------------------------------------------------------------------
 
 
@@ -168,15 +168,15 @@ def _import_module_from_path(py_file: Path, src_root: Path) -> ModuleType | None
 
 @pytest.mark.slow
 def test_all_modules_have_docstrings() -> None:
-    """Report module-level docstring coverage across all pyarchi source files.
+    """Report module-level docstring coverage across all etcion source files.
 
     Skips ``__init__.py`` files (package inits are tested separately) and any
     file that cannot be imported cleanly.  Informational only — always passes.
     """
     src_root = Path(__file__).parent.parent / "src"
-    pyarchi_root = src_root / "pyarchi"
+    etcion_root = src_root / "etcion"
 
-    py_files = sorted(pyarchi_root.rglob("*.py"))
+    py_files = sorted(etcion_root.rglob("*.py"))
 
     missing: list[str] = []
     total = 0

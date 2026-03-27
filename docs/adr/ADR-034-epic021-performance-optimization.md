@@ -12,7 +12,7 @@ PROPOSED
 
 The library is functionally correct through EPIC-020 but has no performance baseline. Before optimizing, we need data. The current runtime characteristics are:
 
-1. **Import time.** `import pyarchi` eagerly loads 7 layer modules, viewpoints, profiles, relationships, derivation, conformance, enums, exceptions, serialization registry, and the permission table (169 lines of top-level imports in `__init__.py`). The serialization registry calls `_register_all()` at module load, which imports all layer modules a second time (resolved by Python's import cache, but the function body executes unconditionally).
+1. **Import time.** `import etcion` eagerly loads 7 layer modules, viewpoints, profiles, relationships, derivation, conformance, enums, exceptions, serialization registry, and the permission table (169 lines of top-level imports in `__init__.py`). The serialization registry calls `_register_all()` at module load, which imports all layer modules a second time (resolved by Python's import cache, but the function body executes unconditionally).
 
 2. **Permission cache.** `_build_cache()` in `permissions.py` lazily expands ABC-level `PermissionRule` entries into concrete-type triples via recursive `__subclasses__()` traversal (ADR-028 Decision 5). The cache is built on the first `is_permitted()` call. Once built, lookup is O(1).
 
@@ -42,7 +42,7 @@ No benchmarks exist. All optimization decisions below are provisional, gated on 
 
 | Benchmark | Metric | Acceptance Threshold |
 |-----------|--------|---------------------|
-| Package import (`import pyarchi`) | Wall-clock time | Baseline capture only; no threshold until measured |
+| Package import (`import etcion`) | Wall-clock time | Baseline capture only; no threshold until measured |
 | Model construction (1K elements) | Elements/second | Baseline capture only |
 | Model construction (10K elements) | Elements/second, peak RSS delta | Baseline capture only |
 | `Model.validate()` (1K relationships) | Calls/second | Baseline capture only |
@@ -59,7 +59,7 @@ All thresholds are "baseline capture only" in the first pass. Regression thresho
 
 ### Aggressive Lazy Loading via `__getattr__`
 
-Defer all layer module imports until first attribute access on the `pyarchi` package. This is the standard pattern from PEP 562. Rejected because:
+Defer all layer module imports until first attribute access on the `etcion` package. This is the standard pattern from PEP 562. Rejected because:
 
 1. All layer modules are pure class definitions with no side effects beyond class creation. The import cost is dominated by Pydantic metaclass execution, which is unavoidable whenever the classes are used.
 2. `__getattr__`-based lazy loading produces confusing tracebacks when an `ImportError` occurs inside a deferred import -- the error appears at the point of attribute access, not at the import statement.

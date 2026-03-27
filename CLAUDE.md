@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**pyarchi** is an early-stage Python library implementing the ArchiMate 3.2 metamodel.
+**etcion** is an early-stage Python library implementing the ArchiMate 3.2 metamodel.
 
 - Python 3.12.3 via `.venv/`
-- Source code goes in `src/pyarchi/`
+- Source code goes in `src/etcion/`
 - Tests go in `test/`
 - Build system: `hatchling` via `pyproject.toml`
 

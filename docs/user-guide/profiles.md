@@ -7,7 +7,7 @@ ArchiMate Profiles customize the language by declaring specialization names and 
 A `Profile` declares specializations and attribute extensions keyed by element type:
 
 ```python
-from pyarchi import Profile, ApplicationComponent
+from etcion import Profile, ApplicationComponent
 
 cloud_profile = Profile(
     name="Cloud Extensions",
@@ -25,7 +25,7 @@ cloud_profile = Profile(
 Register a profile with a model using `apply_profile()`:
 
 ```python
-from pyarchi import Model
+from etcion import Model
 
 model = Model()
 model.apply_profile(cloud_profile)

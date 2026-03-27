@@ -5,15 +5,15 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError as PydanticValidationError
 
-from pyarchi.enums import ContentCategory, PurposeCategory
-from pyarchi.exceptions import ValidationError
-from pyarchi.metamodel.application import ApplicationComponent, ApplicationService
-from pyarchi.metamodel.business import BusinessActor, BusinessProcess
-from pyarchi.metamodel.concepts import Concept
-from pyarchi.metamodel.model import Model
-from pyarchi.metamodel.motivation import Stakeholder
-from pyarchi.metamodel.relationships import Serving
-from pyarchi.metamodel.viewpoints import Concern, View, Viewpoint
+from etcion.enums import ContentCategory, PurposeCategory
+from etcion.exceptions import ValidationError
+from etcion.metamodel.application import ApplicationComponent, ApplicationService
+from etcion.metamodel.business import BusinessActor, BusinessProcess
+from etcion.metamodel.concepts import Concept
+from etcion.metamodel.model import Model
+from etcion.metamodel.motivation import Stakeholder
+from etcion.metamodel.relationships import Serving
+from etcion.metamodel.viewpoints import Concern, View, Viewpoint
 
 
 class TestPurposeCategory:
@@ -186,7 +186,7 @@ class TestViewAddTypeGate:
 
     def test_subclass_permitted_via_issubclass(self) -> None:
         """If permitted_concept_types contains a base class, subclasses pass the gate."""
-        from pyarchi.metamodel.concepts import Element
+        from etcion.metamodel.concepts import Element
 
         actor = BusinessActor(name="A")
         m = Model()
@@ -248,8 +248,8 @@ class TestViewIsNotConcept:
 
 
 class TestViewErrorType:
-    def test_raises_pyarchi_validation_error_not_pydantic(self, actor_viewpoint: Viewpoint) -> None:
-        """Confirm View.add() raises pyarchi.exceptions.ValidationError."""
+    def test_raises_etcion_validation_error_not_pydantic(self, actor_viewpoint: Viewpoint) -> None:
+        """Confirm View.add() raises etcion.exceptions.ValidationError."""
         import pydantic
 
         m = Model()

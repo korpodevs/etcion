@@ -7,7 +7,7 @@ from typing import ClassVar
 import pytest
 from pydantic import ValidationError as PydanticValidationError
 
-from pyarchi.enums import (
+from etcion.enums import (
     AccessMode,
     Aspect,
     AssociationDirection,
@@ -16,17 +16,17 @@ from pyarchi.enums import (
     Layer,
     RelationshipCategory,
 )
-from pyarchi.exceptions import ValidationError
-from pyarchi.metamodel.business import (
+from etcion.exceptions import ValidationError
+from etcion.metamodel.business import (
     BusinessActor,
     BusinessObject,
     BusinessProcess,
     BusinessRole,
 )
-from pyarchi.metamodel.concepts import Concept, Relationship, RelationshipConnector
-from pyarchi.metamodel.elements import ActiveStructureElement, BehaviorElement, Grouping
-from pyarchi.metamodel.model import Model
-from pyarchi.metamodel.relationships import (
+from etcion.metamodel.concepts import Concept, Relationship, RelationshipConnector
+from etcion.metamodel.elements import ActiveStructureElement, BehaviorElement, Grouping
+from etcion.metamodel.model import Model
+from etcion.metamodel.relationships import (
     Access,
     Aggregation,
     Assignment,
@@ -44,7 +44,7 @@ from pyarchi.metamodel.relationships import (
     StructuralRelationship,
     Triggering,
 )
-from pyarchi.validation.permissions import is_permitted
+from etcion.validation.permissions import is_permitted
 
 # ---------------------------------------------------------------------------
 # Test-local concrete element stub
@@ -740,11 +740,11 @@ class TestJunctionInheritance:
 
 class TestDeferredValidation:
     def test_mixed_relationship_types_raises(self) -> None:
-        from pyarchi.enums import JunctionType
-        from pyarchi.exceptions import ValidationError
-        from pyarchi.metamodel.business import BusinessActor, BusinessProcess
-        from pyarchi.metamodel.model import Model
-        from pyarchi.metamodel.relationships import Assignment, Junction, Serving
+        from etcion.enums import JunctionType
+        from etcion.exceptions import ValidationError
+        from etcion.metamodel.business import BusinessActor, BusinessProcess
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Assignment, Junction, Serving
 
         j = Junction(junction_type=JunctionType.AND)
         a1 = BusinessActor(name="a1")
@@ -756,11 +756,11 @@ class TestDeferredValidation:
         assert any(isinstance(e, ValidationError) for e in errors)
 
     def test_endpoint_permission_violation_raises(self) -> None:
-        from pyarchi.enums import JunctionType
-        from pyarchi.exceptions import ValidationError
-        from pyarchi.metamodel.business import BusinessActor, BusinessProcess
-        from pyarchi.metamodel.model import Model
-        from pyarchi.metamodel.relationships import Composition, Junction
+        from etcion.enums import JunctionType
+        from etcion.exceptions import ValidationError
+        from etcion.metamodel.business import BusinessActor, BusinessProcess
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Composition, Junction
 
         j = Junction(junction_type=JunctionType.AND)
         a1 = BusinessActor(name="a1")
@@ -789,8 +789,8 @@ class TestDirectionModelValidate:
     """Model.validate() surfaces direction errors (depends on FEAT-15.7)."""
 
     def test_assignment_wrong_direction_model_error(self) -> None:
-        from pyarchi.exceptions import ValidationError
-        from pyarchi.metamodel.model import Model
+        from etcion.exceptions import ValidationError
+        from etcion.metamodel.model import Model
 
         bo = BusinessObject(name="obj")
         bp = BusinessProcess(name="proc")
@@ -801,7 +801,7 @@ class TestDirectionModelValidate:
         assert isinstance(errors[0], ValidationError)
 
     def test_serving_wrong_direction_model_error(self) -> None:
-        from pyarchi.metamodel.model import Model
+        from etcion.metamodel.model import Model
 
         bo = BusinessObject(name="obj")
         bp = BusinessProcess(name="proc")
@@ -811,7 +811,7 @@ class TestDirectionModelValidate:
         assert len(errors) >= 1
 
     def test_access_wrong_direction_model_error(self) -> None:
-        from pyarchi.metamodel.model import Model
+        from etcion.metamodel.model import Model
 
         bo = BusinessObject(name="obj")
         bp = BusinessProcess(name="proc")
@@ -845,8 +845,8 @@ class TestCompositeSourceModelValidate:
     """Model.validate() surfaces the violation (depends on FEAT-15.7)."""
 
     def test_aggregation_non_composite_source_model_error(self) -> None:
-        from pyarchi.exceptions import ValidationError
-        from pyarchi.metamodel.model import Model
+        from etcion.exceptions import ValidationError
+        from etcion.metamodel.model import Model
 
         a = BusinessActor(name="a")
         bp = BusinessProcess(name="bp")
@@ -870,8 +870,8 @@ class TestSpecializationModelValidate:
     """Model.validate() catches cross-type Specialization (depends on FEAT-15.7)."""
 
     def test_cross_type_specialization_model_error(self) -> None:
-        from pyarchi.exceptions import ValidationError
-        from pyarchi.metamodel.model import Model
+        from etcion.exceptions import ValidationError
+        from etcion.metamodel.model import Model
 
         ba = BusinessActor(name="actor")
         bp = BusinessProcess(name="proc")
@@ -882,7 +882,7 @@ class TestSpecializationModelValidate:
         assert isinstance(errors[0], ValidationError)
 
     def test_same_type_specialization_no_error(self) -> None:
-        from pyarchi.metamodel.model import Model
+        from etcion.metamodel.model import Model
 
         a1 = BusinessActor(name="a1")
         a2 = BusinessActor(name="a2")
@@ -946,8 +946,8 @@ class TestPassiveBehaviorModelValidate:
     """Model.validate() surfaces the violation (depends on FEAT-15.7)."""
 
     def test_passive_assigned_to_behavior_model_error(self) -> None:
-        from pyarchi.exceptions import ValidationError
-        from pyarchi.metamodel.model import Model
+        from etcion.exceptions import ValidationError
+        from etcion.metamodel.model import Model
 
         bo = BusinessObject(name="obj")
         bp = BusinessProcess(name="proc")

@@ -5,7 +5,7 @@
 `Model` is the top-level container for all ArchiMate concepts:
 
 ```python
-from pyarchi import Model
+from etcion import Model
 
 model = Model()
 print(len(model))  # 0
@@ -29,7 +29,7 @@ Access contents via properties:
 Each ArchiMate layer has its own element types. All elements require a `name`:
 
 ```python
-from pyarchi import (
+from etcion import (
     BusinessActor, BusinessService, BusinessProcess,
     ApplicationComponent, ApplicationService,
     Node, Device, Artifact,
@@ -66,7 +66,7 @@ Relationships connect a `source` concept to a `target` concept. The 11 ArchiMate
 | `Association`, `Specialization` | Other |
 
 ```python
-from pyarchi import Serving, Realization, Flow
+from etcion import Serving, Realization, Flow
 
 serving = Serving(name="supports", source=app_service, target=business_service)
 realization = Realization(name="realizes", source=app, target=app_service)
@@ -76,7 +76,7 @@ flow = Flow(name="order data", source=process_a, target=process_b)
 Not all source/target combinations are valid. Use `is_permitted()` to check:
 
 ```python
-from pyarchi import is_permitted
+from etcion import is_permitted
 
 is_permitted(Serving, ApplicationService, BusinessService)  # True
 ```
@@ -86,7 +86,7 @@ is_permitted(Serving, ApplicationService, BusinessService)  # True
 `Junction` is a relationship connector that joins multiple relationships of the same type:
 
 ```python
-from pyarchi import Junction, JunctionType, Triggering
+from etcion import Junction, JunctionType, Triggering
 
 junction = Junction(junction_type=JunctionType.AND)
 ```
@@ -98,7 +98,7 @@ Junctions must be homogeneous -- all connected relationships must be the same ty
 `Grouping` and `Location` are composite elements that span layers:
 
 ```python
-from pyarchi import Grouping, Location
+from etcion import Grouping, Location
 
 hq = Location(name="Headquarters")
 infra_group = Grouping(name="Infrastructure")

@@ -4,7 +4,7 @@ import tracemalloc
 
 import pytest
 
-from pyarchi import (
+from etcion import (
     ApplicationComponent,
     ApplicationService,
     BusinessActor,

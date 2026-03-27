@@ -6,21 +6,21 @@ from typing import ClassVar
 
 import pytest
 
-from pyarchi.derivation.engine import DerivationEngine
-from pyarchi.enums import Aspect, Layer, RelationshipCategory
-from pyarchi.metamodel.application import (
+from etcion.derivation.engine import DerivationEngine
+from etcion.enums import Aspect, Layer, RelationshipCategory
+from etcion.metamodel.application import (
     ApplicationProcess,
     DataObject,
 )
-from pyarchi.metamodel.business import (
+from etcion.metamodel.business import (
     BusinessObject,
     BusinessProcess,
 )
-from pyarchi.metamodel.concepts import Element, Relationship
-from pyarchi.metamodel.elements import ActiveStructureElement, BehaviorElement
-from pyarchi.metamodel.model import Model
-from pyarchi.metamodel.relationships import Realization, Serving
-from pyarchi.metamodel.technology import (
+from etcion.metamodel.concepts import Element, Relationship
+from etcion.metamodel.elements import ActiveStructureElement, BehaviorElement
+from etcion.metamodel.model import Model
+from etcion.metamodel.relationships import Realization, Serving
+from etcion.metamodel.technology import (
     Artifact,
     TechnologyProcess,
     TechnologyService,

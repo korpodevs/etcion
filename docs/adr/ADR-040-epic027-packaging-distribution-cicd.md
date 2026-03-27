@@ -2,7 +2,7 @@
 
 ## Context
 
-pyarchi is feature-complete through Phase 3 with Phase 4 enhancements delivered.
+etcion is feature-complete through Phase 3 with Phase 4 enhancements delivered.
 The library is only installable via `pip install -e .` from a source checkout.
 EPIC-027 covers everything needed to publish to PyPI, automate quality gates, and
 establish a repeatable release process.
@@ -12,8 +12,8 @@ Current state of `pyproject.toml`:
 - Build backend: `hatchling` (already configured)
 - Version: `0.1.0` (already set)
 - Extras: `[xml]`, `[dev]`, `[docs]` (already defined)
-- `py.typed` marker: present at `src/pyarchi/py.typed`
-- XSD schemas: bundled at `src/pyarchi/serialization/schema/*.xsd`
+- `py.typed` marker: present at `src/etcion/py.typed`
+- XSD schemas: bundled at `src/etcion/serialization/schema/*.xsd`
 - Classifiers, license, readme: present but incomplete (missing `urls`, `keywords`)
 
 ## Decisions
@@ -25,10 +25,10 @@ Current state of `pyproject.toml`:
 | Backend | **hatchling** (no change) -- already configured, generates sdist + wheel |
 | Build command | `python -m build` (PEP 517 frontend) |
 | Artifacts | sdist (`.tar.gz`) + wheel (`.whl`) |
-| Schema inclusion | XSD files already inside `src/pyarchi/` tree -- included automatically by hatchling wheel target |
+| Schema inclusion | XSD files already inside `src/etcion/` tree -- included automatically by hatchling wheel target |
 
 **Rationale:** hatchling is already wired up, produces standards-compliant packages,
-and supports the `packages = ["src/pyarchi"]` layout without additional plugins.
+and supports the `packages = ["src/etcion"]` layout without additional plugins.
 
 ### D2 -- Version Strategy
 
@@ -37,11 +37,11 @@ and supports the `packages = ["src/pyarchi"]` layout without additional plugins.
 | Scheme | Semantic Versioning (MAJOR.MINOR.PATCH) |
 | First release | `0.1.0` -- pre-1.0 signals API may evolve |
 | Source of truth | `pyproject.toml` `[project] version` field |
-| Runtime access | `pyarchi.__version__` read from `importlib.metadata` |
+| Runtime access | `etcion.__version__` read from `importlib.metadata` |
 | Bump mechanism | Manual edit of `pyproject.toml` (no `setuptools-scm` or `hatch version` -- one field, low ceremony) |
 
 **Rationale:** A single-source version in `pyproject.toml` avoids sync issues.
-`importlib.metadata.version("pyarchi")` is the standard way to expose it at runtime
+`importlib.metadata.version("etcion")` is the standard way to expose it at runtime
 without duplicating the string.
 
 ### D3 -- PyPI Publishing
@@ -92,11 +92,11 @@ Fields to add or update in `pyproject.toml`:
 | Field | Value |
 |---|---|
 | `keywords` | `["archimate", "enterprise-architecture", "metamodel", "archi", "open-group"]` |
-| `[project.urls] Homepage` | `https://github.com/<org>/pyarchi` |
-| `[project.urls] Documentation` | `https://<org>.github.io/pyarchi/` |
-| `[project.urls] Repository` | `https://github.com/<org>/pyarchi` |
-| `[project.urls] Issues` | `https://github.com/<org>/pyarchi/issues` |
-| `[project.urls] Changelog` | `https://github.com/<org>/pyarchi/blob/main/CHANGELOG.md` |
+| `[project.urls] Homepage` | `https://github.com/<org>/etcion` |
+| `[project.urls] Documentation` | `https://<org>.github.io/etcion/` |
+| `[project.urls] Repository` | `https://github.com/<org>/etcion` |
+| `[project.urls] Issues` | `https://github.com/<org>/etcion/issues` |
+| `[project.urls] Changelog` | `https://github.com/<org>/etcion/blob/main/CHANGELOG.md` |
 
 Existing fields (`name`, `version`, `description`, `readme`, `license`,
 `requires-python`, `authors`, `classifiers`) are already present and sufficient.

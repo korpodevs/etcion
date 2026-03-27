@@ -28,7 +28,7 @@ The design challenge for `source` and `target` is circular typing: `Relationship
 
 ### `Element` Class Definition
 
-`Element` is defined in `src/pyarchi/metamodel/concepts.py` as:
+`Element` is defined in `src/etcion/metamodel/concepts.py` as:
 
 ```python
 class Element(AttributeMixin, Concept):
@@ -43,7 +43,7 @@ Key design points:
 
 ### `Relationship` Class Definition
 
-`Relationship` is defined in `src/pyarchi/metamodel/concepts.py` as:
+`Relationship` is defined in `src/etcion/metamodel/concepts.py` as:
 
 ```python
 class Relationship(AttributeMixin, Concept):
@@ -97,7 +97,7 @@ No additional abstract methods are defined on `Element` or `Relationship`. The `
 
 ### `__init__.py` Re-exports
 
-Both `Element` and `Relationship` are re-exported from `src/pyarchi/__init__.py` and added to `__all__`. This supports the `generic_metamodel` conformance test and gives consumers the import paths `from pyarchi import Element, Relationship`.
+Both `Element` and `Relationship` are re-exported from `src/etcion/__init__.py` and added to `__all__`. This supports the `generic_metamodel` conformance test and gives consumers the import paths `from etcion import Element, Relationship`.
 
 ## Alternatives Considered
 

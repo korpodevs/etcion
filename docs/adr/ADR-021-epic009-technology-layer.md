@@ -20,7 +20,7 @@ Prior decisions accepted without re-litigation:
 - Generic metamodel ABCs: `InternalActiveStructureElement`, `InternalBehaviorElement`, `PassiveStructureElement`, `Process`, `Function`, `Interaction`, `Event`, `ExternalActiveStructureElement`, `ExternalBehaviorElement` (ADR-016).
 - `ClassVar[Layer]` and `ClassVar[Aspect]` on concrete element classes (ADR-014).
 - `ClassVar[NotationMetadata]` on concrete element classes (ADR-013).
-- `Layer.TECHNOLOGY`, `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, `Aspect.PASSIVE_STRUCTURE` already exist in `src/pyarchi/enums.py` (ADR-011, ADR-012).
+- `Layer.TECHNOLOGY`, `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, `Aspect.PASSIVE_STRUCTURE` already exist in `src/etcion/enums.py` (ADR-011, ADR-012).
 - Per-layer module pattern established by `strategy.py` (ADR-018), `business.py` (ADR-019), and `application.py` (ADR-020).
 - `extra="forbid"` on `Concept.model_config` (ADR-006).
 - Multiple inheritance MRO pattern for behavior elements (ADR-019 Decision 5, ADR-020 Decision 5).
@@ -29,9 +29,9 @@ Prior decisions accepted without re-litigation:
 
 ## Decisions
 
-### 1. Module Placement: `src/pyarchi/metamodel/technology.py`
+### 1. Module Placement: `src/etcion/metamodel/technology.py`
 
-All EPIC-009 classes (two ABCs and thirteen concrete types) are defined in a new module `src/pyarchi/metamodel/technology.py`. This continues the per-layer module pattern established in ADR-018 Decision 1.
+All EPIC-009 classes (two ABCs and thirteen concrete types) are defined in a new module `src/etcion/metamodel/technology.py`. This continues the per-layer module pattern established in ADR-018 Decision 1.
 
 ### 2. Layer-Specific ABCs: Two Internal Branches (Not Three)
 
@@ -148,11 +148,11 @@ The `"#C9E7B7"` color is the standard ArchiMate green for the Technology layer, 
 
 ### 12. No New Enums Required
 
-`Layer.TECHNOLOGY` (ADR-011), `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, and `Aspect.PASSIVE_STRUCTURE` (ADR-012) already exist in `src/pyarchi/enums.py`. EPIC-009 introduces no new enum members or enum classes.
+`Layer.TECHNOLOGY` (ADR-011), `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, and `Aspect.PASSIVE_STRUCTURE` (ADR-012) already exist in `src/etcion/enums.py`. EPIC-009 introduces no new enum members or enum classes.
 
 ### 13. `__init__.py` Exports Deferred
 
-Exports of Technology layer types to `src/pyarchi/__init__.py` are deferred to EPIC-014 (public API surface epic), consistent with ADR-016 Decision 7, ADR-017 Decision 10, ADR-018 Decision 8, ADR-019 Decision 11, and ADR-020 Decision 11. The types are importable via `from pyarchi.metamodel.technology import Node` immediately.
+Exports of Technology layer types to `src/etcion/__init__.py` are deferred to EPIC-014 (public API surface epic), consistent with ADR-016 Decision 7, ADR-017 Decision 10, ADR-018 Decision 8, ADR-019 Decision 11, and ADR-020 Decision 11. The types are importable via `from etcion.metamodel.technology import Node` immediately.
 
 ## Alternatives Considered
 

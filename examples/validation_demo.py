@@ -4,7 +4,7 @@
 Demonstrates built-in permission checks and custom validation rules.
 """
 
-from pyarchi import (
+from etcion import (
     BusinessActor,
     BusinessService,
     Model,

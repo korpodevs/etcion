@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build an ArchiMate model of a simple pet shop and export to .archimate XML.
 
-Demonstrates pyarchi across multiple layers:
+Demonstrates etcion across multiple layers:
 - Strategy: business capabilities and resources
 - Business: actors, roles, processes, services, objects
 - Application: components, services, data objects
@@ -20,14 +20,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pyarchi.metamodel.model import Model
-from pyarchi.serialization.xml import write_model
+from etcion.metamodel.model import Model
+from etcion.serialization.xml import write_model
 
 # -- Strategy Layer --
-from pyarchi.metamodel.strategy import Capability, Resource, ValueStream
+from etcion.metamodel.strategy import Capability, Resource, ValueStream
 
 # -- Business Layer --
-from pyarchi.metamodel.business import (
+from etcion.metamodel.business import (
     BusinessActor,
     BusinessFunction,
     BusinessInterface,
@@ -40,7 +40,7 @@ from pyarchi.metamodel.business import (
 )
 
 # -- Application Layer --
-from pyarchi.metamodel.application import (
+from etcion.metamodel.application import (
     ApplicationComponent,
     ApplicationInterface,
     ApplicationService,
@@ -48,7 +48,7 @@ from pyarchi.metamodel.application import (
 )
 
 # -- Technology Layer --
-from pyarchi.metamodel.technology import (
+from etcion.metamodel.technology import (
     Artifact,
     Device,
     Node,
@@ -57,10 +57,10 @@ from pyarchi.metamodel.technology import (
 )
 
 # -- Physical Layer --
-from pyarchi.metamodel.physical import Equipment, Facility
+from etcion.metamodel.physical import Equipment, Facility
 
 # -- Motivation Layer --
-from pyarchi.metamodel.motivation import (
+from etcion.metamodel.motivation import (
     Driver,
     Goal,
     Principle,
@@ -69,14 +69,14 @@ from pyarchi.metamodel.motivation import (
 )
 
 # -- Implementation & Migration Layer --
-from pyarchi.metamodel.implementation_migration import (
+from etcion.metamodel.implementation_migration import (
     Deliverable,
     Plateau,
     WorkPackage,
 )
 
 # -- Relationships --
-from pyarchi.metamodel.relationships import (
+from etcion.metamodel.relationships import (
     Access,
     Aggregation,
     Assignment,
@@ -89,7 +89,7 @@ from pyarchi.metamodel.relationships import (
     Triggering,
 )
 
-from pyarchi.enums import AccessMode, InfluenceSign
+from etcion.enums import AccessMode, InfluenceSign
 
 
 def build_pet_shop() -> Model:

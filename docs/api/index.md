@@ -1,6 +1,6 @@
 # API Reference
 
-Complete API reference for the pyarchi library, auto-generated from source docstrings.
+Complete API reference for the etcion library, auto-generated from source docstrings.
 
 - [Model](model.md) — the top-level `Model` container
 - [Elements](elements.md) — all ArchiMate element classes by layer

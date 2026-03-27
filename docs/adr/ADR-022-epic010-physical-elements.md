@@ -22,15 +22,15 @@ Prior decisions accepted without re-litigation:
 - Generic metamodel ABCs: `ActiveStructureElement`, `PassiveStructureElement` (ADR-016).
 - `ClassVar[Layer]` and `ClassVar[Aspect]` on concrete element classes (ADR-014).
 - `ClassVar[NotationMetadata]` on concrete element classes (ADR-013).
-- `Layer.PHYSICAL`, `Aspect.ACTIVE_STRUCTURE`, `Aspect.PASSIVE_STRUCTURE` already exist in `src/pyarchi/enums.py` (ADR-011, ADR-012).
+- `Layer.PHYSICAL`, `Aspect.ACTIVE_STRUCTURE`, `Aspect.PASSIVE_STRUCTURE` already exist in `src/etcion/enums.py` (ADR-011, ADR-012).
 - Per-layer module pattern established by `strategy.py` (ADR-018), `business.py` (ADR-019), `application.py` (ADR-020), and `technology.py` (ADR-021).
 - `extra="forbid"` on `Concept.model_config` (ADR-006).
 
 ## Decisions
 
-### 1. Module Placement: `src/pyarchi/metamodel/physical.py`
+### 1. Module Placement: `src/etcion/metamodel/physical.py`
 
-All EPIC-010 classes (two ABCs and four concrete types) are defined in a new module `src/pyarchi/metamodel/physical.py`. This continues the per-layer module pattern established in ADR-018 Decision 1.
+All EPIC-010 classes (two ABCs and four concrete types) are defined in a new module `src/etcion/metamodel/physical.py`. This continues the per-layer module pattern established in ADR-018 Decision 1.
 
 ### 2. Layer-Specific ABCs: Two ABCs for Two Aspects
 
@@ -77,11 +77,11 @@ All four concrete Physical classes carry `notation: ClassVar[NotationMetadata]`.
 
 ### 6. No New Enums Required
 
-`Layer.PHYSICAL` (ADR-011), `Aspect.ACTIVE_STRUCTURE`, and `Aspect.PASSIVE_STRUCTURE` (ADR-012) already exist in `src/pyarchi/enums.py`. EPIC-010 introduces no new enum members or enum classes.
+`Layer.PHYSICAL` (ADR-011), `Aspect.ACTIVE_STRUCTURE`, and `Aspect.PASSIVE_STRUCTURE` (ADR-012) already exist in `src/etcion/enums.py`. EPIC-010 introduces no new enum members or enum classes.
 
 ### 7. `__init__.py` Exports Deferred
 
-Exports of Physical layer types to `src/pyarchi/__init__.py` are deferred to EPIC-014 (public API surface epic), consistent with ADR-016 Decision 7, ADR-018 Decision 8, ADR-019 Decision 11, ADR-020 Decision 11, and ADR-021 Decision 13. The types are importable via `from pyarchi.metamodel.physical import Equipment` immediately.
+Exports of Physical layer types to `src/etcion/__init__.py` are deferred to EPIC-014 (public API surface epic), consistent with ADR-016 Decision 7, ADR-018 Decision 8, ADR-019 Decision 11, ADR-020 Decision 11, and ADR-021 Decision 13. The types are importable via `from etcion.metamodel.physical import Equipment` immediately.
 
 ## Alternatives Considered
 

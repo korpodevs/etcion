@@ -52,4 +52,4 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
-      - run: pytest --cov=pyarchi --cov-report=term-missing --cov-fail-under=90
+      - run: pytest --cov=etcion --cov-report=term-missing --cov-fail-under=90

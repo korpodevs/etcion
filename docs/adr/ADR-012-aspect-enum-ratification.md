@@ -10,9 +10,9 @@ ACCEPTED
 
 ## Context
 
-FEAT-03.2 specifies an `Aspect` enum with five members representing the ArchiMate 3.2 framework aspects (the "columns" of the ArchiMate framework): Active Structure, Behavior, Passive Structure, Motivation, and Composite. Like `Layer` (ADR-011), this enum was already implemented as part of FEAT-00.2 in `src/pyarchi/enums.py`. The backlog stories for FEAT-03.2 were written before FEAT-00.2 was executed.
+FEAT-03.2 specifies an `Aspect` enum with five members representing the ArchiMate 3.2 framework aspects (the "columns" of the ArchiMate framework): Active Structure, Behavior, Passive Structure, Motivation, and Composite. Like `Layer` (ADR-011), this enum was already implemented as part of FEAT-00.2 in `src/etcion/enums.py`. The backlog stories for FEAT-03.2 were written before FEAT-00.2 was executed.
 
-This ADR ratifies the existing `Aspect` implementation, confirms its design decisions, and addresses the same gap identified in ADR-011: `Aspect` is not currently re-exported from `src/pyarchi/__init__.py`, causing `hasattr(pyarchi, "Aspect")` to return `False`. The `language_structure` conformance test requires this attribute.
+This ADR ratifies the existing `Aspect` implementation, confirms its design decisions, and addresses the same gap identified in ADR-011: `Aspect` is not currently re-exported from `src/etcion/__init__.py`, causing `hasattr(etcion, "Aspect")` to return `False`. The `language_structure` conformance test requires this attribute.
 
 A notable design point is the naming collision between `Aspect.MOTIVATION` and `Layer.MOTIVATION`. Both enums contain a member named `MOTIVATION`. In the ArchiMate 3.2 framework, the Motivation layer and the Motivation aspect are distinct concepts: the Motivation layer contains element types like Stakeholder, Driver, and Goal, while the Motivation aspect classifies elements by their structural role (alongside Active Structure, Behavior, etc.). The collision is intentional -- both the layer and the aspect are named "Motivation" in the specification. Because `Aspect` and `Layer` are separate `enum.Enum` classes, `Aspect.MOTIVATION` and `Layer.MOTIVATION` are distinct objects with no type-system conflict. `Aspect.MOTIVATION == Layer.MOTIVATION` evaluates to `False`.
 
@@ -22,7 +22,7 @@ STORY-03.2.2 (tests asserting all five values are present and accessible) has no
 
 ### Ratification of Existing Implementation
 
-The existing `Aspect` enum in `src/pyarchi/enums.py` is ratified as the canonical implementation for FEAT-03.2:
+The existing `Aspect` enum in `src/etcion/enums.py` is ratified as the canonical implementation for FEAT-03.2:
 
 ```python
 class Aspect(Enum):
@@ -58,21 +58,21 @@ Both `Aspect` and `Layer` define a `MOTIVATION` member. This is not a conflict:
 3. **Type annotations disambiguate**: Any function parameter typed as `layer: Layer` or `aspect: Aspect` makes it clear which enum is expected. mypy will reject `Layer.MOTIVATION` where `Aspect` is expected, and vice versa.
 4. **Spec-faithful**: The specification uses the word "Motivation" for both a layer and an aspect. Renaming one (e.g., `Aspect.MOTIVATION_ASPECT`) would deviate from the specification's vocabulary without adding clarity.
 
-### Module Location: `src/pyarchi/enums.py`
+### Module Location: `src/etcion/enums.py`
 
-`Aspect` remains in `src/pyarchi/enums.py` alongside `Layer` and all other enumerations. Same rationale as ADR-011.
+`Aspect` remains in `src/etcion/enums.py` alongside `Layer` and all other enumerations. Same rationale as ADR-011.
 
 ### `__init__.py` Re-export
 
-`Aspect` must be added to `src/pyarchi/__init__.py` as a re-export and included in `__all__`:
+`Aspect` must be added to `src/etcion/__init__.py` as a re-export and included in `__all__`:
 
 ```python
-from pyarchi.enums import Aspect
+from etcion.enums import Aspect
 # in __all__:
 "Aspect",
 ```
 
-This satisfies the `language_structure` conformance test and enables `from pyarchi import Aspect`.
+This satisfies the `language_structure` conformance test and enables `from etcion import Aspect`.
 
 ### Remaining Work: Tests (STORY-03.2.2)
 
@@ -126,5 +126,5 @@ This ADR provides the architectural rationale for each story in FEAT-03.2:
 
 | Story | Decision Implemented |
 |---|---|
-| STORY-03.2.1 | Ratified: `Aspect` enum defined in `src/pyarchi/enums.py` with five members (`ACTIVE_STRUCTURE`, `BEHAVIOR`, `PASSIVE_STRUCTURE`, `MOTIVATION`, `COMPOSITE`) and their specification-defined string values. `Aspect` re-exported from `__init__.py`. |
+| STORY-03.2.1 | Ratified: `Aspect` enum defined in `src/etcion/enums.py` with five members (`ACTIVE_STRUCTURE`, `BEHAVIOR`, `PASSIVE_STRUCTURE`, `MOTIVATION`, `COMPOSITE`) and their specification-defined string values. `Aspect` re-exported from `__init__.py`. |
 | STORY-03.2.2 | Test not yet written; ADR specifies the three assertions required (member count, name accessibility, value correctness). |

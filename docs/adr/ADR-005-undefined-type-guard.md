@@ -27,7 +27,7 @@ The choice between these approaches has deep consequences for the library's arch
 
 ### Primary Guard: Python's Type System
 
-The ArchiMate type system is enforced by Python's own type system. Every ArchiMate concept is represented as a concrete Python class defined within `pyarchi`. There is no string-based type registry, no factory function that accepts type name strings, and no dynamic class generation.
+The ArchiMate type system is enforced by Python's own type system. Every ArchiMate concept is represented as a concrete Python class defined within `etcion`. There is no string-based type registry, no factory function that accepts type name strings, and no dynamic class generation.
 
 A user who writes `BusinessWidget(name="test")` gets a `NameError` from Python itself -- the class does not exist. This is the strongest possible guard: illegal types are not merely rejected at runtime, they are structurally impossible to construct. The error occurs at the call site, with a clear message (`NameError: name 'BusinessWidget' is not defined`), and is caught by static analysis tools (mypy, pyright) before the code even runs.
 
@@ -38,10 +38,10 @@ Python's type system prevents constructing undefined types, but it does not prev
 ```python
 model.add({"type": "BusinessWidget", "name": "test"})  # dict, not a Concept
 model.add(42)                                            # int, not a Concept
-model.add(SomeThirdPartyClass())                         # not a pyarchi type
+model.add(SomeThirdPartyClass())                         # not a etcion type
 ```
 
-The `Model.add()` method (to be implemented in EPIC-002, FEAT-02.6) must validate that its argument is an instance of `pyarchi.metamodel.concepts.Concept` (the root abstract base class for all ArchiMate concepts). If the argument fails this check, `Model.add()` raises `TypeError` with a message identifying the rejected object and listing the expected base class.
+The `Model.add()` method (to be implemented in EPIC-002, FEAT-02.6) must validate that its argument is an instance of `etcion.metamodel.concepts.Concept` (the root abstract base class for all ArchiMate concepts). If the argument fails this check, `Model.add()` raises `TypeError` with a message identifying the rejected object and listing the expected base class.
 
 This is an `isinstance` check, not a registry lookup:
 
@@ -68,7 +68,7 @@ Since `Concept` and `Model` do not exist yet (they are EPIC-002), FEAT-01.3 cann
 
 ### No `guards.py` Module
 
-A separate `src/pyarchi/guards.py` module with a standalone `assert_known_type()` function was considered and rejected. The guard logic is a single `isinstance` check that belongs on `Model.add()`, not a reusable utility. Creating a dedicated module for a two-line function would violate YAGNI and add a file to the dependency graph for no benefit.
+A separate `src/etcion/guards.py` module with a standalone `assert_known_type()` function was considered and rejected. The guard logic is a single `isinstance` check that belongs on `Model.add()`, not a reusable utility. Creating a dedicated module for a two-line function would violate YAGNI and add a file to the dependency graph for no benefit.
 
 ### No String-Based Type Registry
 
@@ -113,7 +113,7 @@ Using a `typing.Protocol` (structural subtyping) instead of `abc.ABC` (nominal s
 
 ### Separate `ConformanceError` Instead of `TypeError`
 
-Raising `pyarchi.ConformanceError` instead of `TypeError` when `Model.add()` receives a non-Concept argument. This was rejected because:
+Raising `etcion.ConformanceError` instead of `TypeError` when `Model.add()` receives a non-Concept argument. This was rejected because:
 
 1. Passing the wrong type to a method is a programming error, not a conformance violation. `TypeError` is Python's standard exception for this case, and developers expect it.
 2. `ConformanceError` is reserved for higher-level conformance failures (e.g., a model missing required elements for a viewpoint), not type mismatches.

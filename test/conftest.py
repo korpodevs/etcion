@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for the pyarchi test suite."""
+"""Shared pytest fixtures for the etcion test suite."""
 
 from __future__ import annotations
 

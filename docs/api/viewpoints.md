@@ -1,5 +1,5 @@
 # Viewpoints
 
-::: pyarchi.metamodel.viewpoints
+::: etcion.metamodel.viewpoints
 
-::: pyarchi.metamodel.viewpoint_catalogue
+::: etcion.metamodel.viewpoint_catalogue

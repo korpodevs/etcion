@@ -8,33 +8,33 @@ from datetime import datetime
 import pytest
 from pydantic import ValidationError
 
-from pyarchi.enums import Aspect, Layer
-from pyarchi.metamodel.business import (
+from etcion.enums import Aspect, Layer
+from etcion.metamodel.business import (
     BusinessActor,
     BusinessCollaboration,
     BusinessRole,
 )
-from pyarchi.metamodel.concepts import Element
-from pyarchi.metamodel.elements import (
+from etcion.metamodel.concepts import Element
+from etcion.metamodel.elements import (
     CompositeElement,
     Event,
     InternalBehaviorElement,
     PassiveStructureElement,
 )
-from pyarchi.metamodel.implementation_migration import (
+from etcion.metamodel.implementation_migration import (
     Deliverable,
     Gap,
     ImplementationEvent,
     Plateau,
     WorkPackage,
 )
-from pyarchi.metamodel.relationships import (
+from etcion.metamodel.relationships import (
     Access,
     Assignment,
     Realization,
     Triggering,
 )
-from pyarchi.validation.permissions import is_permitted
+from etcion.validation.permissions import is_permitted
 
 ALL_FEAT121 = [WorkPackage, Deliverable, ImplementationEvent]
 

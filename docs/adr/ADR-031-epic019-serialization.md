@@ -29,12 +29,12 @@ Spec reference: [Open Group ArchiMate Model Exchange File Format](https://public
 
 | Artifact | Location |
 |---|---|
-| Package root | `src/pyarchi/serialization/__init__.py` |
-| XML serializer | `src/pyarchi/serialization/xml.py` |
-| JSON serializer | `src/pyarchi/serialization/json.py` |
-| Type registry | `src/pyarchi/serialization/registry.py` |
+| Package root | `src/etcion/serialization/__init__.py` |
+| XML serializer | `src/etcion/serialization/xml.py` |
+| JSON serializer | `src/etcion/serialization/json.py` |
+| Type registry | `src/etcion/serialization/registry.py` |
 
-Serialization is an infrastructure concern orthogonal to the metamodel. A dedicated package keeps it isolated from `pyarchi.metamodel`.
+Serialization is an infrastructure concern orthogonal to the metamodel. A dedicated package keeps it isolated from `etcion.metamodel`.
 
 ### 2. XML Library: `lxml` as Optional Dependency
 
@@ -43,7 +43,7 @@ Serialization is an infrastructure concern orthogonal to the metamodel. A dedica
 | `xml.etree.ElementTree` (stdlib) | Zero dependencies | No XSD validation, limited XPath, slower on large trees | **Rejected** |
 | `lxml` | XSD validation, full XPath, C-speed parsing, namespace-aware | External C dependency | **Accepted** |
 
-`lxml` is added as an optional dependency: `pip install pyarchi[xml]`. The `pyarchi.serialization.xml` module raises `ImportError` with a descriptive message (`pip install pyarchi[xml]`) if `lxml` is not installed. The core library remains dependency-light.
+`lxml` is added as an optional dependency: `pip install etcion[xml]`. The `etcion.serialization.xml` module raises `ImportError` with a descriptive message (`pip install etcion[xml]`) if `lxml` is not installed. The core library remains dependency-light.
 
 `pyproject.toml` gains:
 
@@ -73,7 +73,7 @@ Decision: the serializer maintains a bidirectional `dict[str, str]` mapping betw
 | Approach | Verdict |
 |---|---|
 | `Model.to_xml()` / `Model.from_xml()` | **Rejected** -- couples Model to lxml, forces the optional dependency into the core |
-| Standalone functions in `pyarchi.serialization.xml` | **Accepted** |
+| Standalone functions in `etcion.serialization.xml` | **Accepted** |
 
 Public API:
 
@@ -91,7 +91,7 @@ def write_model(model: Model, path: str | Path) -> None: ...
 def read_model(path: str | Path) -> Model: ...
 ```
 
-Both live in `pyarchi.serialization.xml`. `write_model` emits UTF-8 encoded XML with `<?xml version="1.0"?>` declaration and 2-space indentation. `read_model` delegates to `lxml.etree.parse` then `deserialize_model`.
+Both live in `etcion.serialization.xml`. `write_model` emits UTF-8 encoded XML with `<?xml version="1.0"?>` declaration and 2-space indentation. `read_model` delegates to `lxml.etree.parse` then `deserialize_model`.
 
 ### 7. Round-Trip Fidelity
 
@@ -110,11 +110,11 @@ Unknown XML elements encountered during read are preserved as raw `lxml.etree.El
 def validate_exchange_format(tree: etree._ElementTree) -> list[str]: ...
 ```
 
-Validates a serialized tree against the Exchange Format XSD. Returns a list of error strings (empty on success). Not invoked automatically on read or write -- the caller opts in. The XSD is bundled in `src/pyarchi/serialization/schema/` or loaded from a configurable path.
+Validates a serialized tree against the Exchange Format XSD. Returns a list of error strings (empty on success). Not invoked automatically on read or write -- the caller opts in. The XSD is bundled in `src/etcion/serialization/schema/` or loaded from a configurable path.
 
 ### 9. JSON Serialization: Pydantic-Native
 
-JSON serialization lives in `pyarchi.serialization.json` and leverages Pydantic's `model_dump()` / `model_validate()` with a custom encoder that emits `type[Concept]` references as `_type_name` strings. No `lxml` dependency.
+JSON serialization lives in `etcion.serialization.json` and leverages Pydantic's `model_dump()` / `model_validate()` with a custom encoder that emits `type[Concept]` references as `_type_name` strings. No `lxml` dependency.
 
 ```python
 def model_to_dict(model: Model) -> dict[str, Any]: ...
@@ -129,11 +129,11 @@ When the XML deserializer encounters an element type not present in the registry
 
 ### 11. Exports Deferred to EPIC-020
 
-Consistent with ADR-026, serialization functions are not added to `pyarchi.__init__.__all__` in EPIC-019. Users import directly from `pyarchi.serialization.xml` or `pyarchi.serialization.json`.
+Consistent with ADR-026, serialization functions are not added to `etcion.__init__.__all__` in EPIC-019. Users import directly from `etcion.serialization.xml` or `etcion.serialization.json`.
 
 ### 12. Dependency Gating Pattern
 
-The `lxml` import is guarded at module level in `pyarchi.serialization.xml`:
+The `lxml` import is guarded at module level in `etcion.serialization.xml`:
 
 ```python
 try:
@@ -141,11 +141,11 @@ try:
 except ImportError as exc:
     raise ImportError(
         "lxml is required for XML serialization. "
-        "Install it with: pip install pyarchi[xml]"
+        "Install it with: pip install etcion[xml]"
     ) from exc
 ```
 
-`pyarchi.serialization.json` has no additional dependencies beyond Pydantic.
+`etcion.serialization.json` has no additional dependencies beyond Pydantic.
 
 ## Alternatives Considered
 
@@ -159,7 +159,7 @@ Adding `to_xml()` and `from_xml()` to `Element` and `Relationship`. Rejected bec
 
 ### Model Methods Delegating to Serialization Module
 
-Adding `Model.to_xml()` that internally imports from `pyarchi.serialization.xml`. Rejected because:
+Adding `Model.to_xml()` that internally imports from `etcion.serialization.xml`. Rejected because:
 
 1. The `Model` class gains API surface that only works when an optional dependency is installed, violating least surprise.
 2. Type checkers and IDE autocompletion would show `to_xml()` even when `lxml` is absent, leading to confusing runtime errors.
@@ -180,10 +180,10 @@ Serializing Model to dict (via Pydantic), then dict to XML. Rejected because:
 - The metamodel package remains free of serialization dependencies. `lxml` is only required when XML features are used.
 - The external registry centralizes the type-to-XML mapping in one place, making it straightforward to add new element types without touching serialization infrastructure.
 - Standalone functions make the dependency boundary visible at the import site and are easily composable in pipelines.
-- Best-effort visual data preservation prevents data loss when round-tripping through pyarchi, even for XML structures the library does not interpret.
+- Best-effort visual data preservation prevents data loss when round-tripping through etcion, even for XML structures the library does not interpret.
 
 ### Negative
 
-- Users must import from `pyarchi.serialization.xml` rather than calling `model.to_xml()`. This is less discoverable but consistent with the library's separation of concerns.
+- Users must import from `etcion.serialization.xml` rather than calling `model.to_xml()`. This is less discoverable but consistent with the library's separation of concerns.
 - The type registry must be kept in sync with the metamodel class hierarchy. A missing registration is a silent bug until a serialization test catches it.
 - Opaque XML preservation (`_opaque_xml`) adds memory overhead proportional to unrecognized content. For models with large view sections, this could be significant.

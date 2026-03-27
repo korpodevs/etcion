@@ -32,8 +32,8 @@
 
 6. **Verify the release**:
    - Watch `.github/workflows/release.yml` in the Actions tab
-   - Confirm the package appears on [PyPI](https://pypi.org/project/pyarchi/)
-   - Verify: `pip install pyarchi==X.Y.Z`
+   - Confirm the package appears on [PyPI](https://pypi.org/project/etcion/)
+   - Verify: `pip install etcion==X.Y.Z`
 
 ## Local Build Verification (Optional)
 

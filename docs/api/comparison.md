@@ -1,3 +1,3 @@
 # Comparison
 
-::: pyarchi.comparison
+::: etcion.comparison

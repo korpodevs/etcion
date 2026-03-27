@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-import pyarchi.validation.permissions as _perm_module
-from pyarchi import BusinessActor, BusinessRole, Serving, is_permitted, warm_cache
+import etcion.validation.permissions as _perm_module
+from etcion import BusinessActor, BusinessRole, Serving, is_permitted, warm_cache
 
 from .conftest import _timed
 
@@ -14,7 +14,7 @@ from .conftest import _timed
 def test_bench_permissions_cache_miss():
     """Measure is_permitted() latency on first call (cache miss / cold build).
 
-    Explicitly sets `pyarchi.validation.permissions._cache = None` before
+    Explicitly sets `etcion.validation.permissions._cache = None` before
     measurement to force a full cache rebuild, even if a prior test has
     already warmed it.
     """

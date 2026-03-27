@@ -6,12 +6,12 @@ import json
 
 import pytest
 
-from pyarchi.enums import AccessMode
-from pyarchi.metamodel.application import ApplicationComponent
-from pyarchi.metamodel.business import BusinessActor, BusinessProcess
-from pyarchi.metamodel.model import Model
-from pyarchi.metamodel.relationships import Access, Serving
-from pyarchi.serialization.json import model_from_dict, model_to_dict
+from etcion.enums import AccessMode
+from etcion.metamodel.application import ApplicationComponent
+from etcion.metamodel.business import BusinessActor, BusinessProcess
+from etcion.metamodel.model import Model
+from etcion.metamodel.relationships import Access, Serving
+from etcion.serialization.json import model_from_dict, model_to_dict
 
 
 @pytest.fixture

@@ -4,7 +4,7 @@
 Demonstrates diff_models, ModelDiff, ConceptChange, and FieldChange.
 """
 
-from pyarchi import (
+from etcion import (
     ApplicationComponent,
     ApplicationService,
     Assignment,

@@ -2,7 +2,7 @@
 
 ## Context
 
-Users may want to extend pyarchi beyond the ArchiMate 3.2 spec: custom element types, custom relationship types, or custom validation rules. The library already provides several extension mechanisms introduced by earlier epics:
+Users may want to extend etcion beyond the ArchiMate 3.2 spec: custom element types, custom relationship types, or custom validation rules. The library already provides several extension mechanisms introduced by earlier epics:
 
 | Mechanism | Epic | What it allows |
 |---|---|---|
@@ -30,10 +30,10 @@ EPIC-025 proposes three features: a type registry API (`FEAT-25.1`), custom vali
 ### What ships
 
 1. **Document existing extension points** in a user guide section (FEAT-25.1 partially satisfied).
-2. **`register_element_type(cls, xml_tag, ...)`** -- a single public function in `pyarchi.serialization.registry` that:
+2. **`register_element_type(cls, xml_tag, ...)`** -- a single public function in `etcion.serialization.registry` that:
    - Validates `cls` is a concrete `Element` subclass (has `_type_name`).
    - Adds a `TypeDescriptor` entry to `TYPE_REGISTRY`.
-   - Resets `_cache = None` in `pyarchi.validation.permissions` so the permission table rebuilds on next `is_permitted()` call.
+   - Resets `_cache = None` in `etcion.validation.permissions` so the permission table rebuilds on next `is_permitted()` call.
    - Emits a `UserWarning` stating the type is non-standard and models containing it may not be portable.
 3. **`register_permission_rule(rule: PermissionRule)`** -- appends to `_PERMISSION_TABLE`, resets `_cache = None`. Same non-portability warning.
 4. **`ValidationRule` protocol + `Model.add_validation_rule()`** -- lightweight; no plugin discovery, no entry points. A `Protocol` with `def validate(model) -> list[ValidationError]` is trivial and useful without framework complexity.
@@ -50,7 +50,7 @@ EPIC-025 proposes three features: a type registry API (`FEAT-25.1`), custom vali
 
 ### Cache invalidation strategy
 
-Both `register_element_type()` and `register_permission_rule()` set `pyarchi.validation.permissions._cache = None`. The next `is_permitted()` call triggers `_build_cache()`, which is O(R * S * T) over the permission table -- acceptable for a one-time cost after registration.
+Both `register_element_type()` and `register_permission_rule()` set `etcion.validation.permissions._cache = None`. The next `is_permitted()` call triggers `_build_cache()`, which is O(R * S * T) over the permission table -- acceptable for a one-time cost after registration.
 
 `TYPE_REGISTRY` is a plain `dict`; insertion is O(1) with no cache to invalidate.
 
@@ -58,6 +58,6 @@ Both `register_element_type()` and `register_permission_rule()` set `pyarchi.val
 
 - **Positive**: Users get a documented, supported path to extend the metamodel without monkey-patching internal dicts. The `ValidationRule` protocol enables custom model checks (e.g., "all elements must have documentation").
 - **Positive**: No framework complexity, no entry-point scanning, no plugin lifecycle management.
-- **Negative**: Users who want fully custom serialization formats must implement them outside pyarchi.
+- **Negative**: Users who want fully custom serialization formats must implement them outside etcion.
 - **Negative**: Custom element types will produce Exchange Format XML that other tools may reject.
 - **Revisit trigger**: If three or more users request serialization plugins or entry-point discovery, revisit FEAT-25.3.

@@ -20,15 +20,15 @@ Prior decisions accepted without re-litigation:
 - Generic metamodel ABCs: `InternalActiveStructureElement`, `InternalBehaviorElement`, `PassiveStructureElement`, `Process`, `Function`, `Interaction`, `Event`, `ExternalActiveStructureElement`, `ExternalBehaviorElement`, `CompositeElement` (ADR-016).
 - `ClassVar[Layer]` and `ClassVar[Aspect]` on concrete element classes (ADR-014).
 - `ClassVar[NotationMetadata]` on concrete element classes (ADR-013).
-- `Layer.BUSINESS`, `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, `Aspect.PASSIVE_STRUCTURE`, `Aspect.COMPOSITE` already exist in `src/pyarchi/enums.py` (ADR-011, ADR-012).
+- `Layer.BUSINESS`, `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, `Aspect.PASSIVE_STRUCTURE`, `Aspect.COMPOSITE` already exist in `src/etcion/enums.py` (ADR-011, ADR-012).
 - Per-layer module pattern established by `strategy.py` (ADR-018).
 - `extra="forbid"` on `Concept.model_config` (ADR-006).
 
 ## Decisions
 
-### 1. Module Placement: `src/pyarchi/metamodel/business.py`
+### 1. Module Placement: `src/etcion/metamodel/business.py`
 
-All EPIC-007 classes (three ABCs and twelve concrete types) are defined in a new module `src/pyarchi/metamodel/business.py`. This continues the per-layer module pattern established in ADR-018 Decision 1.
+All EPIC-007 classes (three ABCs and twelve concrete types) are defined in a new module `src/etcion/metamodel/business.py`. This continues the per-layer module pattern established in ADR-018 Decision 1.
 
 ### 2. Layer-Specific ABCs: Three Internal Branches
 
@@ -100,7 +100,7 @@ Rationale: identical to Decision 4. `Event` and `ExternalBehaviorElement` are no
 
 ### 7. `Contract` as Domain-Level Specialization of `BusinessObject`
 
-`Contract` extends `BusinessObject`, not `BusinessPassiveStructureElement`. This is the first case in pyarchi of a concrete element subclassing another concrete element within the same layer.
+`Contract` extends `BusinessObject`, not `BusinessPassiveStructureElement`. This is the first case in etcion of a concrete element subclassing another concrete element within the same layer.
 
 `Contract` inherits `layer`, `aspect`, and `notation` ClassVars from `BusinessObject` without re-declaring them (except `notation`, which carries its own `NotationMetadata` -- see Decision 9). `Contract._type_name` returns `"Contract"`, distinguishing it from its parent for serialization and type-dispatch purposes.
 
@@ -136,11 +136,11 @@ All thirteen concrete Business classes carry `notation: ClassVar[NotationMetadat
 
 ### 10. No New Enums Required
 
-`Layer.BUSINESS` (ADR-011), `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, `Aspect.PASSIVE_STRUCTURE`, and `Aspect.COMPOSITE` (ADR-012) already exist in `src/pyarchi/enums.py`. EPIC-007 introduces no new enum members or enum classes. This is ratified.
+`Layer.BUSINESS` (ADR-011), `Aspect.ACTIVE_STRUCTURE`, `Aspect.BEHAVIOR`, `Aspect.PASSIVE_STRUCTURE`, and `Aspect.COMPOSITE` (ADR-012) already exist in `src/etcion/enums.py`. EPIC-007 introduces no new enum members or enum classes. This is ratified.
 
 ### 11. `__init__.py` Exports Deferred
 
-Exports of Business layer types to `src/pyarchi/__init__.py` are deferred to EPIC-014 (public API surface epic), consistent with ADR-016 Decision 7, ADR-017 Decision 10, and ADR-018 Decision 8. The types are importable via `from pyarchi.metamodel.business import BusinessActor` immediately.
+Exports of Business layer types to `src/etcion/__init__.py` are deferred to EPIC-014 (public API surface epic), consistent with ADR-016 Decision 7, ADR-017 Decision 10, and ADR-018 Decision 8. The types are importable via `from etcion.metamodel.business import BusinessActor` immediately.
 
 ## Alternatives Considered
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from pyarchi.enums import Aspect, Layer
-from pyarchi.metamodel.elements import (
+from etcion.enums import Aspect, Layer
+from etcion.metamodel.elements import (
     Event,
     ExternalActiveStructureElement,
     ExternalBehaviorElement,
@@ -14,7 +14,7 @@ from pyarchi.metamodel.elements import (
     InternalBehaviorElement,
     PassiveStructureElement,
 )
-from pyarchi.metamodel.technology import (
+from etcion.metamodel.technology import (
     Artifact,
     CommunicationNetwork,
     Device,

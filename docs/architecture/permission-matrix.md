@@ -2,8 +2,8 @@
 
 The ArchiMate 3.2 specification defines a normative **relationship permission
 matrix** (Appendix B) that governs which relationships are allowed between
-which element types.  pyarchi encodes this matrix in
-`pyarchi.validation.permissions` and enforces it at model-validation time.
+which element types.  etcion encodes this matrix in
+`etcion.validation.permissions` and enforces it at model-validation time.
 
 ## How to Read the Tables
 
@@ -165,9 +165,9 @@ apply uniformly:
 ## Usage Example
 
 ```python
-from pyarchi.validation.permissions import is_permitted
-from pyarchi.metamodel.relationships import Assignment, Access
-from pyarchi.metamodel.business import (
+from etcion.validation.permissions import is_permitted
+from etcion.metamodel.relationships import Assignment, Access
+from etcion.metamodel.business import (
     BusinessActor,
     BusinessProcess,
     BusinessObject,

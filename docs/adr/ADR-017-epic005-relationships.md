@@ -20,8 +20,8 @@ Prior decisions accepted without re-litigation:
 - `RelationshipConnector(Concept)` as sibling of `Relationship`, not a subtype (ADR-009).
 - `extra="forbid"` on `Concept.model_config` (ADR-015).
 - `is_nested: bool = False` belongs on `StructuralRelationship` only (ADR-015).
-- `RelationshipCategory` enum with STRUCTURAL, DEPENDENCY, DYNAMIC, OTHER already exists in `src/pyarchi/enums.py` (ADR-002 pattern).
-- All enumerations live in `src/pyarchi/enums.py` (ADR-002).
+- `RelationshipCategory` enum with STRUCTURAL, DEPENDENCY, DYNAMIC, OTHER already exists in `src/etcion/enums.py` (ADR-002 pattern).
+- All enumerations live in `src/etcion/enums.py` (ADR-002).
 
 ## Decisions
 
@@ -99,7 +99,7 @@ The validation entry point will be a model-level `validate()` method (or equival
 
 ### 7. Appendix B Permission Table Structure
 
-The permission table is encoded in `src/pyarchi/validation/permissions.py` as a set of permitted triples. The lookup interface:
+The permission table is encoded in `src/etcion/validation/permissions.py` as a set of permitted triples. The lookup interface:
 
 ```python
 def is_permitted(
@@ -111,7 +111,7 @@ def is_permitted(
 
 The keys are `type[Relationship]` and `type[Element]` references (classes, not strings). This provides IDE support and prevents stringly-typed lookups.
 
-Circular import risk: `permissions.py` is in `src/pyarchi/validation/` and imports from `src/pyarchi/metamodel/`. The metamodel package does not import from the validation package. The dependency direction is `validation -> metamodel`, which is acyclic.
+Circular import risk: `permissions.py` is in `src/etcion/validation/` and imports from `src/etcion/metamodel/`. The metamodel package does not import from the validation package. The dependency direction is `validation -> metamodel`, which is acyclic.
 
 Universal rules encoded once rather than per-triple:
 
@@ -121,7 +121,7 @@ Universal rules encoded once rather than per-triple:
 
 ### 8. Derivation Engine
 
-`DerivationEngine` in `src/pyarchi/derivation/engine.py` with two public methods:
+`DerivationEngine` in `src/etcion/derivation/engine.py` with two public methods:
 
 - `derive(model: Model) -> list[Relationship]` -- traverses the model's relationship graph, identifies derivable chains, returns new `Relationship` instances with `is_derived=True`.
 - `is_directly_permitted(rel_type: type[Relationship], source: Element, target: Element) -> bool` -- delegates to the permission table.
@@ -134,16 +134,16 @@ Chain traversal rules follow the spec: structural chains derive structural relat
 
 | Module | Contents |
 |---|---|
-| `src/pyarchi/metamodel/relationships.py` | Four mid-tier ABCs, eleven concrete relationship types, `Junction` |
-| `src/pyarchi/enums.py` | Ratified: `RelationshipCategory`, `AccessMode`, `InfluenceSign`, `AssociationDirection`, `JunctionType` |
-| `src/pyarchi/validation/permissions.py` | Appendix B permission table, `is_permitted()` function |
-| `src/pyarchi/derivation/engine.py` | `DerivationEngine` class |
+| `src/etcion/metamodel/relationships.py` | Four mid-tier ABCs, eleven concrete relationship types, `Junction` |
+| `src/etcion/enums.py` | Ratified: `RelationshipCategory`, `AccessMode`, `InfluenceSign`, `AssociationDirection`, `JunctionType` |
+| `src/etcion/validation/permissions.py` | Appendix B permission table, `is_permitted()` function |
+| `src/etcion/derivation/engine.py` | `DerivationEngine` class |
 
 All relationship-related types are co-located in a single `relationships.py` rather than split per-category. Rationale: the four mid-tier ABCs and eleven concrete types are small classes (most have zero additional fields). Splitting into `structural.py`, `dependency.py`, `dynamic.py`, `other.py` creates four files averaging three classes each, with disproportionate import/navigation overhead.
 
 ### 10. `__init__.py` Exports
 
-Deferred to the end of EPIC-005 (FEAT-05.11). All relationship types, `Junction`, and `DerivationEngine` are added to `src/pyarchi/__init__.py` in a single batch export update.
+Deferred to the end of EPIC-005 (FEAT-05.11). All relationship types, `Junction`, and `DerivationEngine` are added to `src/etcion/__init__.py` in a single batch export update.
 
 ## Alternatives Considered
 

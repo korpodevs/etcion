@@ -4,7 +4,7 @@
 Demonstrates Profile creation, apply_profile, and validation of profile constraints.
 """
 
-from pyarchi import (
+from etcion import (
     ApplicationComponent,
     Model,
     Profile,

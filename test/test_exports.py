@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-import pyarchi
+import etcion
 
 _PHASE2_TYPES: list[str] = [
     # Strategy layer (EPIC-006)
@@ -89,16 +89,16 @@ _PHASE2_TYPES: list[str] = [
 class TestPhase2Exports:
     @pytest.mark.parametrize("name", _PHASE2_TYPES)
     def test_public_api_export(self, name: str) -> None:
-        import pyarchi
+        import etcion
 
-        attr = getattr(pyarchi, name, None)
-        assert attr is not None, f"{name} not exported from pyarchi"
+        attr = getattr(etcion, name, None)
+        assert attr is not None, f"{name} not exported from etcion"
 
     @pytest.mark.parametrize("name", _PHASE2_TYPES)
     def test_in_all(self, name: str) -> None:
-        import pyarchi
+        import etcion
 
-        assert name in pyarchi.__all__, f"{name} missing from pyarchi.__all__"
+        assert name in etcion.__all__, f"{name} missing from etcion.__all__"
 
     def test_phase2_count(self) -> None:
         assert len(_PHASE2_TYPES) == 69
@@ -116,12 +116,12 @@ PHASE_3_EXPORTS = [
 
 class TestPhase3Exports:
     @pytest.mark.parametrize("name", PHASE_3_EXPORTS)
-    def test_symbol_importable_from_pyarchi(self, name: str) -> None:
-        assert hasattr(pyarchi, name), f"{name} not found in pyarchi namespace"
+    def test_symbol_importable_from_etcion(self, name: str) -> None:
+        assert hasattr(etcion, name), f"{name} not found in etcion namespace"
 
     @pytest.mark.parametrize("name", PHASE_3_EXPORTS)
     def test_symbol_in_all(self, name: str) -> None:
-        assert name in pyarchi.__all__, f"{name} not in pyarchi.__all__"
+        assert name in etcion.__all__, f"{name} not in etcion.__all__"
 
     def test_no_serialization_functions_in_all(self) -> None:
         forbidden = {
@@ -132,5 +132,5 @@ class TestPhase3Exports:
             "model_to_dict",
             "model_from_dict",
         }
-        leaked = forbidden & set(pyarchi.__all__)
+        leaked = forbidden & set(etcion.__all__)
         assert leaked == set(), f"Serialization functions leaked into __all__: {leaked}"

@@ -7,8 +7,8 @@ ArchiMate viewpoints define perspectives on a model, constraining which concept 
 A `Viewpoint` declares a name, purpose, content category, and a set of permitted concept types:
 
 ```python
-from pyarchi import Viewpoint, PurposeCategory, ContentCategory
-from pyarchi import BusinessActor, BusinessRole, Serving, Association
+from etcion import Viewpoint, PurposeCategory, ContentCategory
+from etcion import BusinessActor, BusinessRole, Serving, Association
 
 my_viewpoint = Viewpoint(
     name="Org Structure",
@@ -28,7 +28,7 @@ A `View` projects a model through a viewpoint. Adding a concept enforces two gat
 2. **Membership gate** -- the concept must exist in the underlying model
 
 ```python
-from pyarchi import View, Model, BusinessActor
+from etcion import View, Model, BusinessActor
 
 model = Model(concepts=[actor, role, serving])
 
@@ -44,7 +44,7 @@ Adding a concept whose type is not permitted raises `ValidationError`.
 `Concern` links stakeholders to viewpoints, forming the navigation path: Stakeholder -> Concern -> Viewpoint -> View.
 
 ```python
-from pyarchi import Concern, Stakeholder
+from etcion import Concern, Stakeholder
 
 cto = Stakeholder(name="CTO")
 concern = Concern(
@@ -56,10 +56,10 @@ concern = Concern(
 
 ## Predefined Viewpoint Catalogue
 
-pyarchi ships with 28 standard viewpoints from Appendix C of the ArchiMate 3.2 specification:
+etcion ships with 28 standard viewpoints from Appendix C of the ArchiMate 3.2 specification:
 
 ```python
-from pyarchi import VIEWPOINT_CATALOGUE
+from etcion import VIEWPOINT_CATALOGUE
 
 org_vp = VIEWPOINT_CATALOGUE["Organization"]
 print(org_vp.name)     # "Organization"

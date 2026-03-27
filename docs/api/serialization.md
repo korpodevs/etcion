@@ -1,7 +1,7 @@
 # Serialization
 
-::: pyarchi.serialization.xml
+::: etcion.serialization.xml
 
-::: pyarchi.serialization.json
+::: etcion.serialization.json
 
-::: pyarchi.serialization.registry
+::: etcion.serialization.registry
