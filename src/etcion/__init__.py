@@ -10,9 +10,6 @@ except PackageNotFoundError:  # pragma: no cover
 
 # Phase 4: Model comparison and diff utilities (EPIC-024, FEAT-24.1)
 from etcion.comparison import ConceptChange, FieldChange, ModelDiff, diff_models
-
-# Phase 5: Impact analysis engine (ADR-043, Issue #9)
-from etcion.impact import ImpactedConcept, ImpactResult, analyze_impact
 from etcion.conformance import CONFORMANCE, ConformanceProfile
 from etcion.derivation.engine import DerivationEngine
 from etcion.enums import (
@@ -32,6 +29,9 @@ from etcion.exceptions import (
     PyArchiError,
     ValidationError,
 )
+
+# Phase 5: Impact analysis engine (ADR-043, Issue #9)
+from etcion.impact import ImpactedConcept, ImpactResult, analyze_impact, chain_impacts
 
 # Phase 2: Application layer (EPIC-008)
 from etcion.metamodel.application import (

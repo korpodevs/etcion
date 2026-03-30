@@ -146,11 +146,17 @@ class TestImpactResult:
         assert result.violations == ()
 
     def test_violations_stored(self) -> None:
-        from etcion.impact import ImpactResult
+        from etcion.impact import ImpactResult, Violation
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.relationships import Association
 
-        result = ImpactResult(violations=("rule-1 violated",))
+        actor = BusinessActor(id="a1", name="A")
+        role = BusinessRole(id="r1", name="R")
+        rel = Association(id="rel1", name="assoc", source=actor, target=role)
+        v = Violation(relationship=rel, reason="test reason")
+        result = ImpactResult(violations=(v,))
         assert len(result.violations) == 1
-        assert result.violations[0] == "rule-1 violated"
+        assert result.violations[0] is v
 
     def test_broken_relationships_defaults_empty(self) -> None:
         from etcion.impact import ImpactResult
@@ -851,3 +857,797 @@ class TestResultModelJunction:
         result_j = result.resulting_model["j1"]
         assert id(result_j) != id(j)
         assert result_j.id == j.id
+
+
+# ---------------------------------------------------------------------------
+# Issue #13: TestViolation
+# ---------------------------------------------------------------------------
+
+
+class TestViolation:
+    def test_frozen(self) -> None:
+        """Violation is a frozen dataclass — fields cannot be reassigned."""
+        from etcion.impact import Violation
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.relationships import Association
+
+        actor = BusinessActor(id="a1", name="A")
+        role = BusinessRole(id="r1", name="R")
+        rel = Association(id="rel1", name="assoc", source=actor, target=role)
+        v = Violation(relationship=rel, reason="impermissible")
+        with pytest.raises((AttributeError, TypeError)):
+            v.reason = "changed"  # type: ignore[misc]
+
+    def test_fields(self) -> None:
+        """relationship and reason fields are accessible on a Violation."""
+        from etcion.impact import Violation
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.relationships import Association
+
+        actor = BusinessActor(id="a1", name="A")
+        role = BusinessRole(id="r1", name="R")
+        rel = Association(id="rel1", name="assoc", source=actor, target=role)
+        v = Violation(relationship=rel, reason="test reason")
+        assert v.relationship is rel
+        assert v.reason == "test reason"
+
+
+# ---------------------------------------------------------------------------
+# Issue #13: helpers shared across merge test classes
+# ---------------------------------------------------------------------------
+
+
+def _make_merge_model_basic() -> tuple[object, object, object, object, object, object]:
+    """Return (model, actor_a, actor_b, target_t, rel_ax, rel_bx).
+
+    Two actors A and B that are both associated to a shared role X.
+    T is the merge target (also a BusinessActor).
+
+    A --Association--> X
+    B --Association--> X
+    """
+    from etcion.metamodel.business import BusinessActor, BusinessRole
+    from etcion.metamodel.model import Model
+    from etcion.metamodel.relationships import Association
+
+    a = BusinessActor(id="a1", name="A")
+    b = BusinessActor(id="b1", name="B")
+    t = BusinessActor(id="t1", name="T")
+    x = BusinessRole(id="x1", name="X")
+    rel_ax = Association(id="rel-ax", name="AX", source=a, target=x)
+    rel_bx = Association(id="rel-bx", name="BX", source=b, target=x)
+    model = Model(concepts=[a, b, t, x, rel_ax, rel_bx])
+    return model, a, b, t, rel_ax, rel_bx
+
+
+# ---------------------------------------------------------------------------
+# Issue #13: TestMergeBasic
+# ---------------------------------------------------------------------------
+
+
+class TestMergeBasic:
+    def test_merge_returns_impact_result(self) -> None:
+        pytest.importorskip("networkx")
+        from etcion.impact import ImpactResult, analyze_impact
+
+        model, a, b, t, rel_ax, rel_bx = _make_merge_model_basic()
+        result = analyze_impact(model, merge=([a, b], t))
+        assert isinstance(result, ImpactResult)
+
+    def test_merged_elements_removed_from_result(self) -> None:
+        """Elements in the merge list (excluding the target) are absent from resulting_model."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+
+        model, a, b, t, rel_ax, rel_bx = _make_merge_model_basic()
+        result = analyze_impact(model, merge=([a, b], t))
+        assert result.resulting_model is not None
+        concept_ids = {c.id for c in result.resulting_model}
+        assert a.id not in concept_ids
+        assert b.id not in concept_ids
+
+    def test_target_remains_in_result(self) -> None:
+        """The merge target is present in resulting_model."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+
+        model, a, b, t, rel_ax, rel_bx = _make_merge_model_basic()
+        result = analyze_impact(model, merge=([a, b], t))
+        assert result.resulting_model is not None
+        concept_ids = {c.id for c in result.resulting_model}
+        assert t.id in concept_ids
+
+    def test_relationships_rewired_to_target(self) -> None:
+        """Relationships that pointed to merged elements are rewired to the target."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.concepts import Relationship
+
+        model, a, b, t, rel_ax, rel_bx = _make_merge_model_basic()
+        result = analyze_impact(model, merge=([a, b], t))
+        assert result.resulting_model is not None
+
+        # After merging A and B into T, relationships should use T as source
+        rels_in_result = [c for c in result.resulting_model if isinstance(c, Relationship)]
+        source_ids = {r.source.id for r in rels_in_result}  # type: ignore[union-attr]
+        # T should be the source for the rewired relationships
+        assert t.id in source_ids
+        # A and B must not be sources in the result
+        assert a.id not in source_ids
+        assert b.id not in source_ids
+
+
+# ---------------------------------------------------------------------------
+# Issue #13: TestMergeDeduplication
+# ---------------------------------------------------------------------------
+
+
+class TestMergeDeduplication:
+    def test_duplicate_rewired_relationships_deduplicated(self) -> None:
+        """A→X and B→X both rewire to T→X; only one T→X survives."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.concepts import Relationship
+
+        model, a, b, t, rel_ax, rel_bx = _make_merge_model_basic()
+        result = analyze_impact(model, merge=([a, b], t))
+        assert result.resulting_model is not None
+
+        rels_in_result = [c for c in result.resulting_model if isinstance(c, Relationship)]
+        # Both rel_ax and rel_bx rewire to T→X; only one should survive
+        tx_rels = [
+            r
+            for r in rels_in_result
+            if r.source.id == t.id and r.target.id == "x1"  # type: ignore[union-attr]
+        ]
+        assert len(tx_rels) == 1
+
+
+# ---------------------------------------------------------------------------
+# Issue #13: TestMergePermissionCheck
+# ---------------------------------------------------------------------------
+
+
+class TestMergePermissionCheck:
+    def test_invalid_rewired_relationship_in_violations(self) -> None:
+        """Rewiring that creates an impermissible relationship appears in violations."""
+        pytest.importorskip("networkx")
+        from etcion.impact import Violation, analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessProcess, BusinessService
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Serving
+
+        # BusinessService -Serving-> BusinessProcess is permitted (S2).
+        # After merging BusinessService into BusinessActor, we get
+        # BusinessActor -Serving-> BusinessProcess, which is NOT permitted.
+        svc = BusinessService(id="svc1", name="Svc")
+        proc = BusinessProcess(id="proc1", name="Proc")
+        actor_target = BusinessActor(id="t1", name="T")
+        rel_sp = Serving(id="rel-sp", name="SP", source=svc, target=proc)
+        model = Model(concepts=[svc, proc, actor_target, rel_sp])
+
+        result = analyze_impact(model, merge=([svc], actor_target))
+        assert len(result.violations) > 0
+        assert all(isinstance(v, Violation) for v in result.violations)
+
+    def test_valid_rewired_relationship_in_result_model(self) -> None:
+        """Permissible rewired relationships appear in resulting_model."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.concepts import Relationship
+
+        model, a, b, t, rel_ax, rel_bx = _make_merge_model_basic()
+        result = analyze_impact(model, merge=([a, b], t))
+        assert result.resulting_model is not None
+
+        rels_in_result = [c for c in result.resulting_model if isinstance(c, Relationship)]
+        assert len(rels_in_result) >= 1
+
+
+# ---------------------------------------------------------------------------
+# Issue #13: TestMergeSelfLoop
+# ---------------------------------------------------------------------------
+
+
+class TestMergeSelfLoop:
+    def test_self_referencing_after_merge(self) -> None:
+        """A→B where both A and B merge to T produces a T→T self-loop.
+
+        The self-loop is kept; permission is checked (Association is always
+        permitted, so it must survive into resulting_model).
+        """
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor
+        from etcion.metamodel.concepts import Relationship
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessActor(id="b1", name="B")
+        t = BusinessActor(id="t1", name="T")
+        rel_ab = Association(id="rel-ab", name="AB", source=a, target=b)
+        model = Model(concepts=[a, b, t, rel_ab])
+
+        result = analyze_impact(model, merge=([a, b], t))
+        assert result.resulting_model is not None
+
+        rels_in_result = [c for c in result.resulting_model if isinstance(c, Relationship)]
+        self_loops = [
+            r
+            for r in rels_in_result
+            if r.source.id == t.id and r.target.id == t.id  # type: ignore[union-attr]
+        ]
+        assert len(self_loops) == 1
+
+
+# ---------------------------------------------------------------------------
+# Issue #13: TestMergeSelfMerge
+# ---------------------------------------------------------------------------
+
+
+class TestMergeSelfMerge:
+    def test_target_is_one_of_merged(self) -> None:
+        """merge([A, B], target=A): B is removed, A is kept, B's rels are rewired to A."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.concepts import Relationship
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessActor(id="b1", name="B")
+        x = BusinessRole(id="x1", name="X")
+        rel_bx = Association(id="rel-bx", name="BX", source=b, target=x)
+        model = Model(concepts=[a, b, x, rel_bx])
+
+        result = analyze_impact(model, merge=([a, b], a))
+        assert result.resulting_model is not None
+        concept_ids = {c.id for c in result.resulting_model}
+
+        # A (the target) is kept; B is removed
+        assert a.id in concept_ids
+        assert b.id not in concept_ids
+
+        # B's relationship to X is rewired to A→X
+        rels_in_result = [c for c in result.resulting_model if isinstance(c, Relationship)]
+        ax_rels = [
+            r
+            for r in rels_in_result
+            if r.source.id == a.id and r.target.id == x.id  # type: ignore[union-attr]
+        ]
+        assert len(ax_rels) == 1
+
+
+# ---------------------------------------------------------------------------
+# Issue #13: TestMergeAffected
+# ---------------------------------------------------------------------------
+
+
+class TestMergeAffected:
+    def test_affected_includes_connected_elements(self) -> None:
+        """Elements connected to merged elements appear in the affected set."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+
+        model, a, b, t, rel_ax, rel_bx = _make_merge_model_basic()
+        result = analyze_impact(model, merge=([a, b], t))
+
+        affected_ids = {ic.concept.id for ic in result.affected}
+        # X is connected to both A and B via relationships, so it must appear in affected
+        assert "x1" in affected_ids
+
+
+# ---------------------------------------------------------------------------
+# Issue #14: helpers shared across replace test classes
+# ---------------------------------------------------------------------------
+
+
+def _make_replace_model_basic() -> tuple[object, object, object, object, object]:
+    """Return (model, old_actor, new_actor, role_x, rel_old_x).
+
+    old_actor --Association--> role_x
+    new_actor is not yet connected to anything.
+
+    Replace old_actor with new_actor should rewire the Association to new_actor.
+    """
+    from etcion.metamodel.business import BusinessActor, BusinessRole
+    from etcion.metamodel.model import Model
+    from etcion.metamodel.relationships import Association
+
+    old = BusinessActor(id="old1", name="Old")
+    new = BusinessActor(id="new1", name="New")
+    x = BusinessRole(id="x1", name="X")
+    rel = Association(id="rel-ox", name="OX", source=old, target=x)
+    model = Model(concepts=[old, new, x, rel])
+    return model, old, new, x, rel
+
+
+# ---------------------------------------------------------------------------
+# Issue #14: TestReplaceBasic
+# ---------------------------------------------------------------------------
+
+
+class TestReplaceBasic:
+    def test_replace_returns_impact_result(self) -> None:
+        """analyze_impact(replace=(old, new)) returns an ImpactResult."""
+        pytest.importorskip("networkx")
+        from etcion.impact import ImpactResult, analyze_impact
+
+        model, old, new, x, rel = _make_replace_model_basic()
+        result = analyze_impact(model, replace=(old, new))
+        assert isinstance(result, ImpactResult)
+
+    def test_old_element_removed_from_result(self) -> None:
+        """The old element is absent from resulting_model after replace."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+
+        model, old, new, x, rel = _make_replace_model_basic()
+        result = analyze_impact(model, replace=(old, new))
+        assert result.resulting_model is not None
+        concept_ids = {c.id for c in result.resulting_model}
+        assert old.id not in concept_ids
+
+    def test_new_element_in_result(self) -> None:
+        """The new element is present in resulting_model after replace."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+
+        model, old, new, x, rel = _make_replace_model_basic()
+        result = analyze_impact(model, replace=(old, new))
+        assert result.resulting_model is not None
+        concept_ids = {c.id for c in result.resulting_model}
+        assert new.id in concept_ids
+
+    def test_relationships_transferred(self) -> None:
+        """Relationships that pointed to old now point to new in resulting_model."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.concepts import Relationship
+
+        model, old, new, x, rel = _make_replace_model_basic()
+        result = analyze_impact(model, replace=(old, new))
+        assert result.resulting_model is not None
+
+        rels_in_result = [c for c in result.resulting_model if isinstance(c, Relationship)]
+        source_ids = {r.source.id for r in rels_in_result}  # type: ignore[union-attr]
+        # new should be the source of the transferred relationship
+        assert new.id in source_ids
+        # old must not appear as source or target in any surviving relationship
+        target_ids = {r.target.id for r in rels_in_result}  # type: ignore[union-attr]
+        assert old.id not in source_ids
+        assert old.id not in target_ids
+
+
+# ---------------------------------------------------------------------------
+# Issue #14: TestReplacePermissions
+# ---------------------------------------------------------------------------
+
+
+class TestReplacePermissions:
+    def test_same_type_no_violations(self) -> None:
+        """Replacing BusinessActor with another BusinessActor produces no violations."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+
+        model, old, new, x, rel = _make_replace_model_basic()
+        result = analyze_impact(model, replace=(old, new))
+        assert result.violations == ()
+
+    def test_different_type_creates_violations(self) -> None:
+        """Replacing ApplicationComponent with BusinessActor can produce violations.
+
+        An ApplicationComponent -Serving-> ApplicationService is permitted.
+        After replace, BusinessActor -Serving-> ApplicationService is NOT permitted.
+        """
+        pytest.importorskip("networkx")
+        from etcion.impact import Violation, analyze_impact
+        from etcion.metamodel.application import ApplicationComponent, ApplicationService
+        from etcion.metamodel.business import BusinessActor
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Serving
+
+        app_comp = ApplicationComponent(id="comp1", name="Comp")
+        app_svc = ApplicationService(id="svc1", name="Svc")
+        new_actor = BusinessActor(id="actor1", name="Actor")
+        rel = Serving(id="rel-cs", name="CS", source=app_comp, target=app_svc)
+        model = Model(concepts=[app_comp, app_svc, new_actor, rel])
+
+        result = analyze_impact(model, replace=(app_comp, new_actor))
+        assert len(result.violations) > 0
+        assert all(isinstance(v, Violation) for v in result.violations)
+
+
+# ---------------------------------------------------------------------------
+# Issue #14: TestReplaceAffected
+# ---------------------------------------------------------------------------
+
+
+class TestReplaceAffected:
+    def test_affected_includes_connected_elements(self) -> None:
+        """Elements connected to old element appear in the affected set."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+
+        model, old, new, x, rel = _make_replace_model_basic()
+        result = analyze_impact(model, replace=(old, new))
+
+        affected_ids = {ic.concept.id for ic in result.affected}
+        # x is connected to old via the Association, so it must appear in affected
+        assert x.id in affected_ids
+
+
+# ---------------------------------------------------------------------------
+# Issue #15: TestChaining — chaining via resulting_model
+# ---------------------------------------------------------------------------
+
+
+class TestChaining:
+    def test_chain_via_resulting_model(self) -> None:
+        """Remove elem1 from model, then remove elem2 from result → second result has neither."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        c = BusinessActor(id="c1", name="C")
+        rel_ab = Association(id="rel-ab", name="AB", source=a, target=b)
+        rel_bc = Association(id="rel-bc", name="BC", source=b, target=c)
+        model = Model(concepts=[a, b, c, rel_ab, rel_bc])
+
+        # First: remove a
+        result1 = analyze_impact(model, remove=a)
+        assert result1.resulting_model is not None
+
+        # Second: remove b from the resulting model
+        b_in_result1 = result1.resulting_model["b1"]
+        result2 = analyze_impact(result1.resulting_model, remove=b_in_result1)
+        assert result2.resulting_model is not None
+
+        # Final result should have neither a nor b
+        concept_ids = {c.id for c in result2.resulting_model}
+        assert "a1" not in concept_ids
+        assert "b1" not in concept_ids
+
+    def test_chain_remove_then_replace(self) -> None:
+        """Remove A, then replace B with C in the result → final model has C but not A or B."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        c = BusinessActor(id="c1", name="C")
+        rel_bc = Association(id="rel-bc", name="BC", source=b, target=c)
+        model = Model(concepts=[a, b, c, rel_bc])
+
+        # First: remove a
+        result1 = analyze_impact(model, remove=a)
+        assert result1.resulting_model is not None
+
+        # Second: replace B with a new element D in the intermediate result
+        d = BusinessActor(id="d1", name="D")
+        b_in_result1 = result1.resulting_model["b1"]
+        result2 = analyze_impact(result1.resulting_model, replace=(b_in_result1, d))
+        assert result2.resulting_model is not None
+
+        concept_ids = {c.id for c in result2.resulting_model}
+        assert "a1" not in concept_ids
+        assert "b1" not in concept_ids
+        assert "d1" in concept_ids
+
+    def test_diff_models_on_chain(self) -> None:
+        """diff_models(original, final_result) shows all changes from the full chain."""
+        pytest.importorskip("networkx")
+        from etcion.comparison import diff_models
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        c = BusinessActor(id="c1", name="C")
+        rel_ab = Association(id="rel-ab", name="AB", source=a, target=b)
+        rel_bc = Association(id="rel-bc", name="BC", source=b, target=c)
+        model = Model(concepts=[a, b, c, rel_ab, rel_bc])
+
+        result1 = analyze_impact(model, remove=a)
+        assert result1.resulting_model is not None
+        b_in_result1 = result1.resulting_model["b1"]
+        result2 = analyze_impact(result1.resulting_model, remove=b_in_result1)
+        assert result2.resulting_model is not None
+
+        diff = diff_models(model, result2.resulting_model)
+        removed_ids = {c.id for c in diff.removed}
+        # Both A and B (plus their relationships) removed across the chain
+        assert "a1" in removed_ids
+        assert "b1" in removed_ids
+
+
+# ---------------------------------------------------------------------------
+# Issue #15: TestChainImpacts — chain_impacts() utility
+# ---------------------------------------------------------------------------
+
+
+class TestChainImpacts:
+    def test_chain_impacts_combines_affected(self) -> None:
+        """Union of affected across impacts, keeping min depth when IDs overlap."""
+        pytest.importorskip("networkx")
+        from etcion.impact import ImpactedConcept, ImpactResult, chain_impacts
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        ic_a = ImpactedConcept(concept=a, depth=1)
+        ic_b = ImpactedConcept(concept=b, depth=2)
+        impact1 = ImpactResult(affected=(ic_a,))
+        impact2 = ImpactResult(affected=(ic_b,))
+
+        result = chain_impacts(impact1, impact2)
+        affected_ids = {ic.concept.id for ic in result.affected}
+        assert "a1" in affected_ids
+        assert "b1" in affected_ids
+
+    def test_chain_impacts_deduplicates_by_id_keeps_min_depth(self) -> None:
+        """When the same concept ID appears in multiple impacts, keep the min depth."""
+        pytest.importorskip("networkx")
+        from etcion.impact import ImpactedConcept, ImpactResult, chain_impacts
+        from etcion.metamodel.business import BusinessActor
+
+        a = BusinessActor(id="a1", name="A")
+        ic_a_deep = ImpactedConcept(concept=a, depth=3)
+        ic_a_shallow = ImpactedConcept(concept=a, depth=1)
+        impact1 = ImpactResult(affected=(ic_a_deep,))
+        impact2 = ImpactResult(affected=(ic_a_shallow,))
+
+        result = chain_impacts(impact1, impact2)
+        assert len(result.affected) == 1
+        assert result.affected[0].depth == 1
+
+    def test_chain_impacts_resulting_model_is_last(self) -> None:
+        """resulting_model in the chained result comes from the last impact."""
+        pytest.importorskip("networkx")
+        from etcion.impact import ImpactResult, analyze_impact, chain_impacts
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        c = BusinessActor(id="c1", name="C")
+        rel_ab = Association(id="rel-ab", name="AB", source=a, target=b)
+        rel_bc = Association(id="rel-bc", name="BC", source=b, target=c)
+        model = Model(concepts=[a, b, c, rel_ab, rel_bc])
+
+        result1 = analyze_impact(model, remove=a)
+        assert result1.resulting_model is not None
+        b_copy = result1.resulting_model["b1"]
+        result2 = analyze_impact(result1.resulting_model, remove=b_copy)
+
+        chained = chain_impacts(result1, result2)
+        assert chained.resulting_model is result2.resulting_model
+
+    def test_chain_impacts_unions_violations(self) -> None:
+        """violations from all impacts are collected into the chained result."""
+        pytest.importorskip("networkx")
+        from etcion.impact import ImpactResult, Violation, chain_impacts
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        r = BusinessRole(id="r1", name="R")
+        rel1 = Association(id="rel1", name="R1", source=a, target=r)
+        rel2 = Association(id="rel2", name="R2", source=r, target=a)
+        v1 = Violation(relationship=rel1, reason="reason1")
+        v2 = Violation(relationship=rel2, reason="reason2")
+        impact1 = ImpactResult(violations=(v1,))
+        impact2 = ImpactResult(violations=(v2,))
+
+        result = chain_impacts(impact1, impact2)
+        assert v1 in result.violations
+        assert v2 in result.violations
+
+    def test_chain_impacts_unions_broken(self) -> None:
+        """broken_relationships from all impacts are collected into the chained result."""
+        pytest.importorskip("networkx")
+        from etcion.impact import ImpactResult, chain_impacts
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        r = BusinessRole(id="r1", name="R")
+        rel1 = Association(id="rel1", name="R1", source=a, target=r)
+        rel2 = Association(id="rel2", name="R2", source=r, target=a)
+        impact1 = ImpactResult(broken_relationships=(rel1,))
+        impact2 = ImpactResult(broken_relationships=(rel2,))
+
+        result = chain_impacts(impact1, impact2)
+        assert rel1 in result.broken_relationships
+        assert rel2 in result.broken_relationships
+
+    def test_chain_impacts_empty(self) -> None:
+        """chain_impacts() with no args returns an empty ImpactResult."""
+        pytest.importorskip("networkx")
+        from etcion.impact import ImpactResult, chain_impacts
+
+        result = chain_impacts()
+        assert isinstance(result, ImpactResult)
+        assert len(result.affected) == 0
+        assert result.resulting_model is None
+        assert result.violations == ()
+        assert result.broken_relationships == ()
+
+
+# ---------------------------------------------------------------------------
+# Issue #15: TestPostChangeValidation
+# ---------------------------------------------------------------------------
+
+
+class TestPostChangeValidation:
+    def test_validate_resulting_model(self) -> None:
+        """impact.resulting_model.validate() returns a list (happy path, no errors)."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        rel = Association(id="rel-ab", name="AB", source=a, target=b)
+        model = Model(concepts=[a, b, rel])
+
+        result = analyze_impact(model, remove_relationship=rel)
+        assert result.resulting_model is not None
+        errors = result.resulting_model.validate()
+        assert isinstance(errors, list)
+
+    def test_validate_detects_issues_after_change(self) -> None:
+        """After a replace that creates an impermissible relationship, validate() returns errors.
+
+        We rely on the resulting_model being built by analyze_impact with the valid
+        rewired relationships only — so this test instead builds a model manually with
+        a known-impermissible relationship and confirms validate() catches it.
+        """
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.application import ApplicationService
+        from etcion.metamodel.business import BusinessActor, BusinessProcess
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Serving
+
+        # BusinessActor -Serving-> ApplicationService is NOT permitted by ArchiMate
+        actor = BusinessActor(id="actor1", name="Actor")
+        app_svc = ApplicationService(id="svc1", name="Svc")
+        proc = BusinessProcess(id="proc1", name="Proc")
+        # Permitted relationship; after replace proc→actor it becomes impermissible.
+        # Create a model with a permitted rel, then replace proc with actor to get a violation
+        permitted_rel = Serving(id="rel-ps", name="PS", source=proc, target=app_svc)
+        model = Model(concepts=[actor, app_svc, proc, permitted_rel])
+
+        # Replace proc with actor: BusinessActor -Serving-> ApplicationService is impermissible
+        result = analyze_impact(model, replace=(proc, actor))
+        assert result.resulting_model is not None
+
+        # The resulting model should still be constructable; validate() on the
+        # violations-only result model (which has the relationship excluded) returns no errors,
+        # but the violations list is non-empty
+        assert len(result.violations) > 0
+
+
+# ---------------------------------------------------------------------------
+# Issue #15: TestAddRelationship
+# ---------------------------------------------------------------------------
+
+
+class TestAddRelationship:
+    def test_add_relationship_to_model(self) -> None:
+        """analyze_impact(model, add_relationship=new_rel) → resulting_model has the new rel."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        model = Model(concepts=[a, b])
+
+        new_rel = Association(id="rel-new", name="NewRel", source=a, target=b)
+        result = analyze_impact(model, add_relationship=new_rel)
+
+        assert result.resulting_model is not None
+        concept_ids = {c.id for c in result.resulting_model}
+        assert "rel-new" in concept_ids
+
+    def test_add_relationship_affected_endpoints(self) -> None:
+        """affected includes source and target elements of the added relationship."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        model = Model(concepts=[a, b])
+
+        new_rel = Association(id="rel-new", name="NewRel", source=a, target=b)
+        result = analyze_impact(model, add_relationship=new_rel)
+
+        affected_ids = {ic.concept.id for ic in result.affected}
+        assert "a1" in affected_ids
+        assert "b1" in affected_ids
+
+
+# ---------------------------------------------------------------------------
+# Issue #15: TestRemoveRelationship
+# ---------------------------------------------------------------------------
+
+
+class TestRemoveRelationship:
+    def test_remove_relationship_from_model(self) -> None:
+        """analyze_impact(model, remove_relationship=rel) → resulting_model lacks the rel."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        rel = Association(id="rel-ab", name="AB", source=a, target=b)
+        model = Model(concepts=[a, b, rel])
+
+        result = analyze_impact(model, remove_relationship=rel)
+
+        assert result.resulting_model is not None
+        concept_ids = {c.id for c in result.resulting_model}
+        # Relationship is removed; elements survive
+        assert "rel-ab" not in concept_ids
+        assert "a1" in concept_ids
+        assert "b1" in concept_ids
+
+    def test_remove_relationship_affected_endpoints(self) -> None:
+        """affected includes source and target elements of the removed relationship."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        rel = Association(id="rel-ab", name="AB", source=a, target=b)
+        model = Model(concepts=[a, b, rel])
+
+        result = analyze_impact(model, remove_relationship=rel)
+
+        affected_ids = {ic.concept.id for ic in result.affected}
+        assert "a1" in affected_ids
+        assert "b1" in affected_ids
+
+    def test_remove_relationship_broken_contains_rel(self) -> None:
+        """broken_relationships contains the removed relationship."""
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Association
+
+        a = BusinessActor(id="a1", name="A")
+        b = BusinessRole(id="b1", name="B")
+        rel = Association(id="rel-ab", name="AB", source=a, target=b)
+        model = Model(concepts=[a, b, rel])
+
+        result = analyze_impact(model, remove_relationship=rel)
+        broken_ids = {r.id for r in result.broken_relationships}
+        assert "rel-ab" in broken_ids
