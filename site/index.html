@@ -429,10 +429,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#why-etcion" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Why etcion?
       
     </span>
   </a>
@@ -440,10 +440,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
+  <a href="#key-capabilities" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Features
+        Key Capabilities
       
     </span>
   </a>
@@ -1420,10 +1420,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#why-etcion" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Why etcion?
       
     </span>
   </a>
@@ -1431,10 +1431,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
+  <a href="#key-capabilities" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Features
+        Key Capabilities
       
     </span>
   </a>
@@ -1495,74 +1495,56 @@
 
 
 <h1 id="etcion">etcion<a class="headerlink" href="#etcion" title="Permanent link">&para;</a></h1>
-<p>A Python library implementing the ArchiMate 3.2 metamodel.</p>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p><a href="https://pubs.opengroup.org/architecture/archimate32-doc/">ArchiMate 3.2</a> is The Open Group's enterprise architecture modeling language. It provides a uniform representation for diagrams that describe enterprise architectures across business, application, technology, and other domains.</p>
-<p><strong>etcion</strong> provides a complete, type-safe Python implementation of the ArchiMate 3.2 metamodel. It lets you programmatically create, validate, and serialize architecture models using plain Python objects backed by Pydantic.</p>
-<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
+<p><strong>Architecture as code.</strong> Build, query, validate, and analyze enterprise architecture models in Python.</p>
+<h2 id="why-etcion">Why etcion?<a class="headerlink" href="#why-etcion" title="Permanent link">&para;</a></h2>
+<p>Enterprise architecture models are rich data structures — typed elements, directed relationships, cross-layer dependencies, governance rules. But most EA tooling treats them as static diagrams locked inside proprietary formats.</p>
+<p><strong>etcion</strong> turns your architecture into a first-class Python data structure. Once it's code, you can query it, validate it against rules, test what-if scenarios, diff versions, and integrate it with the rest of your analytical toolkit — pandas, networkx, Jupyter notebooks, CI/CD pipelines, or anything else Python touches.</p>
+<p>Built on the <a href="https://pubs.opengroup.org/architecture/archimate32-doc/">ArchiMate 3.2</a> metamodel. Compatible with <a href="https://www.archimatetool.com/">Archi</a> via the Open Group Exchange Format.</p>
+<h2 id="key-capabilities">Key Capabilities<a class="headerlink" href="#key-capabilities" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Complete ArchiMate 3.2 metamodel</strong> -- all 7 layers, 58 concrete element types, 11 relationship types, and Junction</li>
-<li><strong>Model validation</strong> via <code>Model.validate()</code> -- checks every relationship against the specification's permission rules</li>
-<li><strong>Declarative Appendix B permission table</strong> -- the full normative relationship permission matrix from the spec, exposed via <code>is_permitted()</code></li>
-<li><strong>Viewpoint mechanism</strong> -- Viewpoints, Views, and Concerns per Chapter 13</li>
-<li><strong>Language customization</strong> -- Profiles with specializations and extended attributes per Chapter 14</li>
-<li><strong>XML serialization</strong> -- Open Group ArchiMate Exchange Format, compatible with <a href="https://www.archimatetool.com/">Archi</a></li>
-<li><strong>JSON serialization</strong> -- lightweight alternative for web tooling and data pipelines</li>
-<li><strong>Model comparison</strong> -- structural diff engine for comparing model versions</li>
-<li><strong>Derivation engine</strong> -- relationship derivation following the specification's derivation rules</li>
+<li><strong>Build</strong> architecture models programmatically with type-safe Python objects</li>
+<li><strong>Query</strong> — filter by type, layer, aspect, name; traverse relationships; find connections</li>
+<li><strong>Validate</strong> — check every relationship against the ArchiMate permission matrix, enforce custom rules</li>
+<li><strong>Pattern match</strong> — define structural patterns, detect anti-patterns, find gaps in your architecture</li>
+<li><strong>Analyze impact</strong> — model what-if scenarios: remove, merge, replace elements and see the blast radius</li>
+<li><strong>Serialize</strong> — exchange with Archi and other tools via Open Group XML, or use lightweight JSON</li>
+<li><strong>Compare</strong> — diff two model versions, track changes over time</li>
+<li><strong>Extend</strong> — custom validation rules, profiles for language customization, plugin hooks</li>
 </ul>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>etcion
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>etcion<span class="w">              </span><span class="c1"># Core library</span>
+pip<span class="w"> </span>install<span class="w"> </span>etcion<span class="o">[</span>xml<span class="o">]</span><span class="w">         </span><span class="c1"># + XML serialization (lxml)</span>
+pip<span class="w"> </span>install<span class="w"> </span>etcion<span class="o">[</span>graph<span class="o">]</span><span class="w">       </span><span class="c1"># + Pattern matching &amp; impact analysis (networkx)</span>
 </code></pre></div>
-<p>For XML serialization support (requires <code>lxml</code>):</p>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>etcion<span class="o">[</span>xml<span class="o">]</span>
-</code></pre></div>
-<p><strong>Requires Python 3.12 or later.</strong></p>
+<p>Requires Python 3.12 or later.</p>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">etcion</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ApplicationComponent</span><span class="p">,</span>
-    <span class="n">ApplicationService</span><span class="p">,</span>
-    <span class="n">Assignment</span><span class="p">,</span>
-    <span class="n">BusinessProcess</span><span class="p">,</span>
-    <span class="n">BusinessService</span><span class="p">,</span>
-    <span class="n">Model</span><span class="p">,</span>
-    <span class="n">Serving</span><span class="p">,</span>
+    <span class="n">BusinessProcess</span><span class="p">,</span> <span class="n">ApplicationService</span><span class="p">,</span> <span class="n">ApplicationComponent</span><span class="p">,</span>
+    <span class="n">Model</span><span class="p">,</span> <span class="n">Serving</span><span class="p">,</span> <span class="n">Assignment</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">etcion.serialization.xml</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_model</span>
 
-<span class="c1"># Create elements from different layers</span>
-<span class="n">order_process</span> <span class="o">=</span> <span class="n">BusinessProcess</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Order Handling&quot;</span><span class="p">)</span>
-<span class="n">order_service</span> <span class="o">=</span> <span class="n">BusinessService</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Order Service&quot;</span><span class="p">)</span>
-<span class="n">crm</span> <span class="o">=</span> <span class="n">ApplicationComponent</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;CRM System&quot;</span><span class="p">)</span>
-<span class="n">crm_api</span> <span class="o">=</span> <span class="n">ApplicationService</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;CRM API&quot;</span><span class="p">)</span>
+<span class="c1"># Build a model</span>
+<span class="n">order_handling</span> <span class="o">=</span> <span class="n">BusinessProcess</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Order Handling&quot;</span><span class="p">)</span>
+<span class="n">api</span> <span class="o">=</span> <span class="n">ApplicationService</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Order API&quot;</span><span class="p">)</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">ApplicationComponent</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Order Service&quot;</span><span class="p">)</span>
 
-<span class="c1"># Create relationships (name is required)</span>
-<span class="n">biz_serve</span> <span class="o">=</span> <span class="n">Serving</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;enables&quot;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">order_service</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">order_process</span><span class="p">)</span>
-<span class="n">app_assign</span> <span class="o">=</span> <span class="n">Assignment</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;exposes&quot;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">crm</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">crm_api</span><span class="p">)</span>
-<span class="n">cross_serve</span> <span class="o">=</span> <span class="n">Serving</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;supports&quot;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">crm_api</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">order_process</span><span class="p">)</span>
-
-<span class="c1"># Build a model and validate</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">concepts</span><span class="o">=</span><span class="p">[</span>
-    <span class="n">order_process</span><span class="p">,</span> <span class="n">order_service</span><span class="p">,</span> <span class="n">crm</span><span class="p">,</span> <span class="n">crm_api</span><span class="p">,</span>
-    <span class="n">biz_serve</span><span class="p">,</span> <span class="n">app_assign</span><span class="p">,</span> <span class="n">cross_serve</span><span class="p">,</span>
+    <span class="n">order_handling</span><span class="p">,</span> <span class="n">api</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span>
+    <span class="n">Serving</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;serves&quot;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">api</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">order_handling</span><span class="p">),</span>
+    <span class="n">Assignment</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;runs&quot;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">api</span><span class="p">),</span>
 <span class="p">])</span>
 
+<span class="c1"># Validate and export</span>
 <span class="n">errors</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
-<span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model is valid.&quot;</span><span class="p">)</span>
-
-<span class="c1"># Export to ArchiMate Exchange Format XML</span>
 <span class="n">write_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;architecture.xml&quot;</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;My Architecture&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="getting-started/">Getting Started</a> -- installation, first model, validation, export</li>
-<li><a href="user-guide/building-models/">User Guide</a> -- in-depth guides for each feature</li>
-<li><a href="api/">API Reference</a> -- auto-generated reference from docstrings</li>
-<li><a href="examples/">Examples</a> -- runnable example scripts</li>
+<li><a href="getting-started/">Getting Started</a> — installation and first model</li>
+<li><a href="user-guide/building-models/">User Guide</a> — deep dive into each capability</li>
+<li><a href="api/">API Reference</a> — full module documentation</li>
+<li><a href="examples/">Examples</a> — runnable scripts for every feature</li>
 </ul>
 
 

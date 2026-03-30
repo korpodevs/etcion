@@ -1,84 +1,64 @@
 # etcion
 
-A Python library implementing the ArchiMate 3.2 metamodel.
+**Architecture as code.** Build, query, validate, and analyze enterprise architecture models in Python.
 
-## Overview
+## Why etcion?
 
-[ArchiMate 3.2](https://pubs.opengroup.org/architecture/archimate32-doc/) is The Open Group's enterprise architecture modeling language. It provides a uniform representation for diagrams that describe enterprise architectures across business, application, technology, and other domains.
+Enterprise architecture models are rich data structures — typed elements, directed relationships, cross-layer dependencies, governance rules. But most EA tooling treats them as static diagrams locked inside proprietary formats.
 
-**etcion** provides a complete, type-safe Python implementation of the ArchiMate 3.2 metamodel. It lets you programmatically create, validate, and serialize architecture models using plain Python objects backed by Pydantic.
+**etcion** turns your architecture into a first-class Python data structure. Once it's code, you can query it, validate it against rules, test what-if scenarios, diff versions, and integrate it with the rest of your analytical toolkit — pandas, networkx, Jupyter notebooks, CI/CD pipelines, or anything else Python touches.
 
-## Features
+Built on the [ArchiMate 3.2](https://pubs.opengroup.org/architecture/archimate32-doc/) metamodel. Compatible with [Archi](https://www.archimatetool.com/) via the Open Group Exchange Format.
 
-- **Complete ArchiMate 3.2 metamodel** -- all 7 layers, 58 concrete element types, 11 relationship types, and Junction
-- **Model validation** via `Model.validate()` -- checks every relationship against the specification's permission rules
-- **Declarative Appendix B permission table** -- the full normative relationship permission matrix from the spec, exposed via `is_permitted()`
-- **Viewpoint mechanism** -- Viewpoints, Views, and Concerns per Chapter 13
-- **Language customization** -- Profiles with specializations and extended attributes per Chapter 14
-- **XML serialization** -- Open Group ArchiMate Exchange Format, compatible with [Archi](https://www.archimatetool.com/)
-- **JSON serialization** -- lightweight alternative for web tooling and data pipelines
-- **Model comparison** -- structural diff engine for comparing model versions
-- **Derivation engine** -- relationship derivation following the specification's derivation rules
+## Key Capabilities
+
+- **Build** architecture models programmatically with type-safe Python objects
+- **Query** — filter by type, layer, aspect, name; traverse relationships; find connections
+- **Validate** — check every relationship against the ArchiMate permission matrix, enforce custom rules
+- **Pattern match** — define structural patterns, detect anti-patterns, find gaps in your architecture
+- **Analyze impact** — model what-if scenarios: remove, merge, replace elements and see the blast radius
+- **Serialize** — exchange with Archi and other tools via Open Group XML, or use lightweight JSON
+- **Compare** — diff two model versions, track changes over time
+- **Extend** — custom validation rules, profiles for language customization, plugin hooks
 
 ## Installation
 
 ```bash
-pip install etcion
+pip install etcion              # Core library
+pip install etcion[xml]         # + XML serialization (lxml)
+pip install etcion[graph]       # + Pattern matching & impact analysis (networkx)
 ```
 
-For XML serialization support (requires `lxml`):
-
-```bash
-pip install etcion[xml]
-```
-
-**Requires Python 3.12 or later.**
+Requires Python 3.12 or later.
 
 ## Quick Start
 
 ```python
 from etcion import (
-    ApplicationComponent,
-    ApplicationService,
-    Assignment,
-    BusinessProcess,
-    BusinessService,
-    Model,
-    Serving,
+    BusinessProcess, ApplicationService, ApplicationComponent,
+    Model, Serving, Assignment,
 )
 from etcion.serialization.xml import write_model
 
-# Create elements from different layers
-order_process = BusinessProcess(name="Order Handling")
-order_service = BusinessService(name="Order Service")
-crm = ApplicationComponent(name="CRM System")
-crm_api = ApplicationService(name="CRM API")
+# Build a model
+order_handling = BusinessProcess(name="Order Handling")
+api = ApplicationService(name="Order API")
+backend = ApplicationComponent(name="Order Service")
 
-# Create relationships (name is required)
-biz_serve = Serving(name="enables", source=order_service, target=order_process)
-app_assign = Assignment(name="exposes", source=crm, target=crm_api)
-cross_serve = Serving(name="supports", source=crm_api, target=order_process)
-
-# Build a model and validate
 model = Model(concepts=[
-    order_process, order_service, crm, crm_api,
-    biz_serve, app_assign, cross_serve,
+    order_handling, api, backend,
+    Serving(name="serves", source=api, target=order_handling),
+    Assignment(name="runs", source=backend, target=api),
 ])
 
+# Validate and export
 errors = model.validate()
-if errors:
-    for e in errors:
-        print(e)
-else:
-    print("Model is valid.")
-
-# Export to ArchiMate Exchange Format XML
 write_model(model, "architecture.xml", model_name="My Architecture")
 ```
 
 ## Next Steps
 
-- [Getting Started](getting-started.md) -- installation, first model, validation, export
-- [User Guide](user-guide/building-models.md) -- in-depth guides for each feature
-- [API Reference](api/index.md) -- auto-generated reference from docstrings
-- [Examples](examples/index.md) -- runnable example scripts
+- [Getting Started](getting-started.md) — installation and first model
+- [User Guide](user-guide/building-models.md) — deep dive into each capability
+- [API Reference](api/index.md) — full module documentation
+- [Examples](examples/index.md) — runnable scripts for every feature

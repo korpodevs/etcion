@@ -1359,6 +1359,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#etcion.metamodel.model.Model.to_networkx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_networkx
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#etcion.metamodel.model.Model.connected_to" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1760,6 +1771,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#etcion.metamodel.model.Model.to_networkx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_networkx
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#etcion.metamodel.model.Model.connected_to" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1914,11 +1936,15 @@ assert model[actor.id] is actor
 <span class="normal">46</span>
 <span class="normal">47</span>
 <span class="normal">48</span>
-<span class="normal">49</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concepts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Concept</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concepts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Concept</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_concepts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Concept</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_profiles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Profile</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_specialization_registry</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">Element</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_custom_rules</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ValidationRule</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Graph cache — invalidated by add() (ADR-041).</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_nx_graph</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">concepts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">concept</span><span class="p">)</span>
@@ -2046,9 +2072,7 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">53</span>
 <span class="normal">54</span>
 <span class="normal">55</span>
 <span class="normal">56</span>
@@ -2056,7 +2080,10 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 <span class="normal">58</span>
 <span class="normal">59</span>
 <span class="normal">60</span>
-<span class="normal">61</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a Concept to the model.</span>
 
 <span class="sd">    :raises TypeError: if *concept* is not a :class:`Concept` instance.</span>
@@ -2067,6 +2094,7 @@ instances (e.g. Junction) because connectors are not relationships.</p>
     <span class="k">if</span> <span class="n">concept</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_concepts</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duplicate concept ID: &#39;</span><span class="si">{</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_concepts</span><span class="p">[</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">concept</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_nx_graph</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># invalidate graph cache (ADR-041)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2091,10 +2119,7 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">75</span>
 <span class="normal">76</span>
 <span class="normal">77</span>
 <span class="normal">78</span>
@@ -2104,7 +2129,10 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 <span class="normal">82</span>
 <span class="normal">83</span>
 <span class="normal">84</span>
-<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">apply_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profile</span><span class="p">:</span> <span class="n">Profile</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">apply_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profile</span><span class="p">:</span> <span class="n">Profile</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a Profile with this model.</span>
 
 <span class="sd">    :raises TypeError: if *profile* is not a Profile instance.</span>
@@ -2143,10 +2171,7 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 87</span>
-<span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 90</span>
 <span class="normal"> 91</span>
 <span class="normal"> 92</span>
 <span class="normal"> 93</span>
@@ -2157,7 +2182,10 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 <span class="normal"> 98</span>
 <span class="normal"> 99</span>
 <span class="normal">100</span>
-<span class="normal">101</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_validation_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="n">ValidationRule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_validation_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="n">ValidationRule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a custom validation rule.</span>
 
 <span class="sd">    :param rule: An object implementing the</span>
@@ -2196,16 +2224,16 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">106</span>
 <span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
 <span class="normal">110</span>
 <span class="normal">111</span>
-<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">remove_validation_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="n">ValidationRule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">remove_validation_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="n">ValidationRule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove a previously registered custom validation rule.</span>
 
 <span class="sd">    :param rule: The exact rule instance to remove (identity match).</span>
@@ -2237,9 +2265,9 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">elements_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Element</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Element</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">elements_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Element</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Element</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return elements that are instances of *cls* (includes subclasses).&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)]</span>
 </code></pre></div></td></tr></table></div>
@@ -2264,9 +2292,9 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">elements_by_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Layer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Element</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">elements_by_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Layer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Element</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return elements whose class-level ``layer`` ClassVar matches.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="n">layer</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
@@ -2291,9 +2319,9 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">elements_by_aspect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aspect</span><span class="p">:</span> <span class="n">Aspect</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Element</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">elements_by_aspect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aspect</span><span class="p">:</span> <span class="n">Aspect</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Element</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return elements whose class-level ``aspect`` ClassVar matches.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">&quot;aspect&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="n">aspect</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
@@ -2319,15 +2347,15 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">153</span>
 <span class="normal">154</span>
 <span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
-<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">elements_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">regex</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Element</span><span class="p">]:</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">elements_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">regex</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Element</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return elements whose name contains *pattern* (substring).</span>
 
 <span class="sd">    When *regex* is ``True``, uses ``re.search(pattern, name)`` instead.</span>
@@ -2358,9 +2386,9 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">relationships_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Relationship</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Relationship</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">relationships_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Relationship</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Relationship</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return relationships that are instances of *cls* (includes subclasses).&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationships</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)]</span>
 </code></pre></div></td></tr></table></div>
@@ -2372,105 +2400,41 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="etcion.metamodel.model.Model.connected_to" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">connected_to</span><span class="p">(</span><span class="n">concept</span><span class="p">)</span></code>
+<h4 id="etcion.metamodel.model.Model.to_networkx" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">to_networkx</span><span class="p">()</span></code>
 
-<a href="#etcion.metamodel.model.Model.connected_to" class="headerlink" title="Permanent link">&para;</a></h4>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return all relationships where <em>concept</em> is source or target (identity check).</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connected_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Relationship</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return all relationships where *concept* is source or target (identity check).&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationships</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="n">concept</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="n">concept</span><span class="p">]</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h4 id="etcion.metamodel.model.Model.sources_of" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">sources_of</span><span class="p">(</span><span class="n">concept</span><span class="p">)</span></code>
-
-<a href="#etcion.metamodel.model.Model.sources_of" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#etcion.metamodel.model.Model.to_networkx" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
 
-        <p>Return source concepts of all relationships targeting <em>concept</em>.</p>
+        <p>Convert this model to a networkx MultiDiGraph.</p>
+<p>Nodes represent Elements and RelationshipConnectors (Junctions).
+Edges represent Relationships.  Results are cached; the cache is
+invalidated whenever :meth:<code>add</code> is called.</p>
+<p>Node attributes: <code>type</code> (Python class), <code>name</code>, <code>layer</code>,
+<code>aspect</code>, <code>concept</code> (back-reference to the Concept instance).</p>
+<p>Edge attributes: <code>type</code> (Python class), <code>name</code>, <code>rel_id</code>
+(the relationship's own ID), <code>relationship</code> (back-reference).</p>
+<p>Requires the <code>graph</code> extra::</p>
+<pre><code>pip install etcion[graph]
+</code></pre>
+<p>:raises ImportError: If <code>networkx</code> is not installed.
+:returns: A <code>networkx.MultiDiGraph</code> instance.</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">168</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">167</span>
+<span class="normal">168</span>
 <span class="normal">169</span>
-<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sources_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Concept</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return source concepts of all relationships targeting *concept*.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">source</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationships</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="n">concept</span><span class="p">]</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h4 id="etcion.metamodel.model.Model.targets_of" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">targets_of</span><span class="p">(</span><span class="n">concept</span><span class="p">)</span></code>
-
-<a href="#etcion.metamodel.model.Model.targets_of" class="headerlink" title="Permanent link">&para;</a></h4>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return target concepts of all relationships sourced from <em>concept</em>.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">172</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
 <span class="normal">173</span>
-<span class="normal">174</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">targets_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Concept</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return target concepts of all relationships sourced from *concept*.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">target</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationships</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="n">concept</span><span class="p">]</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h4 id="etcion.metamodel.model.Model.validate" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">validate</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
-
-<a href="#etcion.metamodel.model.Model.validate" class="headerlink" title="Permanent link">&para;</a></h4>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Run all model-level validation rules.</p>
-<p>Iterates all relationships and checks each against <code>is_permitted()</code>.</p>
-<p>:param strict: If <code>True</code>, raise on the first error instead of collecting.
-:returns: List of all :class:<code>~etcion.exceptions.ValidationError</code> instances found.
-:raises ValidationError: If <em>strict</em> is <code>True</code> and any violation is found.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">176</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
 <span class="normal">177</span>
 <span class="normal">178</span>
 <span class="normal">179</span>
@@ -2521,21 +2485,175 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 <span class="normal">224</span>
 <span class="normal">225</span>
 <span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
+<span class="normal">227</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">to_networkx</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert this model to a networkx MultiDiGraph.</span>
+
+<span class="sd">    Nodes represent Elements and RelationshipConnectors (Junctions).</span>
+<span class="sd">    Edges represent Relationships.  Results are cached; the cache is</span>
+<span class="sd">    invalidated whenever :meth:`add` is called.</span>
+
+<span class="sd">    Node attributes: ``type`` (Python class), ``name``, ``layer``,</span>
+<span class="sd">    ``aspect``, ``concept`` (back-reference to the Concept instance).</span>
+
+<span class="sd">    Edge attributes: ``type`` (Python class), ``name``, ``rel_id``</span>
+<span class="sd">    (the relationship&#39;s own ID), ``relationship`` (back-reference).</span>
+
+<span class="sd">    Requires the ``graph`` extra::</span>
+
+<span class="sd">        pip install etcion[graph]</span>
+
+<span class="sd">    :raises ImportError: If ``networkx`` is not installed.</span>
+<span class="sd">    :returns: A ``networkx.MultiDiGraph`` instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx_graph</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;networkx is required for graph operations. &quot;</span>
+            <span class="s2">&quot;Install it with: pip install etcion[graph]&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">etcion.metamodel.concepts</span><span class="w"> </span><span class="kn">import</span> <span class="n">RelationshipConnector</span>
+
+    <span class="n">g</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">()</span>
+
+    <span class="c1"># Add nodes: Elements and RelationshipConnectors (e.g. Junction).</span>
+    <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_concepts</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">concept</span><span class="p">,</span> <span class="p">(</span><span class="n">Element</span><span class="p">,</span> <span class="n">RelationshipConnector</span><span class="p">)):</span>
+            <span class="bp">cls</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">concept</span><span class="p">)</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">cls</span><span class="p">,</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">concept</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="s2">&quot;layer&quot;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="s2">&quot;aspect&quot;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">&quot;aspect&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="s2">&quot;concept&quot;</span><span class="p">:</span> <span class="n">concept</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
+
+    <span class="c1"># Add edges: one directed edge per Relationship.</span>
+    <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationships</span><span class="p">:</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span>  <span class="c1"># type: ignore[attr-defined]</span>
+            <span class="n">rel</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">rel</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">rel</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">rel</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">rel_id</span><span class="o">=</span><span class="n">rel</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">relationship</span><span class="o">=</span><span class="n">rel</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_nx_graph</span> <span class="o">=</span> <span class="n">g</span>
+    <span class="k">return</span> <span class="n">g</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="etcion.metamodel.model.Model.connected_to" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">connected_to</span><span class="p">(</span><span class="n">concept</span><span class="p">)</span></code>
+
+<a href="#etcion.metamodel.model.Model.connected_to" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return all relationships where <em>concept</em> is source or target (identity check).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">229</span>
 <span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
+<span class="normal">231</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connected_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Relationship</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return all relationships where *concept* is source or target (identity check).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationships</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="n">concept</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="n">concept</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="etcion.metamodel.model.Model.sources_of" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">sources_of</span><span class="p">(</span><span class="n">concept</span><span class="p">)</span></code>
+
+<a href="#etcion.metamodel.model.Model.sources_of" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return source concepts of all relationships targeting <em>concept</em>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">233</span>
 <span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
+<span class="normal">235</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sources_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Concept</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return source concepts of all relationships targeting *concept*.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">source</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationships</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="n">concept</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="etcion.metamodel.model.Model.targets_of" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">targets_of</span><span class="p">(</span><span class="n">concept</span><span class="p">)</span></code>
+
+<a href="#etcion.metamodel.model.Model.targets_of" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return target concepts of all relationships sourced from <em>concept</em>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">237</span>
 <span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
+<span class="normal">239</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">targets_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">concept</span><span class="p">:</span> <span class="n">Concept</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Concept</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return target concepts of all relationships sourced from *concept*.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">target</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">relationships</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="n">concept</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="etcion.metamodel.model.Model.validate" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">validate</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#etcion.metamodel.model.Model.validate" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Run all model-level validation rules.</p>
+<p>Iterates all relationships and checks each against <code>is_permitted()</code>.</p>
+<p>:param strict: If <code>True</code>, raise on the first error instead of collecting.
+:returns: List of all :class:<code>~etcion.exceptions.ValidationError</code> instances found.
+:raises ValidationError: If <em>strict</em> is <code>True</code> and any violation is found.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/etcion/metamodel/model.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">241</span>
 <span class="normal">242</span>
 <span class="normal">243</span>
 <span class="normal">244</span>
@@ -2603,7 +2721,72 @@ instances (e.g. Junction) because connectors are not relationships.</p>
 <span class="normal">306</span>
 <span class="normal">307</span>
 <span class="normal">308</span>
-<span class="normal">309</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ValidationError</span><span class="p">]:</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ValidationError</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run all model-level validation rules.</span>
 
 <span class="sd">    Iterates all relationships and checks each against ``is_permitted()``.</span>

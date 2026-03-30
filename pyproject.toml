@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "etcion"
-version = "0.1.0"
-description = "A Python library implementing the ArchiMate 3.2 metamodel"
+version = "0.2.0"
+description = "Architecture as code — build, query, validate, and analyze enterprise architecture models in Python"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
