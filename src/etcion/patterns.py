@@ -22,10 +22,11 @@ Reference: GitHub Issues #2, #3, ADR-041.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Iterator, Protocol
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Protocol
 
 __all__: list[str] = [
     "AntiPatternRule",
+    "CardinalityConstraint",
     "GapResult",
     "MatchResult",
     "Pattern",
@@ -35,11 +36,34 @@ __all__: list[str] = [
 
 from etcion.metamodel.concepts import Concept, Element, Relationship, RelationshipConnector
 
+# Sentinel used in node_match to distinguish "attribute absent" from None values.
+_SENTINEL = object()
+
+
+@dataclass(frozen=True)
+class CardinalityConstraint:
+    """Specifies a minimum or maximum count of edges of a given type on a pattern node.
+
+    :param alias: The pattern alias of the node to constrain.
+    :param rel_type: The :class:`~etcion.metamodel.concepts.Relationship` subclass to count.
+    :param min_count: Minimum number of edges required (inclusive).  ``None`` means no lower bound.
+    :param max_count: Maximum number of edges allowed (inclusive).  ``None`` means no upper bound.
+    :param direction: One of ``"incoming"``, ``"outgoing"``, or ``"any"``.
+    """
+
+    alias: str
+    rel_type: type
+    min_count: int | None = None
+    max_count: int | None = None
+    direction: str = "any"
+
+
 if TYPE_CHECKING:
     import networkx as nx
 
     from etcion.exceptions import ValidationError
     from etcion.metamodel.model import Model
+    from etcion.metamodel.viewpoints import Viewpoint
 
 
 @dataclass(frozen=True)
@@ -95,6 +119,45 @@ class _MatcherProto(Protocol):
         ...
 
 
+# ---------------------------------------------------------------------------
+# Lazy type-name -> class registry for JSON deserialization
+# ---------------------------------------------------------------------------
+
+_NAME_TO_CLASS: dict[str, type] | None = None
+
+
+def _get_name_to_class() -> dict[str, type]:
+    """Return a mapping of ``ClassName -> class`` for all :class:`Concept` subclasses.
+
+    Built lazily on first call and cached for subsequent calls.  Covers the
+    full metamodel hierarchy via recursive :meth:`__subclasses__` traversal.
+    """
+    global _NAME_TO_CLASS
+    if _NAME_TO_CLASS is not None:
+        return _NAME_TO_CLASS
+    registry: dict[str, type] = {}
+
+    def _collect(base: type) -> None:
+        for sub in base.__subclasses__():
+            registry[sub.__name__] = sub
+            _collect(sub)
+
+    # Trigger all lazy imports so every concrete subclass is registered.
+    import etcion.metamodel.application  # noqa: F401
+    import etcion.metamodel.business  # noqa: F401
+    import etcion.metamodel.elements  # noqa: F401
+    import etcion.metamodel.implementation_migration  # noqa: F401
+    import etcion.metamodel.motivation  # noqa: F401
+    import etcion.metamodel.physical  # noqa: F401
+    import etcion.metamodel.relationships  # noqa: F401
+    import etcion.metamodel.strategy  # noqa: F401
+    import etcion.metamodel.technology  # noqa: F401
+
+    _collect(Concept)
+    _NAME_TO_CLASS = registry
+    return registry
+
+
 class Pattern:
     """Fluent builder for a typed ArchiMate sub-graph pattern.
 
@@ -111,16 +174,20 @@ class Pattern:
     :attr edges: Ordered list of ``(source_alias, target_alias, rel_type)`` tuples.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, viewpoint: Viewpoint | None = None) -> None:
         self._nodes: dict[str, type] = {}
         self._edges: list[tuple[str, str, type]] = []
+        self._constraints: dict[str, dict[str, object]] = {}
+        self._predicates: dict[str, list[Callable[[Concept], bool]]] = {}
+        self._cardinality: list[CardinalityConstraint] = []
+        self._viewpoint: Viewpoint | None = viewpoint
 
     # ------------------------------------------------------------------
     # Fluent API
     # ------------------------------------------------------------------
 
-    def node(self, alias: str, element_type: type) -> Pattern:
-        """Register a typed node placeholder.
+    def node(self, alias: str, element_type: type, **constraints: object) -> Pattern:
+        """Register a typed node placeholder with optional exact-match attribute constraints.
 
         :param alias: Unique string identifier for this placeholder within the
             pattern.
@@ -129,8 +196,13 @@ class Pattern:
             :class:`~etcion.metamodel.concepts.RelationshipConnector`.
             Abstract base classes (e.g. ``BehaviorElement``) are accepted for
             broad matching.
+        :param constraints: Optional keyword arguments specifying exact-match
+            attribute constraints (e.g. ``name="Alice"``).  Each key must be a
+            valid field name on *element_type*; unrecognised keys raise
+            :exc:`ValueError` immediately at definition time.
         :returns: ``self`` for method chaining.
-        :raises ValueError: If *alias* has already been registered.
+        :raises ValueError: If *alias* has already been registered, or if a
+            constraint key is not a recognised field on *element_type*.
         :raises TypeError: If *element_type* is not a subclass of
             :class:`~etcion.metamodel.concepts.Element` or
             :class:`~etcion.metamodel.concepts.RelationshipConnector`.
@@ -147,6 +219,25 @@ class Pattern:
                 f"element_type must be a subclass of Element or RelationshipConnector, "
                 f"got {element_type!r}."
             )
+        if self._viewpoint is not None:
+            permitted = self._viewpoint.permitted_concept_types
+            if not any(issubclass(element_type, t) for t in permitted):
+                raise ValueError(
+                    f"{element_type.__name__} not permitted by viewpoint "
+                    f"'{self._viewpoint.name}'"
+                )
+        if constraints:
+            valid_fields: set[str] = set()
+            for cls in element_type.__mro__:
+                if hasattr(cls, "model_fields"):
+                    valid_fields.update(cls.model_fields.keys())
+            for field_name in constraints:
+                if field_name not in valid_fields:
+                    raise ValueError(
+                        f"Unknown field '{field_name}' for {element_type.__name__}. "
+                        f"Valid fields: {sorted(valid_fields)}"
+                    )
+            self._constraints[alias] = dict(constraints)
         self._nodes[alias] = element_type
         return self
 
@@ -177,7 +268,100 @@ class Pattern:
             )
         if not (isinstance(rel_type, type) and issubclass(rel_type, Relationship)):
             raise TypeError(f"rel_type must be a subclass of Relationship, got {rel_type!r}.")
+        if self._viewpoint is not None:
+            permitted = self._viewpoint.permitted_concept_types
+            if not any(issubclass(rel_type, t) for t in permitted):
+                raise ValueError(
+                    f"{rel_type.__name__} not permitted by viewpoint "
+                    f"'{self._viewpoint.name}'"
+                )
         self._edges.append((source_alias, target_alias, rel_type))
+        return self
+
+    def where(self, alias: str, predicate: Callable[[Concept], bool]) -> Pattern:
+        """Register an arbitrary predicate filter for a pattern node.
+
+        Unlike the keyword constraints accepted by :meth:`node`, ``where``
+        accepts any callable that takes a
+        :class:`~etcion.metamodel.concepts.Concept` and returns ``bool``.
+        Multiple ``where`` calls on the same alias are ANDed together — a
+        model node must satisfy *all* registered predicates to match.
+
+        :param alias: The alias of the node to constrain.  Must already be
+            registered via :meth:`node`.
+        :param predicate: A callable ``(concept) -> bool``.  Return ``True``
+            to allow a match, ``False`` to reject it.
+        :returns: ``self`` for method chaining.
+        :raises ValueError: If *alias* has not yet been registered with
+            :meth:`node`.
+        """
+        if alias not in self._nodes:
+            raise ValueError(f"Unknown alias '{alias}': register it with .node() first.")
+        self._predicates.setdefault(alias, []).append(predicate)
+        return self
+
+    def min_edges(
+        self,
+        alias: str,
+        rel_type: type,
+        *,
+        count: int = 1,
+        direction: str = "any",
+    ) -> Pattern:
+        """Require at least *count* edges of *rel_type* on the node bound to *alias*.
+
+        :param alias: The pattern alias of the node to constrain.  Must already
+            be registered via :meth:`node`.
+        :param rel_type: A subclass of
+            :class:`~etcion.metamodel.concepts.Relationship` to count.
+        :param count: Minimum number of edges required (default 1).
+        :param direction: ``"incoming"``, ``"outgoing"``, or ``"any"``
+            (default ``"any"``).
+        :returns: ``self`` for method chaining.
+        :raises ValueError: If *alias* is not a registered alias.
+        """
+        if alias not in self._nodes:
+            raise ValueError(f"Unknown alias '{alias}'")
+        self._cardinality.append(
+            CardinalityConstraint(
+                alias=alias,
+                rel_type=rel_type,
+                min_count=count,
+                direction=direction,
+            )
+        )
+        return self
+
+    def max_edges(
+        self,
+        alias: str,
+        rel_type: type,
+        *,
+        count: int,
+        direction: str = "any",
+    ) -> Pattern:
+        """Require at most *count* edges of *rel_type* on the node bound to *alias*.
+
+        :param alias: The pattern alias of the node to constrain.  Must already
+            be registered via :meth:`node`.
+        :param rel_type: A subclass of
+            :class:`~etcion.metamodel.concepts.Relationship` to count.
+        :param count: Maximum number of edges allowed.
+        :param direction: ``"incoming"``, ``"outgoing"``, or ``"any"``
+            (default ``"any"``).
+        :returns: ``self`` for method chaining.
+        :raises ValueError: If *alias* is not a registered alias.
+        """
+        if alias not in self._nodes:
+            raise ValueError(f"Unknown alias '{alias}'")
+        self._cardinality.append(
+            CardinalityConstraint(
+                alias=alias,
+                rel_type=rel_type,
+                max_count=count,
+                direction=direction,
+            )
+        )
         return self
 
     # ------------------------------------------------------------------
@@ -193,6 +377,163 @@ class Pattern:
     def edges(self) -> list[tuple[str, str, type]]:
         """Read-only list of ``(source_alias, target_alias, rel_type)`` tuples."""
         return list(self._edges)
+
+    # ------------------------------------------------------------------
+    # Composition
+    # ------------------------------------------------------------------
+
+    def compose(self, other: Pattern) -> Pattern:
+        """Return a new Pattern merging nodes, edges, constraints, predicates, and
+        cardinality from both ``self`` and *other*.
+
+        Nodes whose alias appears in both patterns must map to the same type;
+        conflicting types raise :exc:`ValueError`.  Neither input pattern is
+        mutated.
+
+        :param other: A second :class:`Pattern` to compose with this one.
+        :returns: A new :class:`Pattern` containing the union of both patterns.
+        :raises ValueError: If a shared alias maps to different types in the
+            two patterns.
+        """
+        result = Pattern()
+        # Merge nodes — left side first, then right with conflict check.
+        for alias, elem_type in self._nodes.items():
+            result._nodes[alias] = elem_type
+        for alias, elem_type in other._nodes.items():
+            if alias in result._nodes and result._nodes[alias] is not elem_type:
+                raise ValueError(
+                    f"Alias '{alias}' has conflicting types: "
+                    f"{result._nodes[alias].__name__} vs {elem_type.__name__}"
+                )
+            result._nodes[alias] = elem_type
+        # Merge edges.
+        result._edges = list(self._edges) + list(other._edges)
+        # Merge keyword constraints.
+        for alias, cons in self._constraints.items():
+            result._constraints[alias] = dict(cons)
+        for alias, cons in other._constraints.items():
+            result._constraints.setdefault(alias, {}).update(cons)
+        # Merge predicates.
+        for alias, preds in self._predicates.items():
+            result._predicates[alias] = list(preds)
+        for alias, preds in other._predicates.items():
+            result._predicates.setdefault(alias, []).extend(preds)
+        # Merge cardinality.
+        result._cardinality = list(self._cardinality) + list(other._cardinality)
+        return result
+
+    # ------------------------------------------------------------------
+    # Serialization
+    # ------------------------------------------------------------------
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize this pattern to a plain Python dictionary suitable for JSON encoding.
+
+        The returned dict has the schema::
+
+            {
+                "version": 1,
+                "nodes": {
+                    "<alias>": {
+                        "type": "<ClassName>",
+                        "constraints": {"<field>": "<value>", ...}  # omitted when empty
+                    }, ...
+                },
+                "edges": [
+                    {"source": "<alias>", "target": "<alias>", "type": "<ClassName>"}, ...
+                ],
+                "cardinality": [  # omitted when empty
+                    {
+                        "alias": ..., "rel_type": ...,
+                        "min_count": ..., "max_count": ..., "direction": ...
+                    }, ...
+                ]
+            }
+
+        .. note::
+            Lambda predicates registered via :meth:`where` are **not** included
+            in the output; they cannot be serialized.  Re-attach them manually
+            after :meth:`from_dict` if required.
+
+        :returns: A JSON-serializable :class:`dict`.
+        """
+        nodes: dict[str, dict[str, Any]] = {}
+        for alias, elem_type in self._nodes.items():
+            entry: dict[str, Any] = {"type": elem_type.__name__}
+            if alias in self._constraints:
+                entry["constraints"] = {k: str(v) for k, v in self._constraints[alias].items()}
+            nodes[alias] = entry
+
+        edges = [
+            {"source": src, "target": tgt, "type": rel.__name__} for src, tgt, rel in self._edges
+        ]
+        cardinality = [
+            {
+                "alias": cc.alias,
+                "rel_type": cc.rel_type.__name__,
+                "min_count": cc.min_count,
+                "max_count": cc.max_count,
+                "direction": cc.direction,
+            }
+            for cc in self._cardinality
+        ]
+        result: dict[str, Any] = {"version": 1, "nodes": nodes, "edges": edges}
+        if cardinality:
+            result["cardinality"] = cardinality
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Pattern:
+        """Reconstruct a :class:`Pattern` from a dict produced by :meth:`to_dict`.
+
+        :param data: A dict with the schema emitted by :meth:`to_dict`.
+        :returns: A new :class:`Pattern` instance.
+        :raises ValueError: If a type name in *data* is not found in the
+            metamodel type registry.
+        """
+        registry = _get_name_to_class()
+        p = cls()
+        for alias, node_data in data["nodes"].items():
+            type_name: str = node_data["type"]
+            if type_name not in registry:
+                raise ValueError(
+                    f"Unknown type: '{type_name}'. "
+                    "Ensure the type name matches a registered Concept subclass."
+                )
+            elem_type = registry[type_name]
+            constraints: dict[str, Any] = node_data.get("constraints", {})
+            p.node(alias, elem_type, **constraints)
+        for edge_data in data["edges"]:
+            type_name = edge_data["type"]
+            if type_name not in registry:
+                raise ValueError(
+                    f"Unknown type: '{type_name}'. "
+                    "Ensure the type name matches a registered Concept subclass."
+                )
+            p.edge(edge_data["source"], edge_data["target"], registry[type_name])
+        for cc_data in data.get("cardinality", []):
+            type_name = cc_data["rel_type"]
+            if type_name not in registry:
+                raise ValueError(
+                    f"Unknown type: '{type_name}'. "
+                    "Ensure the type name matches a registered Concept subclass."
+                )
+            rel_type = registry[type_name]
+            if cc_data.get("min_count") is not None:
+                p.min_edges(
+                    cc_data["alias"],
+                    rel_type,
+                    count=cc_data["min_count"],
+                    direction=cc_data.get("direction", "any"),
+                )
+            if cc_data.get("max_count") is not None:
+                p.max_edges(
+                    cc_data["alias"],
+                    rel_type,
+                    count=cc_data["max_count"],
+                    direction=cc_data.get("direction", "any"),
+                )
+        return p
 
     # ------------------------------------------------------------------
     # Graph conversion
@@ -233,7 +574,27 @@ class Pattern:
             p_type = pattern_attrs["type"]
             if not (isinstance(m_type, type) and isinstance(p_type, type)):
                 return False
-            return issubclass(m_type, p_type)
+            if not issubclass(m_type, p_type):
+                return False
+            # Exact-match keyword constraints and arbitrary predicates require
+            # access to the actual Concept instance stored on the model node.
+            concept_raw = model_attrs.get("concept")
+            if isinstance(concept_raw, Concept):
+                constraints_raw = pattern_attrs.get("constraints", {})
+                constraints: dict[str, object] = (
+                    constraints_raw if isinstance(constraints_raw, dict) else {}
+                )
+                for field_name, expected in constraints.items():
+                    if getattr(concept_raw, field_name, _SENTINEL) != expected:
+                        return False
+                predicates_raw = pattern_attrs.get("predicates", [])
+                predicates: list[Callable[[Concept], bool]] = (
+                    predicates_raw if isinstance(predicates_raw, list) else []
+                )
+                for pred in predicates:
+                    if not pred(concept_raw):
+                        return False
+            return True
 
         def edge_match(
             model_edges: dict[int, dict[str, object]],
@@ -260,6 +621,32 @@ class Pattern:
                 edge_match=edge_match,
             ),
         )
+
+    def _check_cardinality(self, match_result: MatchResult, model: Model) -> bool:
+        """Return True if all cardinality constraints are satisfied for this match.
+
+        :param match_result: The :class:`MatchResult` to evaluate.
+        :param model: The :class:`~etcion.metamodel.model.Model` to query.
+        :returns: ``True`` when every :class:`CardinalityConstraint` is met.
+        """
+        for cc in self._cardinality:
+            concept = match_result[cc.alias]
+            connected = model.connected_to(concept)
+            count = 0
+            for rel in connected:
+                if not isinstance(rel, cc.rel_type):
+                    continue
+                if cc.direction == "incoming" and rel.target is concept:
+                    count += 1
+                elif cc.direction == "outgoing" and rel.source is concept:
+                    count += 1
+                elif cc.direction == "any":
+                    count += 1
+            if cc.min_count is not None and count < cc.min_count:
+                return False
+            if cc.max_count is not None and count > cc.max_count:
+                return False
+        return True
 
     def match(self, model: Model) -> list[MatchResult]:
         """Find all subgraph matches of this pattern within *model*.
@@ -316,6 +703,10 @@ class Pattern:
                 mapping[pattern_alias] = node_data["concept"]
 
             results.append(MatchResult(mapping=mapping))
+
+        # Post-filter: remove matches that violate cardinality constraints.
+        if self._cardinality:
+            results = [r for r in results if self._check_cardinality(r, model)]
 
         return results
 
@@ -428,6 +819,30 @@ class Pattern:
                 )
                 if not has_match:
                     missing.append(f"No {rel_type.__name__} edge from any {other_type.__name__}")
+        # Check cardinality constraints for this anchor.
+        for cc in self._cardinality:
+            if cc.alias != anchor:
+                continue
+            count = 0
+            for rel in connected:
+                if not isinstance(rel, cc.rel_type):
+                    continue
+                if cc.direction == "incoming" and rel.target is elem:
+                    count += 1
+                elif cc.direction == "outgoing" and rel.source is elem:
+                    count += 1
+                elif cc.direction == "any":
+                    count += 1
+            if cc.min_count is not None and count < cc.min_count:
+                missing.append(
+                    f"Requires at least {cc.min_count} {cc.direction} "
+                    f"{cc.rel_type.__name__} edges, found {count}"
+                )
+            if cc.max_count is not None and count > cc.max_count:
+                missing.append(
+                    f"Requires at most {cc.max_count} {cc.direction} "
+                    f"{cc.rel_type.__name__} edges, found {count}"
+                )
         return missing
 
     def to_networkx(self) -> nx.MultiDiGraph:
@@ -458,7 +873,12 @@ class Pattern:
         g: object = nx.MultiDiGraph()
 
         for alias, elem_type in self._nodes.items():
-            g.add_node(alias, type=elem_type)  # type: ignore[attr-defined]
+            g.add_node(  # type: ignore[attr-defined]
+                alias,
+                type=elem_type,
+                constraints=self._constraints.get(alias, {}),
+                predicates=self._predicates.get(alias, []),
+            )
 
         for src_alias, tgt_alias, rel_type in self._edges:
             g.add_edge(src_alias, tgt_alias, type=rel_type)  # type: ignore[attr-defined]

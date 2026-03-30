@@ -1473,3 +1473,948 @@ class TestRequiredPatternRule:
         descriptions = [str(e) for e in errors]
         assert any("Every BusinessProcess must be served" in d for d in descriptions)
         assert any("Actors must not directly assign" in d for d in descriptions)
+
+
+# ---------------------------------------------------------------------------
+# TestNodeAttributeConstraints — Issue #16
+# ---------------------------------------------------------------------------
+
+
+class TestNodeAttributeConstraints:
+    """Tests for keyword-argument exact-match constraints on .node() — GitHub Issue #16.
+
+    All tests require networkx (module-level importorskip already guards the
+    whole module past the to_networkx section).
+    """
+
+    def test_keyword_name_matches(self) -> None:
+        """node('a', BusinessActor, name='Alice') matches only a BusinessActor named 'Alice'."""
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        alice = BusinessActor(name="Alice")
+        bob = BusinessActor(name="Bob")
+        proc = BusinessProcess(name="Proc")
+        rel_alice = Assignment(name="r1", source=alice, target=proc)
+        rel_bob = Assignment(name="r2", source=bob, target=proc)
+        model = Model(concepts=[alice, bob, proc, rel_alice, rel_bob])
+
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor, name="Alice")
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+        )
+        results = pattern.match(model)
+        assert len(results) == 1
+        assert results[0]["actor"] is alice
+
+    def test_keyword_name_no_match(self) -> None:
+        """node with name='Alice' returns no matches when model only has 'Bob'."""
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        bob = BusinessActor(name="Bob")
+        proc = BusinessProcess(name="Proc")
+        rel = Assignment(name="r1", source=bob, target=proc)
+        model = Model(concepts=[bob, proc, rel])
+
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor, name="Alice")
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+        )
+        results = pattern.match(model)
+        assert results == []
+
+    def test_keyword_specialization(self) -> None:
+        """node with specialization='Manager' matches only that BusinessActor."""
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        manager = BusinessActor(name="Alice", specialization="Manager")
+        plain = BusinessActor(name="Bob")
+        proc = BusinessProcess(name="Proc")
+        rel_manager = Assignment(name="r1", source=manager, target=proc)
+        rel_plain = Assignment(name="r2", source=plain, target=proc)
+        model = Model(concepts=[manager, plain, proc, rel_manager, rel_plain])
+
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor, specialization="Manager")
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+        )
+        results = pattern.match(model)
+        assert len(results) == 1
+        assert results[0]["actor"] is manager
+
+    def test_invalid_keyword_field_raises(self) -> None:
+        """.node('a', BusinessActor, nonexistent_field='x') raises ValueError at definition time."""
+        from etcion.patterns import Pattern
+
+        with pytest.raises(ValueError, match="nonexistent_field"):
+            Pattern().node("a", BusinessActor, nonexistent_field="x")
+
+
+# ---------------------------------------------------------------------------
+# TestWherePredicates — Issue #16
+# ---------------------------------------------------------------------------
+
+
+class TestWherePredicates:
+    """Tests for the .where() predicate filter API — GitHub Issue #16."""
+
+    def test_where_predicate_filters(self) -> None:
+        """.where('a', lambda e: e.name.startswith('A')) matches 'Alice' but not 'Bob'."""
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        alice = BusinessActor(name="Alice")
+        bob = BusinessActor(name="Bob")
+        proc = BusinessProcess(name="Proc")
+        rel_alice = Assignment(name="r1", source=alice, target=proc)
+        rel_bob = Assignment(name="r2", source=bob, target=proc)
+        model = Model(concepts=[alice, bob, proc, rel_alice, rel_bob])
+
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+            .where("actor", lambda e: e.name.startswith("A"))
+        )
+        results = pattern.match(model)
+        assert len(results) == 1
+        assert results[0]["actor"] is alice
+
+    def test_where_multiple_anded(self) -> None:
+        """Two .where() calls on the same alias — both predicates must pass."""
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        alice_mgr = BusinessActor(name="Alice", specialization="Manager")
+        alice_eng = BusinessActor(name="Alice", specialization="Engineer")
+        proc = BusinessProcess(name="Proc")
+        rel1 = Assignment(name="r1", source=alice_mgr, target=proc)
+        rel2 = Assignment(name="r2", source=alice_eng, target=proc)
+        model = Model(concepts=[alice_mgr, alice_eng, proc, rel1, rel2])
+
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+            .where("actor", lambda e: e.name == "Alice")
+            .where("actor", lambda e: e.specialization == "Manager")
+        )
+        results = pattern.match(model)
+        assert len(results) == 1
+        assert results[0]["actor"] is alice_mgr
+
+    def test_where_unknown_alias_raises(self) -> None:
+        """.where('nonexistent', ...) raises ValueError before .node() registers that alias."""
+        from etcion.patterns import Pattern
+
+        with pytest.raises(ValueError, match="nonexistent"):
+            Pattern().where("nonexistent", lambda e: True)
+
+    def test_where_chaining(self) -> None:
+        """.where() returns self to enable method chaining."""
+        from etcion.patterns import Pattern
+
+        p = Pattern().node("a", BusinessActor)
+        result = p.where("a", lambda e: True)
+        assert result is p
+
+
+# ---------------------------------------------------------------------------
+# TestConstraintsWithMatch — Issue #16
+# ---------------------------------------------------------------------------
+
+
+class TestConstraintsWithMatch:
+    """Integration tests confirming constraints propagate through match/exists/gaps."""
+
+    @staticmethod
+    def _make_named_model() -> object:
+        """Return a model with two actors ('Alice', 'Bob') each assigned to their own process."""
+        from etcion.metamodel.model import Model
+
+        alice = BusinessActor(name="Alice")
+        bob = BusinessActor(name="Bob")
+        proc_a = BusinessProcess(name="ProcA")
+        proc_b = BusinessProcess(name="ProcB")
+        rel_a = Assignment(name="r1", source=alice, target=proc_a)
+        rel_b = Assignment(name="r2", source=bob, target=proc_b)
+        return Model(concepts=[alice, bob, proc_a, proc_b, rel_a, rel_b])
+
+    def test_constrained_pattern_match(self) -> None:
+        """Keyword + where together: only the subgraph with 'Alice' whose name starts with 'A'."""
+        from etcion.patterns import Pattern
+
+        model = self._make_named_model()
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor, name="Alice")
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+            .where("actor", lambda e: e.name.startswith("A"))
+        )
+        results = pattern.match(model)
+        assert len(results) == 1
+        assert results[0]["actor"].name == "Alice"
+
+    def test_constrained_pattern_exists(self) -> None:
+        """exists() returns True when constraints are satisfied, False when not."""
+        from etcion.patterns import Pattern
+
+        model = self._make_named_model()
+
+        pattern_found = (
+            Pattern()
+            .node("actor", BusinessActor, name="Alice")
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+        )
+        assert pattern_found.exists(model) is True
+
+        pattern_not_found = (
+            Pattern()
+            .node("actor", BusinessActor, name="Charlie")
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+        )
+        assert pattern_not_found.exists(model) is False
+
+    def test_constrained_pattern_gaps(self) -> None:
+        """gaps() respects constraints — 'Bob' matches the type but fails name='Alice' constraint.
+
+        With anchor='actor' and name='Alice': Alice participates in a match,
+        Bob does not (type matches, constraint fails).  However, gaps() uses
+        elements_of_type(anchor_type) for the candidate set, which will include
+        both Alice and Bob.  Only Alice appears in match results, so Bob is a gap.
+        """
+        from etcion.patterns import Pattern
+
+        model = self._make_named_model()
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor, name="Alice")
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+        )
+        gaps = pattern.gaps(model, anchor="actor")
+        # Alice matches; Bob is a gap (type-correct but constraint-failing).
+        assert len(gaps) == 1
+        assert gaps[0].element.name == "Bob"
+
+
+# ---------------------------------------------------------------------------
+# TestMinEdges — Issue #17
+# ---------------------------------------------------------------------------
+
+
+class TestMinEdges:
+    """Tests for Pattern.min_edges() cardinality constraint — GitHub Issue #17.
+
+    All tests require networkx (module-level importorskip already guards the
+    whole module past the to_networkx section).
+    """
+
+    pytest.importorskip("networkx")
+
+    @staticmethod
+    def _two_proc_model() -> object:
+        """Return a Model with two BusinessProcesses.
+
+        proc_rich has 2 incoming Assignment edges (from actor1 and actor2).
+        proc_lean has 1 incoming Assignment edge (from actor3 only).
+        """
+        from etcion.metamodel.model import Model
+
+        actor1 = BusinessActor(name="Actor1")
+        actor2 = BusinessActor(name="Actor2")
+        actor3 = BusinessActor(name="Actor3")
+        proc_rich = BusinessProcess(name="RichProcess")
+        proc_lean = BusinessProcess(name="LeanProcess")
+        rel1 = Assignment(name="r1", source=actor1, target=proc_rich)
+        rel2 = Assignment(name="r2", source=actor2, target=proc_rich)
+        rel3 = Assignment(name="r3", source=actor3, target=proc_lean)
+        return Model(concepts=[actor1, actor2, actor3, proc_rich, proc_lean, rel1, rel2, rel3])
+
+    def test_min_edges_filters_matches(self) -> None:
+        """Requiring min 2 incoming Assignment edges keeps only proc_rich."""
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        model = self._two_proc_model()
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+            .min_edges("proc", Assignment, count=2, direction="incoming")
+        )
+        results = pattern.match(model)
+        matched_procs = {r["proc"].name for r in results}
+        assert "RichProcess" in matched_procs
+        assert "LeanProcess" not in matched_procs
+
+    def test_min_edges_direction_incoming(self) -> None:
+        """min_edges with direction='incoming' only counts edges where the node is target."""
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        # proc_rich has 2 incoming Assignment edges, 0 outgoing.
+        # With direction='incoming' and count=2 it should still match.
+        model = self._two_proc_model()
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+            .min_edges("proc", Assignment, count=2, direction="incoming")
+        )
+        results = pattern.match(model)
+        matched_procs = {r["proc"].name for r in results}
+        assert "RichProcess" in matched_procs
+
+    def test_min_edges_direction_outgoing(self) -> None:
+        """min_edges with direction='outgoing' counts only edges where node is source.
+
+        The two actors each have 1 outgoing Assignment edge.  Requiring min 2
+        outgoing Assignment edges on the actor node should filter both out.
+        """
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        model = self._two_proc_model()
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+            .min_edges("actor", Assignment, count=2, direction="outgoing")
+        )
+        results = pattern.match(model)
+        assert results == []
+
+    def test_min_edges_direction_any(self) -> None:
+        """min_edges with direction='any' counts edges in both directions."""
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        # Build a model where an actor has 1 incoming Serving AND 1 outgoing Assignment.
+        actor = BusinessActor(name="Pivot")
+        proc = BusinessProcess(name="Proc")
+        role = BusinessRole(name="Role")
+        rel_in = Serving(name="r_in", source=role, target=actor)
+        rel_out = Assignment(name="r_out", source=actor, target=proc)
+        model = Model(concepts=[actor, proc, role, rel_in, rel_out])
+
+        # Pattern only registers what we need for the match; cardinality counts ALL connected.
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+            .min_edges("actor", Assignment, count=1, direction="any")
+        )
+        results = pattern.match(model)
+        assert len(results) == 1
+        assert results[0]["actor"] is actor
+
+    def test_min_edges_unknown_alias_raises(self) -> None:
+        """min_edges with an alias not registered via .node() raises ValueError."""
+        from etcion.patterns import Pattern
+
+        p = Pattern().node("actor", BusinessActor)
+        with pytest.raises(ValueError, match="nonexistent"):
+            p.min_edges("nonexistent", Assignment, count=1)
+
+    def test_min_edges_chaining(self) -> None:
+        """min_edges() returns self to enable method chaining."""
+        from etcion.patterns import Pattern
+
+        p = Pattern().node("actor", BusinessActor).node("proc", BusinessProcess)
+        result = p.min_edges("proc", Assignment, count=1)
+        assert result is p
+
+
+# ---------------------------------------------------------------------------
+# TestMaxEdges — Issue #17
+# ---------------------------------------------------------------------------
+
+
+class TestMaxEdges:
+    """Tests for Pattern.max_edges() cardinality constraint — GitHub Issue #17."""
+
+    pytest.importorskip("networkx")
+
+    def test_max_edges_filters_matches(self) -> None:
+        """Requiring max 1 incoming Assignment edges excludes proc_rich (has 2)."""
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        actor1 = BusinessActor(name="A1")
+        actor2 = BusinessActor(name="A2")
+        proc_two = BusinessProcess(name="TwoAssignments")
+        proc_one = BusinessProcess(name="OneAssignment")
+        rel1 = Assignment(name="r1", source=actor1, target=proc_two)
+        rel2 = Assignment(name="r2", source=actor2, target=proc_two)
+        rel3 = Assignment(name="r3", source=actor1, target=proc_one)
+        model = Model(concepts=[actor1, actor2, proc_two, proc_one, rel1, rel2, rel3])
+
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+            .max_edges("proc", Assignment, count=1, direction="incoming")
+        )
+        results = pattern.match(model)
+        matched_procs = {r["proc"].name for r in results}
+        assert "OneAssignment" in matched_procs
+        assert "TwoAssignments" not in matched_procs
+
+
+# ---------------------------------------------------------------------------
+# TestCardinalityWithGaps — Issue #17
+# ---------------------------------------------------------------------------
+
+
+class TestCardinalityWithGaps:
+    """Tests for cardinality violations surfaced in gaps() — GitHub Issue #17."""
+
+    pytest.importorskip("networkx")
+
+    def test_gaps_reports_cardinality_violation(self) -> None:
+        """Element matching type but failing min_edges cardinality appears in gaps().
+
+        The gap's missing list must include a human-readable description like
+        'Requires at least 2 incoming Assignment edges, found 1'.
+        """
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        actor_rich = BusinessActor(name="RichActor")
+        actor_poor = BusinessActor(name="PoorActor")
+        proc = BusinessProcess(name="Proc1")
+        proc2 = BusinessProcess(name="Proc2")
+        rel1 = Assignment(name="r1", source=actor_rich, target=proc)
+        rel2 = Assignment(name="r2", source=actor_rich, target=proc2)
+        rel3 = Assignment(name="r3", source=actor_poor, target=proc)
+        model = Model(concepts=[actor_rich, actor_poor, proc, proc2, rel1, rel2, rel3])
+
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+            .min_edges("actor", Assignment, count=2, direction="outgoing")
+        )
+        gaps = pattern.gaps(model, anchor="actor")
+        gap_names = {g.element.name for g in gaps}
+        assert "PoorActor" in gap_names
+        assert "RichActor" not in gap_names
+
+        poor_gap = next(g for g in gaps if g.element.name == "PoorActor")
+        combined = " ".join(poor_gap.missing)
+        assert "2" in combined
+        assert "Assignment" in combined
+        assert "outgoing" in combined
+        assert "found 1" in combined
+
+
+# ---------------------------------------------------------------------------
+# TestCardinalityComposesWithConstraints — Issue #17
+# ---------------------------------------------------------------------------
+
+
+class TestCardinalityComposesWithConstraints:
+    """Tests confirming cardinality constraints compose with attribute constraints."""
+
+    pytest.importorskip("networkx")
+
+    def test_cardinality_plus_attribute_constraint(self) -> None:
+        """Both attribute constraint (name='Alice') and min_edges must pass for a match.
+
+        Alice has 2 outgoing Assignments — passes cardinality.
+        Alice-wrong-name has 2 outgoing Assignments but name doesn't match — excluded.
+        Bob has name='Bob' but only 1 outgoing Assignment — excluded by cardinality.
+        Only Alice passes both.
+        """
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        alice = BusinessActor(name="Alice")
+        not_alice = BusinessActor(name="NotAlice")
+        bob = BusinessActor(name="Bob")
+        proc1 = BusinessProcess(name="P1")
+        proc2 = BusinessProcess(name="P2")
+        proc3 = BusinessProcess(name="P3")
+        proc4 = BusinessProcess(name="P4")
+        proc5 = BusinessProcess(name="P5")
+
+        # Alice: 2 outgoing Assignments (passes both).
+        rel1 = Assignment(name="r1", source=alice, target=proc1)
+        rel2 = Assignment(name="r2", source=alice, target=proc2)
+        # NotAlice: 2 outgoing Assignments but wrong name (passes cardinality, fails attribute).
+        rel3 = Assignment(name="r3", source=not_alice, target=proc3)
+        rel4 = Assignment(name="r4", source=not_alice, target=proc4)
+        # Bob: 1 outgoing Assignment (passes attribute if name='Bob', fails cardinality).
+        rel5 = Assignment(name="r5", source=bob, target=proc5)
+
+        model = Model(
+            concepts=[
+                alice,
+                not_alice,
+                bob,
+                proc1,
+                proc2,
+                proc3,
+                proc4,
+                proc5,
+                rel1,
+                rel2,
+                rel3,
+                rel4,
+                rel5,
+            ]
+        )
+
+        pattern = (
+            Pattern()
+            .node("actor", BusinessActor, name="Alice")
+            .node("proc", BusinessProcess)
+            .edge("actor", "proc", Assignment)
+            .min_edges("actor", Assignment, count=2, direction="outgoing")
+        )
+        results = pattern.match(model)
+        matched_actors = {r["actor"].name for r in results}
+        assert matched_actors == {"Alice"}
+
+
+# ---------------------------------------------------------------------------
+# TestCompose — Pattern.compose() — GitHub Issue #18
+# ---------------------------------------------------------------------------
+
+
+class TestCompose:
+    """Tests for Pattern.compose(), which returns a new immutable-style Pattern
+    merging nodes, edges, constraints, predicates, and cardinality from both
+    operands without mutating either input.
+    """
+
+    def test_compose_merges_nodes(self) -> None:
+        """compose() of two non-overlapping patterns yields all nodes from both."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.patterns import Pattern
+
+        nx = pytest.importorskip("networkx")  # noqa: F841
+
+        service_backing = (
+            Pattern()
+            .node("bsvc", BusinessRole)
+            .node("asvc", ApplicationService)
+            .edge("asvc", "bsvc", Serving)
+        )
+        app_assignment = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("asvc", ApplicationService)
+            .edge("actor", "asvc", Assignment)
+        )
+        composed = service_backing.compose(app_assignment)
+        assert set(composed.nodes.keys()) == {"bsvc", "asvc", "actor"}
+
+    def test_compose_merges_edges(self) -> None:
+        """compose() includes edges from both patterns."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.patterns import Pattern
+
+        pytest.importorskip("networkx")
+
+        p1 = (
+            Pattern()
+            .node("asvc", ApplicationService)
+            .node("bsvc", BusinessRole)
+            .edge("asvc", "bsvc", Serving)
+        )
+        p2 = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("asvc", ApplicationService)
+            .edge("actor", "asvc", Assignment)
+        )
+        composed = p1.compose(p2)
+        assert len(composed.edges) == 2
+        edge_types = {rel for _, _, rel in composed.edges}
+        assert edge_types == {Serving, Assignment}
+
+    def test_compose_shared_alias_same_type(self) -> None:
+        """compose() accepts a shared alias when both patterns bind it to the same type."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.patterns import Pattern
+
+        pytest.importorskip("networkx")
+
+        p1 = (
+            Pattern()
+            .node("asvc", ApplicationService)
+            .node("bsvc", BusinessRole)
+            .edge("asvc", "bsvc", Serving)
+        )
+        p2 = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("asvc", ApplicationService)
+            .edge("actor", "asvc", Assignment)
+        )
+        # Should not raise
+        composed = p1.compose(p2)
+        assert composed.nodes["asvc"] is ApplicationService
+
+    def test_compose_shared_alias_different_type_raises(self) -> None:
+        """compose() raises ValueError when a shared alias is bound to incompatible types."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.patterns import Pattern
+
+        pytest.importorskip("networkx")
+
+        p1 = Pattern().node("x", BusinessActor)
+        p2 = Pattern().node("x", ApplicationService)
+        with pytest.raises(ValueError, match="conflicting types"):
+            p1.compose(p2)
+
+    def test_compose_returns_new_pattern(self) -> None:
+        """compose() must not mutate either input pattern."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.patterns import Pattern
+
+        pytest.importorskip("networkx")
+
+        p1 = (
+            Pattern()
+            .node("asvc", ApplicationService)
+            .node("bsvc", BusinessRole)
+            .edge("asvc", "bsvc", Serving)
+        )
+        p2 = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("asvc", ApplicationService)
+            .edge("actor", "asvc", Assignment)
+        )
+
+        p1_nodes_before = dict(p1.nodes)
+        p1_edges_before = list(p1.edges)
+        p2_nodes_before = dict(p2.nodes)
+        p2_edges_before = list(p2.edges)
+
+        composed = p1.compose(p2)
+
+        assert composed is not p1
+        assert composed is not p2
+        assert p1.nodes == p1_nodes_before
+        assert p1.edges == p1_edges_before
+        assert p2.nodes == p2_nodes_before
+        assert p2.edges == p2_edges_before
+
+    def test_compose_merges_constraints(self) -> None:
+        """compose() carries keyword constraints from both patterns into the result."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.patterns import Pattern
+
+        pytest.importorskip("networkx")
+
+        p1 = Pattern().node("bsvc", BusinessRole, name="Ordering")
+        p2 = Pattern().node("asvc", ApplicationService, name="OrderApp")
+        composed = p1.compose(p2)
+        assert composed._constraints.get("bsvc", {}).get("name") == "Ordering"
+        assert composed._constraints.get("asvc", {}).get("name") == "OrderApp"
+
+    def test_compose_merges_predicates(self) -> None:
+        """compose() carries where() predicates from both patterns into the result."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.patterns import Pattern
+
+        pytest.importorskip("networkx")
+
+        pred1 = lambda c: True  # noqa: E731
+        pred2 = lambda c: True  # noqa: E731
+        p1 = Pattern().node("bsvc", BusinessRole).where("bsvc", pred1)
+        p2 = Pattern().node("asvc", ApplicationService).where("asvc", pred2)
+        composed = p1.compose(p2)
+        assert pred1 in composed._predicates.get("bsvc", [])
+        assert pred2 in composed._predicates.get("asvc", [])
+
+    def test_compose_merges_cardinality(self) -> None:
+        """compose() includes CardinalityConstraints from both patterns."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.patterns import Pattern
+
+        pytest.importorskip("networkx")
+
+        p1 = Pattern().node("bsvc", BusinessRole).min_edges("bsvc", Serving, count=1)
+        p2 = Pattern().node("asvc", ApplicationService).min_edges("asvc", Assignment, count=2)
+        composed = p1.compose(p2)
+        assert len(composed._cardinality) == 2
+        aliases = {cc.alias for cc in composed._cardinality}
+        assert aliases == {"bsvc", "asvc"}
+
+    def test_composed_pattern_matches(self) -> None:
+        """A composed pattern finds the expected subgraph in a model."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        pytest.importorskip("networkx")
+
+        actor = BusinessActor(name="Actor1")
+        asvc = ApplicationService(name="AppSvc1")
+        bsvc = BusinessRole(name="BizSvc1")
+        rel_assignment = Assignment(name="a1", source=actor, target=asvc)
+        rel_serving = Serving(name="s1", source=asvc, target=bsvc)
+
+        model = Model(concepts=[actor, asvc, bsvc, rel_assignment, rel_serving])
+
+        p1 = (
+            Pattern()
+            .node("asvc", ApplicationService)
+            .node("bsvc", BusinessRole)
+            .edge("asvc", "bsvc", Serving)
+        )
+        p2 = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("asvc", ApplicationService)
+            .edge("actor", "asvc", Assignment)
+        )
+        composed = p1.compose(p2)
+
+        results = composed.match(model)
+        assert len(results) >= 1
+        first = results[0]
+        assert "actor" in first
+        assert "asvc" in first
+        assert "bsvc" in first
+
+
+# ---------------------------------------------------------------------------
+# TestToDict — Pattern.to_dict() — GitHub Issue #18
+# ---------------------------------------------------------------------------
+
+
+class TestToDict:
+    """Tests for Pattern.to_dict() JSON serialization."""
+
+    def test_to_dict_structure(self) -> None:
+        """to_dict() output has required top-level keys: version, nodes, edges."""
+        from etcion.patterns import Pattern
+
+        p = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("role", BusinessRole)
+            .edge("actor", "role", Assignment)
+        )
+        d = p.to_dict()
+        assert "version" in d
+        assert "nodes" in d
+        assert "edges" in d
+        assert d["version"] == 1
+
+    def test_to_dict_nodes_have_type(self) -> None:
+        """Each node entry in to_dict() output has a 'type' key with the class name as a string."""
+        from etcion.patterns import Pattern
+
+        p = Pattern().node("actor", BusinessActor).node("role", BusinessRole)
+        d = p.to_dict()
+        assert d["nodes"]["actor"]["type"] == "BusinessActor"
+        assert d["nodes"]["role"]["type"] == "BusinessRole"
+
+    def test_to_dict_edges_have_fields(self) -> None:
+        """Each edge entry in to_dict() output has source, target, and type fields."""
+        from etcion.patterns import Pattern
+
+        p = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("role", BusinessRole)
+            .edge("actor", "role", Assignment)
+        )
+        d = p.to_dict()
+        assert len(d["edges"]) == 1
+        edge = d["edges"][0]
+        assert edge["source"] == "actor"
+        assert edge["target"] == "role"
+        assert edge["type"] == "Assignment"
+
+    def test_to_dict_includes_constraints(self) -> None:
+        """Keyword constraints registered via .node(..., name='X') appear in to_dict() output."""
+        from etcion.patterns import Pattern
+
+        p = Pattern().node("actor", BusinessActor, name="Alice")
+        d = p.to_dict()
+        assert d["nodes"]["actor"].get("constraints", {}).get("name") == "Alice"
+
+    def test_to_dict_includes_cardinality(self) -> None:
+        """CardinalityConstraints registered via .min_edges() appear in to_dict() output."""
+        from etcion.patterns import Pattern
+
+        p = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .min_edges("actor", Assignment, count=2, direction="outgoing")
+        )
+        d = p.to_dict()
+        assert "cardinality" in d
+        assert len(d["cardinality"]) == 1
+        cc = d["cardinality"][0]
+        assert cc["alias"] == "actor"
+        assert cc["rel_type"] == "Assignment"
+        assert cc["min_count"] == 2
+        assert cc["direction"] == "outgoing"
+
+    def test_to_dict_excludes_predicates(self) -> None:
+        """Lambda predicates registered via .where() are NOT included in to_dict() output.
+
+        Predicates are arbitrary callables that cannot be serialized to JSON.
+        Documented behavior: predicates are silently dropped during serialization.
+        Callers must re-attach predicates manually after from_dict() if needed.
+        """
+        from etcion.patterns import Pattern
+
+        p = Pattern().node("actor", BusinessActor).where("actor", lambda c: True)
+        d = p.to_dict()
+        # The node entry must not contain a 'predicates' key
+        assert "predicates" not in d["nodes"].get("actor", {})
+
+
+# ---------------------------------------------------------------------------
+# TestFromDict — Pattern.from_dict() — GitHub Issue #18
+# ---------------------------------------------------------------------------
+
+
+class TestFromDict:
+    """Tests for Pattern.from_dict() JSON deserialization."""
+
+    def test_from_dict_reconstructs_pattern(self) -> None:
+        """from_dict() recreates nodes and edges from a serialized dict."""
+        from etcion.patterns import Pattern
+
+        original = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("role", BusinessRole)
+            .edge("actor", "role", Assignment)
+        )
+        d = original.to_dict()
+        restored = Pattern.from_dict(d)
+
+        assert set(restored.nodes.keys()) == {"actor", "role"}
+        assert restored.nodes["actor"] is BusinessActor
+        assert restored.nodes["role"] is BusinessRole
+        assert len(restored.edges) == 1
+        src, tgt, rel = restored.edges[0]
+        assert src == "actor"
+        assert tgt == "role"
+        assert rel is Assignment
+
+    def test_from_dict_unknown_type_raises(self) -> None:
+        """from_dict() raises ValueError when a type name is not found in the registry."""
+        from etcion.patterns import Pattern
+
+        d = {
+            "version": 1,
+            "nodes": {"x": {"type": "NonExistentMadeUpType123"}},
+            "edges": [],
+        }
+        with pytest.raises(ValueError, match="Unknown type"):
+            Pattern.from_dict(d)
+
+    def test_round_trip_match_equivalence(self) -> None:
+        """from_dict(p.to_dict()).match(model) returns the same matches as p.match(model)."""
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        pytest.importorskip("networkx")
+
+        actor = BusinessActor(name="A")
+        role = BusinessRole(name="R")
+        rel = Assignment(name="ar", source=actor, target=role)
+        model = Model(concepts=[actor, role, rel])
+
+        original = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("role", BusinessRole)
+            .edge("actor", "role", Assignment)
+        )
+        restored = Pattern.from_dict(original.to_dict())
+
+        orig_results = original.match(model)
+        rest_results = restored.match(model)
+        assert len(orig_results) == len(rest_results)
+        # Each match should bind the same concept IDs
+        orig_ids = frozenset(frozenset(id(v) for v in r.mapping.values()) for r in orig_results)
+        rest_ids = frozenset(frozenset(id(v) for v in r.mapping.values()) for r in rest_results)
+        assert orig_ids == rest_ids
+
+
+# ---------------------------------------------------------------------------
+# TestViewpointIntegration — Pattern(viewpoint=...) — GitHub Issue #18
+# ---------------------------------------------------------------------------
+
+
+class TestViewpointIntegration:
+    """Tests for the optional viewpoint parameter on Pattern.__init__().
+
+    When a viewpoint is supplied, .node() and .edge() validate that the
+    supplied types are permitted by the viewpoint's permitted_concept_types.
+    """
+
+    def _make_restricted_viewpoint(self) -> object:
+        """Return a Viewpoint that only permits BusinessActor and BusinessRole."""
+        from etcion.enums import ContentCategory, PurposeCategory
+        from etcion.metamodel.viewpoints import Viewpoint
+
+        return Viewpoint(
+            name="RestrictedViewpoint",
+            purpose=PurposeCategory.DESIGNING,
+            content=ContentCategory.DETAILS,
+            permitted_concept_types=frozenset([BusinessActor, BusinessRole, Assignment]),
+        )
+
+    def test_viewpoint_validates_node_types(self) -> None:
+        """node() raises ValueError when element_type is not permitted by the viewpoint."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.patterns import Pattern
+
+        vp = self._make_restricted_viewpoint()
+        p = Pattern(viewpoint=vp)
+        with pytest.raises(ValueError, match="not permitted by viewpoint"):
+            p.node("asvc", ApplicationService)
+
+    def test_viewpoint_accepts_valid_types(self) -> None:
+        """node() succeeds when all element types are permitted by the viewpoint."""
+        from etcion.patterns import Pattern
+
+        vp = self._make_restricted_viewpoint()
+        p = Pattern(viewpoint=vp)
+        # Should not raise
+        p.node("actor", BusinessActor).node("role", BusinessRole).edge("actor", "role", Assignment)
+        assert set(p.nodes.keys()) == {"actor", "role"}
+
+    def test_no_viewpoint_no_validation(self) -> None:
+        """Without a viewpoint, any valid element type is accepted (existing behavior unchanged)."""
+        from etcion.metamodel.application import ApplicationService
+        from etcion.patterns import Pattern
+
+        p = Pattern()
+        # Should not raise
+        p.node("asvc", ApplicationService)
+        assert "asvc" in p.nodes
