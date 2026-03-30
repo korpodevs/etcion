@@ -44,6 +44,8 @@ class Model:
         self._profiles: list[Profile] = []
         self._specialization_registry: dict[str, type[Element]] = {}
         self._custom_rules: list[ValidationRule] = []
+        # Graph cache — invalidated by add() (ADR-041).
+        self._nx_graph: object | None = None
         if concepts is not None:
             for concept in concepts:
                 self.add(concept)
@@ -59,6 +61,7 @@ class Model:
         if concept.id in self._concepts:
             raise ValueError(f"Duplicate concept ID: '{concept.id}'")
         self._concepts[concept.id] = concept
+        self._nx_graph = None  # invalidate graph cache (ADR-041)
 
     def __iter__(self) -> Iterator[Concept]:
         return iter(self._concepts.values())
@@ -160,6 +163,68 @@ class Model:
     def relationships_of_type(self, cls: type[Relationship]) -> list[Relationship]:
         """Return relationships that are instances of *cls* (includes subclasses)."""
         return [r for r in self.relationships if isinstance(r, cls)]
+
+    def to_networkx(self) -> object:
+        """Convert this model to a networkx MultiDiGraph.
+
+        Nodes represent Elements and RelationshipConnectors (Junctions).
+        Edges represent Relationships.  Results are cached; the cache is
+        invalidated whenever :meth:`add` is called.
+
+        Node attributes: ``type`` (Python class), ``name``, ``layer``,
+        ``aspect``, ``concept`` (back-reference to the Concept instance).
+
+        Edge attributes: ``type`` (Python class), ``name``, ``rel_id``
+        (the relationship's own ID), ``relationship`` (back-reference).
+
+        Requires the ``graph`` extra::
+
+            pip install etcion[graph]
+
+        :raises ImportError: If ``networkx`` is not installed.
+        :returns: A ``networkx.MultiDiGraph`` instance.
+        """
+        if self._nx_graph is not None:
+            return self._nx_graph
+
+        try:
+            import networkx as nx
+        except ImportError:
+            raise ImportError(
+                "networkx is required for graph operations. "
+                "Install it with: pip install etcion[graph]"
+            ) from None
+
+        from etcion.metamodel.concepts import RelationshipConnector
+
+        g: object = nx.MultiDiGraph()
+
+        # Add nodes: Elements and RelationshipConnectors (e.g. Junction).
+        for concept in self._concepts.values():
+            if isinstance(concept, (Element, RelationshipConnector)):
+                cls = type(concept)
+                attrs = {
+                    "type": cls,
+                    "name": getattr(concept, "name", None),
+                    "layer": getattr(cls, "layer", None),
+                    "aspect": getattr(cls, "aspect", None),
+                    "concept": concept,
+                }
+                g.add_node(concept.id, **attrs)  # type: ignore[attr-defined]
+
+        # Add edges: one directed edge per Relationship.
+        for rel in self.relationships:
+            g.add_edge(  # type: ignore[attr-defined]
+                rel.source.id,
+                rel.target.id,
+                type=type(rel),
+                name=getattr(rel, "name", None),
+                rel_id=rel.id,
+                relationship=rel,
+            )
+
+        self._nx_graph = g
+        return g
 
     def connected_to(self, concept: Concept) -> list[Relationship]:
         """Return all relationships where *concept* is source or target (identity check)."""
