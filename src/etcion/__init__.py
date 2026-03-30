@@ -10,6 +10,9 @@ except PackageNotFoundError:  # pragma: no cover
 
 # Phase 4: Model comparison and diff utilities (EPIC-024, FEAT-24.1)
 from etcion.comparison import ConceptChange, FieldChange, ModelDiff, diff_models
+
+# Phase 5: Impact analysis engine (ADR-043, Issue #9)
+from etcion.impact import ImpactedConcept, ImpactResult, analyze_impact
 from etcion.conformance import CONFORMANCE, ConformanceProfile
 from etcion.derivation.engine import DerivationEngine
 from etcion.enums import (
@@ -340,4 +343,8 @@ __all__: list[str] = [
     "ConceptChange",
     "ModelDiff",
     "diff_models",
+    # Impact analysis engine (ADR-043, Issue #9)
+    "ImpactedConcept",
+    "ImpactResult",
+    "analyze_impact",
 ]
