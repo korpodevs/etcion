@@ -223,8 +223,7 @@ class Pattern:
             permitted = self._viewpoint.permitted_concept_types
             if not any(issubclass(element_type, t) for t in permitted):
                 raise ValueError(
-                    f"{element_type.__name__} not permitted by viewpoint "
-                    f"'{self._viewpoint.name}'"
+                    f"{element_type.__name__} not permitted by viewpoint '{self._viewpoint.name}'"
                 )
         if constraints:
             valid_fields: set[str] = set()
@@ -272,8 +271,7 @@ class Pattern:
             permitted = self._viewpoint.permitted_concept_types
             if not any(issubclass(rel_type, t) for t in permitted):
                 raise ValueError(
-                    f"{rel_type.__name__} not permitted by viewpoint "
-                    f"'{self._viewpoint.name}'"
+                    f"{rel_type.__name__} not permitted by viewpoint '{self._viewpoint.name}'"
                 )
         self._edges.append((source_alias, target_alias, rel_type))
         return self
