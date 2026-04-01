@@ -1,0 +1,1317 @@
+# =============================================================================
+# PawsPlus Corporation - Synthetic Enterprise Architecture Model
+# =============================================================================
+# A mid-size pet retail and e-commerce company operating ~150 stores with an
+# online marketplace, veterinary clinic partnerships, and a pet wellness
+# subscription business.
+#
+# This file defines the complete architecture across five viewpoints:
+#   1. Capability to Application
+#   2. Application Integration
+#   3. Technology Reference Model (Tech Stack)
+#   4. Data of Record
+#   5. Data Flow
+# =============================================================================
+
+company:
+  name: "PawsPlus Corporation"
+  description: >
+    PawsPlus is a mid-size specialty pet retailer operating 150+ stores across
+    the US, an e-commerce marketplace, a veterinary clinic partner network, and
+    a recurring pet wellness subscription service (PawsCare+). Annual revenue
+    ~$1.2B with aggressive digital transformation underway.
+
+# -----------------------------------------------------------------------------
+# CAPABILITIES (Strategy Layer)
+# 3-level hierarchy: L0 domain > L1 capability > L2 sub-capability
+# -----------------------------------------------------------------------------
+capabilities:
+  - name: Customer Management
+    priority: invest
+    maturity: established
+    children:
+      - name: Customer Onboarding
+      - name: Customer Identity & Profile
+      - name: Loyalty & Rewards
+      - name: Customer Communication
+
+  - name: Commerce
+    priority: invest
+    maturity: established
+    children:
+      - name: Online Ordering
+      - name: In-Store Point of Sale
+      - name: Marketplace Management
+      - name: Pricing & Promotions
+      - name: Cart & Checkout
+
+  - name: Product Management
+    priority: maintain
+    maturity: established
+    children:
+      - name: Product Catalog
+      - name: Product Sourcing
+      - name: Vendor Management
+
+  - name: Inventory & Fulfillment
+    priority: invest
+    maturity: emerging
+    children:
+      - name: Inventory Management
+      - name: Warehouse Operations
+      - name: Order Fulfillment
+      - name: Ship-from-Store
+      - name: Returns Processing
+
+  - name: Payment Processing
+    priority: maintain
+    maturity: established
+    children:
+      - name: Payment Authorization
+      - name: Payment Settlement
+      - name: Refund Processing
+
+  - name: Supply Chain
+    priority: maintain
+    maturity: established
+    children:
+      - name: Demand Forecasting
+      - name: Purchase Order Management
+      - name: Supplier Logistics
+
+  - name: Veterinary Services
+    priority: invest
+    maturity: emerging
+    children:
+      - name: Clinic Appointment Scheduling
+      - name: Pet Health Records
+      - name: Prescription Management
+
+  - name: Subscription & Wellness
+    priority: invest
+    maturity: emerging
+    children:
+      - name: Subscription Lifecycle
+      - name: Autoship Management
+      - name: Wellness Plan Administration
+
+  - name: Corporate Operations
+    priority: maintain
+    maturity: established
+    children:
+      - name: Financial Management
+      - name: Human Resources
+      - name: Store Operations
+
+  - name: Analytics & Insights
+    priority: invest
+    maturity: emerging
+    children:
+      - name: Business Intelligence
+      - name: Customer Analytics
+      - name: Demand Analytics
+
+# -----------------------------------------------------------------------------
+# APPLICATIONS
+# Each application lists:
+#   - lifecycle_status: active | sunset | proposed
+#   - fitness_score: 1.0 - 5.0
+#   - annual_tco: USD
+#   - owning_team: the responsible engineering team
+#   - realizes: list of capability names this app delivers
+#   - data_role: system_of_record | system_of_reference (optional, per data entity)
+# -----------------------------------------------------------------------------
+applications:
+  # --- Commerce & Customer-Facing ---
+  - name: PawsPlus.com
+    description: E-commerce web and mobile platform
+    lifecycle_status: active
+    fitness_score: 4.3
+    annual_tco: 1800000
+    owning_team: Digital Commerce
+    realizes:
+      - Online Ordering
+      - Cart & Checkout
+      - Marketplace Management
+      - Customer Onboarding
+
+  - name: StoreOS POS
+    description: In-store point of sale terminals and kiosks
+    lifecycle_status: active
+    fitness_score: 3.8
+    annual_tco: 950000
+    owning_team: Store Technology
+    realizes:
+      - In-Store Point of Sale
+      - Loyalty & Rewards
+
+  - name: Loyalty Engine
+    description: Points, tiers, and rewards management
+    lifecycle_status: active
+    fitness_score: 4.0
+    annual_tco: 320000
+    owning_team: Customer Experience
+    realizes:
+      - Loyalty & Rewards
+
+  - name: Promo Manager
+    description: Pricing rules, promotions, and coupon management
+    lifecycle_status: active
+    fitness_score: 3.5
+    annual_tco: 280000
+    owning_team: Merchandising Tech
+    realizes:
+      - Pricing & Promotions
+
+  # --- Customer & Communication ---
+  - name: Customer Hub
+    description: Customer identity, profile, and preferences (CDP)
+    lifecycle_status: active
+    fitness_score: 4.5
+    annual_tco: 650000
+    owning_team: Customer Experience
+    realizes:
+      - Customer Identity & Profile
+      - Customer Onboarding
+
+  - name: CommsPlatform
+    description: Email, SMS, push notification orchestration
+    lifecycle_status: active
+    fitness_score: 4.1
+    annual_tco: 420000
+    owning_team: Customer Experience
+    realizes:
+      - Customer Communication
+
+  # --- Product & Catalog ---
+  - name: Product Information Manager
+    description: Product catalog, attributes, images, and taxonomy
+    lifecycle_status: active
+    fitness_score: 4.2
+    annual_tco: 380000
+    owning_team: Merchandising Tech
+    realizes:
+      - Product Catalog
+
+  - name: Vendor Portal
+    description: Supplier onboarding, compliance, and communication
+    lifecycle_status: active
+    fitness_score: 3.2
+    annual_tco: 190000
+    owning_team: Supply Chain Tech
+    realizes:
+      - Vendor Management
+      - Product Sourcing
+
+  # --- Inventory & Fulfillment ---
+  - name: Inventory Service
+    description: Real-time inventory positions across all channels
+    lifecycle_status: active
+    fitness_score: 4.4
+    annual_tco: 720000
+    owning_team: Fulfillment Engineering
+    realizes:
+      - Inventory Management
+      - Ship-from-Store
+
+  - name: Warehouse Management System
+    description: DC operations, pick/pack/ship
+    lifecycle_status: active
+    fitness_score: 3.6
+    annual_tco: 1100000
+    owning_team: Fulfillment Engineering
+    realizes:
+      - Warehouse Operations
+      - Order Fulfillment
+
+  - name: Order Management System
+    description: Order lifecycle, routing, and orchestration
+    lifecycle_status: active
+    fitness_score: 4.0
+    annual_tco: 890000
+    owning_team: Fulfillment Engineering
+    realizes:
+      - Order Fulfillment
+      - Returns Processing
+
+  - name: Legacy Returns Processor
+    description: Returns authorization and restocking (mainframe-based)
+    lifecycle_status: sunset
+    fitness_score: 1.8
+    annual_tco: 450000
+    owning_team: Fulfillment Engineering
+    realizes:
+      - Returns Processing
+
+  # --- Payments ---
+  - name: Payment Gateway
+    description: Card authorization, tokenization, and fraud screening
+    lifecycle_status: active
+    fitness_score: 4.6
+    annual_tco: 580000
+    owning_team: Payments
+    realizes:
+      - Payment Authorization
+
+  - name: Settlement Engine
+    description: End-of-day batch settlement and reconciliation
+    lifecycle_status: active
+    fitness_score: 3.4
+    annual_tco: 310000
+    owning_team: Payments
+    realizes:
+      - Payment Settlement
+      - Refund Processing
+
+  # --- Supply Chain ---
+  - name: Demand Planner
+    description: ML-based demand forecasting and replenishment
+    lifecycle_status: active
+    fitness_score: 3.9
+    annual_tco: 480000
+    owning_team: Supply Chain Tech
+    realizes:
+      - Demand Forecasting
+      - Purchase Order Management
+
+  - name: Supplier Logistics Hub
+    description: Inbound logistics, ASN tracking, dock scheduling
+    lifecycle_status: active
+    fitness_score: 3.1
+    annual_tco: 260000
+    owning_team: Supply Chain Tech
+    realizes:
+      - Supplier Logistics
+
+  # --- Veterinary & Wellness ---
+  - name: VetConnect
+    description: Clinic scheduling, partner integration, telehealth
+    lifecycle_status: active
+    fitness_score: 3.7
+    annual_tco: 520000
+    owning_team: Vet Services Engineering
+    realizes:
+      - Clinic Appointment Scheduling
+      - Pet Health Records
+
+  - name: RxManager
+    description: Pet prescription management and pharmacy integration
+    lifecycle_status: active
+    fitness_score: 3.3
+    annual_tco: 340000
+    owning_team: Vet Services Engineering
+    realizes:
+      - Prescription Management
+
+  - name: PawsCare+ Platform
+    description: Subscription management, autoship, wellness plans
+    lifecycle_status: active
+    fitness_score: 4.1
+    annual_tco: 680000
+    owning_team: Subscription Engineering
+    realizes:
+      - Subscription Lifecycle
+      - Autoship Management
+      - Wellness Plan Administration
+
+  # --- Corporate / Back-Office ---
+  - name: SAP ERP
+    description: Finance, GL, AP/AR, fixed assets
+    lifecycle_status: active
+    fitness_score: 3.0
+    annual_tco: 2200000
+    owning_team: Enterprise Systems
+    realizes:
+      - Financial Management
+      - Purchase Order Management
+
+  - name: Workday HCM
+    description: HR, payroll, talent management
+    lifecycle_status: active
+    fitness_score: 4.2
+    annual_tco: 890000
+    owning_team: Enterprise Systems
+    realizes:
+      - Human Resources
+
+  - name: StoreOps Dashboard
+    description: Store performance, staffing, and task management
+    lifecycle_status: active
+    fitness_score: 3.5
+    annual_tco: 210000
+    owning_team: Store Technology
+    realizes:
+      - Store Operations
+
+  # --- Analytics & Data ---
+  - name: Enterprise Data Warehouse
+    description: Snowflake-based analytical data store
+    lifecycle_status: active
+    fitness_score: 4.3
+    annual_tco: 960000
+    owning_team: Data Engineering
+    realizes:
+      - Business Intelligence
+      - Customer Analytics
+      - Demand Analytics
+
+  - name: Analytics Portal
+    description: Tableau-based dashboards and self-service analytics
+    lifecycle_status: active
+    fitness_score: 4.0
+    annual_tco: 350000
+    owning_team: Data Engineering
+    realizes:
+      - Business Intelligence
+
+  - name: Legacy Reporting DB
+    description: Oracle-based reporting database (being migrated to EDW)
+    lifecycle_status: sunset
+    fitness_score: 2.0
+    annual_tco: 380000
+    owning_team: Data Engineering
+    realizes:
+      - Business Intelligence
+
+# -----------------------------------------------------------------------------
+# INTEGRATIONS
+# Each integration defines:
+#   - source: the application providing the service
+#   - target: the application consuming the service
+#   - service_name: what the service is called
+#   - interface_name: the technical endpoint
+#   - style: REST | gRPC | Kafka | MQ | SFTP | SOAP | JDBC
+#   - criticality: tier1 | tier2 | tier3
+#   - avg_daily_volume: approximate daily call/message count
+#   - sla_ms: target latency in milliseconds
+# -----------------------------------------------------------------------------
+integrations:
+  # Commerce -> downstream
+  - source: PawsPlus.com
+    target: Order Management System
+    service_name: Submit Order
+    interface_name: POST /v2/orders
+    style: REST
+    criticality: tier1
+    avg_daily_volume: 35000
+    sla_ms: 500
+
+  - source: PawsPlus.com
+    target: Customer Hub
+    service_name: Customer Lookup
+    interface_name: GET /v1/customers/{id}
+    style: REST
+    criticality: tier1
+    avg_daily_volume: 280000
+    sla_ms: 100
+
+  - source: PawsPlus.com
+    target: Product Information Manager
+    service_name: Product Search
+    interface_name: GET /v2/products/search
+    style: REST
+    criticality: tier1
+    avg_daily_volume: 1200000
+    sla_ms: 150
+
+  - source: PawsPlus.com
+    target: Inventory Service
+    service_name: Check Availability
+    interface_name: GET /v1/inventory/availability
+    style: REST
+    criticality: tier1
+    avg_daily_volume: 950000
+    sla_ms: 200
+
+  - source: PawsPlus.com
+    target: Payment Gateway
+    service_name: Process Payment
+    interface_name: POST /v2/charges
+    style: REST
+    criticality: tier1
+    avg_daily_volume: 35000
+    sla_ms: 300
+
+  - source: PawsPlus.com
+    target: Loyalty Engine
+    service_name: Apply Rewards
+    interface_name: POST /v1/rewards/apply
+    style: REST
+    criticality: tier2
+    avg_daily_volume: 22000
+    sla_ms: 200
+
+  - source: PawsPlus.com
+    target: Promo Manager
+    service_name: Evaluate Promotions
+    interface_name: POST /v1/promotions/evaluate
+    style: REST
+    criticality: tier2
+    avg_daily_volume: 450000
+    sla_ms: 100
+
+  # POS -> downstream
+  - source: StoreOS POS
+    target: Payment Gateway
+    service_name: Process Payment
+    interface_name: POST /v2/charges
+    style: REST
+    criticality: tier1
+    avg_daily_volume: 120000
+    sla_ms: 300
+
+  - source: StoreOS POS
+    target: Inventory Service
+    service_name: Reserve Inventory
+    interface_name: POST /v1/inventory/reserve
+    style: REST
+    criticality: tier1
+    avg_daily_volume: 120000
+    sla_ms: 200
+
+  - source: StoreOS POS
+    target: Loyalty Engine
+    service_name: Redeem Points
+    interface_name: POST /v1/rewards/redeem
+    style: REST
+    criticality: tier2
+    avg_daily_volume: 45000
+    sla_ms: 200
+
+  # Order Management -> downstream
+  - source: Order Management System
+    target: Inventory Service
+    service_name: Allocate Inventory
+    interface_name: POST /v1/inventory/allocate
+    style: REST
+    criticality: tier1
+    avg_daily_volume: 40000
+    sla_ms: 300
+
+  - source: Order Management System
+    target: Warehouse Management System
+    service_name: Create Shipment
+    interface_name: orders.routed (Kafka)
+    style: Kafka
+    criticality: tier1
+    avg_daily_volume: 38000
+    sla_ms: 5000
+
+  - source: Order Management System
+    target: CommsPlatform
+    service_name: Order Notification
+    interface_name: notifications.order (Kafka)
+    style: Kafka
+    criticality: tier2
+    avg_daily_volume: 40000
+    sla_ms: 30000
+
+  - source: Order Management System
+    target: Legacy Returns Processor
+    service_name: Authorize Return
+    interface_name: RETURNS.AUTH.REQ (MQ)
+    style: MQ
+    criticality: tier2
+    avg_daily_volume: 3500
+    sla_ms: 10000
+
+  # Payments -> downstream
+  - source: Payment Gateway
+    target: Settlement Engine
+    service_name: Settlement Batch
+    interface_name: payments.authorized (Kafka)
+    style: Kafka
+    criticality: tier1
+    avg_daily_volume: 155000
+    sla_ms: 60000
+
+  - source: Settlement Engine
+    target: SAP ERP
+    service_name: Post Journal Entry
+    interface_name: SETTLEMENT.SFTP
+    style: SFTP
+    criticality: tier1
+    avg_daily_volume: 1
+    sla_ms: 3600000
+
+  # Inventory -> downstream
+  - source: Inventory Service
+    target: Demand Planner
+    service_name: Inventory Snapshot
+    interface_name: inventory.snapshot (Kafka)
+    style: Kafka
+    criticality: tier2
+    avg_daily_volume: 150
+    sla_ms: 60000
+
+  - source: Warehouse Management System
+    target: Inventory Service
+    service_name: Stock Update
+    interface_name: inventory.adjustments (Kafka)
+    style: Kafka
+    criticality: tier1
+    avg_daily_volume: 85000
+    sla_ms: 5000
+
+  # Supply Chain
+  - source: Demand Planner
+    target: SAP ERP
+    service_name: Create Purchase Order
+    interface_name: RFC/BAPI MM.PO.CREATE
+    style: SOAP
+    criticality: tier2
+    avg_daily_volume: 200
+    sla_ms: 5000
+
+  - source: Vendor Portal
+    target: Supplier Logistics Hub
+    service_name: ASN Notification
+    interface_name: POST /v1/asn
+    style: REST
+    criticality: tier2
+    avg_daily_volume: 500
+    sla_ms: 2000
+
+  - source: Supplier Logistics Hub
+    target: Warehouse Management System
+    service_name: Inbound Receipt
+    interface_name: receiving.inbound (Kafka)
+    style: Kafka
+    criticality: tier2
+    avg_daily_volume: 500
+    sla_ms: 30000
+
+  # Vet & Wellness
+  - source: VetConnect
+    target: Customer Hub
+    service_name: Link Pet to Customer
+    interface_name: POST /v1/customers/{id}/pets
+    style: REST
+    criticality: tier2
+    avg_daily_volume: 2500
+    sla_ms: 500
+
+  - source: VetConnect
+    target: RxManager
+    service_name: Create Prescription
+    interface_name: POST /v1/prescriptions
+    style: REST
+    criticality: tier2
+    avg_daily_volume: 1800
+    sla_ms: 500
+
+  - source: PawsCare+ Platform
+    target: Order Management System
+    service_name: Create Autoship Order
+    interface_name: POST /v2/orders
+    style: REST
+    criticality: tier1
+    avg_daily_volume: 12000
+    sla_ms: 500
+
+  - source: PawsCare+ Platform
+    target: Payment Gateway
+    service_name: Recurring Charge
+    interface_name: POST /v2/charges/recurring
+    style: REST
+    criticality: tier1
+    avg_daily_volume: 12000
+    sla_ms: 300
+
+  - source: PawsCare+ Platform
+    target: CommsPlatform
+    service_name: Subscription Notification
+    interface_name: notifications.subscription (Kafka)
+    style: Kafka
+    criticality: tier2
+    avg_daily_volume: 15000
+    sla_ms: 30000
+
+  - source: RxManager
+    target: CommsPlatform
+    service_name: Prescription Ready Notification
+    interface_name: notifications.rx (Kafka)
+    style: Kafka
+    criticality: tier2
+    avg_daily_volume: 1800
+    sla_ms: 30000
+
+  # Analytics feeds
+  - source: Order Management System
+    target: Enterprise Data Warehouse
+    service_name: Order Events Feed
+    interface_name: orders.completed (Kafka)
+    style: Kafka
+    criticality: tier2
+    avg_daily_volume: 35000
+    sla_ms: 300000
+
+  - source: Customer Hub
+    target: Enterprise Data Warehouse
+    service_name: Customer Profile Sync
+    interface_name: customers.updated (Kafka)
+    style: Kafka
+    criticality: tier2
+    avg_daily_volume: 50000
+    sla_ms: 300000
+
+  - source: Inventory Service
+    target: Enterprise Data Warehouse
+    service_name: Inventory Events Feed
+    interface_name: inventory.changes (Kafka)
+    style: Kafka
+    criticality: tier3
+    avg_daily_volume: 200000
+    sla_ms: 300000
+
+  - source: Enterprise Data Warehouse
+    target: Analytics Portal
+    service_name: Dashboard Queries
+    interface_name: Snowflake JDBC
+    style: JDBC
+    criticality: tier2
+    avg_daily_volume: 25000
+    sla_ms: 10000
+
+  - source: Legacy Reporting DB
+    target: Enterprise Data Warehouse
+    service_name: Legacy Data Migration
+    interface_name: LEGACY.ETL.SFTP
+    style: SFTP
+    criticality: tier3
+    avg_daily_volume: 1
+    sla_ms: 7200000
+
+# -----------------------------------------------------------------------------
+# TECHNOLOGY STACK
+# Each technology entry defines:
+#   - name: technology name
+#   - type: Kubernetes Cluster | VM | Container | Database | Message Broker |
+#           Runtime | Cache | Operating System | Web Server | Serverless |
+#           CDN | Load Balancer | Search Engine
+#   - hosts: list of application names this technology supports
+#   - cloud_provider: AWS | Azure | GCP | on-prem
+#   - region: deployment region
+#   - environment: production | staging | dev
+#   - version: current version
+#   - end_of_support: ISO date (empty if N/A)
+#   - license_cost_annual: USD
+#   - standardization_status: standard | tolerated | retiring | prohibited
+# -----------------------------------------------------------------------------
+technology:
+  # --- Compute Infrastructure ---
+  - name: commerce-prod-eks
+    type: Kubernetes Cluster
+    hosts:
+      - PawsPlus.com
+      - Inventory Service
+      - Order Management System
+      - Loyalty Engine
+      - Promo Manager
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "1.29"
+    end_of_support: ""
+    license_cost_annual: 0
+    standardization_status: standard
+
+  - name: services-prod-eks
+    type: Kubernetes Cluster
+    hosts:
+      - Customer Hub
+      - CommsPlatform
+      - Product Information Manager
+      - Payment Gateway
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "1.29"
+    end_of_support: ""
+    license_cost_annual: 0
+    standardization_status: standard
+
+  - name: fulfillment-prod-eks
+    type: Kubernetes Cluster
+    hosts:
+      - Warehouse Management System
+      - Demand Planner
+      - Supplier Logistics Hub
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "1.28"
+    end_of_support: "2025-11-28"
+    license_cost_annual: 0
+    standardization_status: standard
+
+  - name: vet-prod-eks
+    type: Kubernetes Cluster
+    hosts:
+      - VetConnect
+      - RxManager
+      - PawsCare+ Platform
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "1.29"
+    end_of_support: ""
+    license_cost_annual: 0
+    standardization_status: standard
+
+  - name: pos-store-servers
+    type: VM
+    hosts:
+      - StoreOS POS
+    cloud_provider: on-prem
+    region: 150 store locations
+    environment: production
+    version: Windows Server 2019
+    end_of_support: "2029-01-09"
+    license_cost_annual: 225000
+    standardization_status: standard
+
+  - name: erp-on-prem-cluster
+    type: VM
+    hosts:
+      - SAP ERP
+    cloud_provider: on-prem
+    region: Ashburn DC
+    environment: production
+    version: RHEL 8
+    end_of_support: "2029-05-31"
+    license_cost_annual: 85000
+    standardization_status: tolerated
+
+  - name: legacy-mainframe
+    type: VM
+    hosts:
+      - Legacy Returns Processor
+    cloud_provider: on-prem
+    region: Ashburn DC
+    environment: production
+    version: z/OS 2.5
+    end_of_support: "2025-09-30"
+    license_cost_annual: 320000
+    standardization_status: retiring
+
+  - name: workday-cloud
+    type: Serverless
+    hosts:
+      - Workday HCM
+    cloud_provider: Workday Cloud
+    region: US
+    environment: production
+    version: "2024R2"
+    end_of_support: ""
+    license_cost_annual: 0
+    standardization_status: standard
+
+  # --- Databases ---
+  - name: Aurora PostgreSQL (Commerce)
+    type: Database
+    hosts:
+      - PawsPlus.com
+      - Order Management System
+      - Inventory Service
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "15.4"
+    end_of_support: "2027-11-11"
+    license_cost_annual: 0
+    standardization_status: standard
+
+  - name: Aurora PostgreSQL (Services)
+    type: Database
+    hosts:
+      - Customer Hub
+      - Loyalty Engine
+      - PawsCare+ Platform
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "15.4"
+    end_of_support: "2027-11-11"
+    license_cost_annual: 0
+    standardization_status: standard
+
+  - name: MongoDB Atlas
+    type: Database
+    hosts:
+      - Product Information Manager
+      - VetConnect
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "7.0"
+    end_of_support: ""
+    license_cost_annual: 86000
+    standardization_status: standard
+
+  - name: Oracle 12c (Legacy)
+    type: Database
+    hosts:
+      - SAP ERP
+      - Legacy Reporting DB
+      - Settlement Engine
+    cloud_provider: on-prem
+    region: Ashburn DC
+    environment: production
+    version: "12.2.0.1"
+    end_of_support: "2022-03-31"
+    license_cost_annual: 420000
+    standardization_status: retiring
+
+  # --- Middleware ---
+  - name: Amazon MSK (Kafka)
+    type: Message Broker
+    hosts:
+      - Order Management System
+      - Inventory Service
+      - Payment Gateway
+      - Customer Hub
+      - CommsPlatform
+      - Warehouse Management System
+      - PawsCare+ Platform
+      - RxManager
+      - Enterprise Data Warehouse
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "3.6"
+    end_of_support: ""
+    license_cost_annual: 180000
+    standardization_status: standard
+
+  - name: IBM MQ
+    type: Message Broker
+    hosts:
+      - Legacy Returns Processor
+      - Order Management System
+    cloud_provider: on-prem
+    region: Ashburn DC
+    environment: production
+    version: "9.3"
+    end_of_support: "2027-04-30"
+    license_cost_annual: 95000
+    standardization_status: tolerated
+
+  - name: ElastiCache Redis
+    type: Cache
+    hosts:
+      - PawsPlus.com
+      - Inventory Service
+      - Customer Hub
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "7.1"
+    end_of_support: ""
+    license_cost_annual: 48000
+    standardization_status: standard
+
+  - name: OpenSearch
+    type: Search Engine
+    hosts:
+      - PawsPlus.com
+      - Product Information Manager
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "2.11"
+    end_of_support: ""
+    license_cost_annual: 62000
+    standardization_status: standard
+
+  - name: CloudFront CDN
+    type: CDN
+    hosts:
+      - PawsPlus.com
+      - Analytics Portal
+    cloud_provider: AWS
+    region: Global
+    environment: production
+    version: ""
+    end_of_support: ""
+    license_cost_annual: 96000
+    standardization_status: standard
+
+  # --- Analytics ---
+  - name: Snowflake
+    type: Database
+    hosts:
+      - Enterprise Data Warehouse
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "8.x"
+    end_of_support: ""
+    license_cost_annual: 540000
+    standardization_status: standard
+
+  - name: Tableau Server
+    type: Runtime
+    hosts:
+      - Analytics Portal
+    cloud_provider: AWS
+    region: us-east-1
+    environment: production
+    version: "2024.1"
+    end_of_support: ""
+    license_cost_annual: 185000
+    standardization_status: standard
+
+# -----------------------------------------------------------------------------
+# DATA ENTITIES
+# Each data entity defines:
+#   - name: business data entity name
+#   - data_steward: the responsible person
+#   - classification: public | internal | confidential | restricted
+#   - quality_score: 0.0 - 1.0
+#   - system_of_record: the authoritative application
+#   - systems_of_reference: list of applications that consume copies
+# -----------------------------------------------------------------------------
+data_entities:
+  - name: Customer
+    data_steward: Sarah Chen (VP Customer Experience)
+    classification: confidential
+    quality_score: 0.91
+    system_of_record: Customer Hub
+    systems_of_reference:
+      - PawsPlus.com
+      - StoreOS POS
+      - CommsPlatform
+      - Enterprise Data Warehouse
+      - VetConnect
+      - PawsCare+ Platform
+
+  - name: Order
+    data_steward: Mike Torres (Dir. Commerce Engineering)
+    classification: internal
+    quality_score: 0.94
+    system_of_record: Order Management System
+    systems_of_reference:
+      - PawsPlus.com
+      - Warehouse Management System
+      - Enterprise Data Warehouse
+      - Settlement Engine
+
+  - name: Product
+    data_steward: Lisa Park (Dir. Merchandising)
+    classification: internal
+    quality_score: 0.96
+    system_of_record: Product Information Manager
+    systems_of_reference:
+      - PawsPlus.com
+      - StoreOS POS
+      - Inventory Service
+      - Demand Planner
+      - Enterprise Data Warehouse
+
+  - name: Inventory Position
+    data_steward: Raj Patel (Dir. Supply Chain)
+    classification: internal
+    quality_score: 0.88
+    system_of_record: Inventory Service
+    systems_of_reference:
+      - PawsPlus.com
+      - Warehouse Management System
+      - Demand Planner
+      - StoreOS POS
+      - Enterprise Data Warehouse
+
+  - name: Payment Transaction
+    data_steward: David Kim (Dir. Payments)
+    classification: restricted
+    quality_score: 0.99
+    system_of_record: Payment Gateway
+    systems_of_reference:
+      - Settlement Engine
+      - SAP ERP
+      - Enterprise Data Warehouse
+
+  - name: Pet Profile
+    data_steward: Sarah Chen (VP Customer Experience)
+    classification: confidential
+    quality_score: 0.82
+    system_of_record: VetConnect
+    systems_of_reference:
+      - Customer Hub
+      - PawsCare+ Platform
+      - CommsPlatform
+
+  - name: Prescription
+    data_steward: Dr. Amy Roth (Vet Services Lead)
+    classification: restricted
+    quality_score: 0.95
+    system_of_record: RxManager
+    systems_of_reference:
+      - VetConnect
+      - CommsPlatform
+
+  - name: Subscription
+    data_steward: Jordan Blake (Dir. Subscription)
+    classification: internal
+    quality_score: 0.90
+    system_of_record: PawsCare+ Platform
+    systems_of_reference:
+      - Customer Hub
+      - CommsPlatform
+      - Enterprise Data Warehouse
+
+  - name: Vendor
+    data_steward: Raj Patel (Dir. Supply Chain)
+    classification: internal
+    quality_score: 0.85
+    system_of_record: Vendor Portal
+    systems_of_reference:
+      - SAP ERP
+      - Demand Planner
+      - Supplier Logistics Hub
+
+  - name: Financial Transaction
+    data_steward: CFO Office
+    classification: restricted
+    quality_score: 0.97
+    system_of_record: SAP ERP
+    systems_of_reference:
+      - Enterprise Data Warehouse
+      - Legacy Reporting DB
+
+  - name: Employee
+    data_steward: HR Leadership
+    classification: confidential
+    quality_score: 0.93
+    system_of_record: Workday HCM
+    systems_of_reference:
+      - SAP ERP
+      - StoreOps Dashboard
+
+  - name: Promotion
+    data_steward: Lisa Park (Dir. Merchandising)
+    classification: internal
+    quality_score: 0.87
+    system_of_record: Promo Manager
+    systems_of_reference:
+      - PawsPlus.com
+      - StoreOS POS
+
+  - name: Loyalty Account
+    data_steward: Sarah Chen (VP Customer Experience)
+    classification: internal
+    quality_score: 0.92
+    system_of_record: Loyalty Engine
+    systems_of_reference:
+      - PawsPlus.com
+      - StoreOS POS
+      - Customer Hub
+      - Enterprise Data Warehouse
+
+# -----------------------------------------------------------------------------
+# DATA FLOWS
+# Each flow traces data movement through the architecture:
+#   - name: descriptive flow name
+#   - data_entity: which data entity is flowing
+#   - stages: ordered list of processing stages
+#     - app: application name
+#     - process: what happens at this stage
+#     - transformation: passthrough | filter | enrich | aggregate | transform
+#   - flow_style: real-time | batch | near-real-time
+#   - protocol: Kafka | REST | SFTP | JDBC | MQ
+#   - contains_pii: true | false
+# -----------------------------------------------------------------------------
+data_flows:
+  - name: Order-to-Cash Flow
+    description: End-to-end order processing from customer placement through payment settlement
+    data_entity: Order
+    contains_pii: true
+    stages:
+      - app: PawsPlus.com
+        process: Capture Order
+        transformation: passthrough
+      - app: Order Management System
+        process: Validate & Route Order
+        transformation: enrich
+      - app: Inventory Service
+        process: Allocate Inventory
+        transformation: filter
+      - app: Payment Gateway
+        process: Authorize Payment
+        transformation: enrich
+      - app: Warehouse Management System
+        process: Pick Pack Ship
+        transformation: transform
+      - app: Settlement Engine
+        process: Settle Payment
+        transformation: aggregate
+      - app: SAP ERP
+        process: Post to General Ledger
+        transformation: transform
+    legs:
+      - from: PawsPlus.com
+        to: Order Management System
+        flow_style: real-time
+        protocol: REST
+        avg_volume: 35K orders/day
+      - from: Order Management System
+        to: Inventory Service
+        flow_style: real-time
+        protocol: REST
+        avg_volume: 40K allocations/day
+      - from: Order Management System
+        to: Payment Gateway
+        flow_style: real-time
+        protocol: REST
+        avg_volume: 35K authorizations/day
+      - from: Order Management System
+        to: Warehouse Management System
+        flow_style: real-time
+        protocol: Kafka
+        avg_volume: 38K shipments/day
+      - from: Payment Gateway
+        to: Settlement Engine
+        flow_style: near-real-time
+        protocol: Kafka
+        avg_volume: 155K transactions/day
+      - from: Settlement Engine
+        to: SAP ERP
+        flow_style: batch
+        protocol: SFTP
+        avg_volume: 1 file/day
+
+  - name: Customer 360 Sync
+    description: Customer profile data flowing from system of record to all consuming systems
+    data_entity: Customer
+    contains_pii: true
+    stages:
+      - app: Customer Hub
+        process: Master Customer Profile
+        transformation: passthrough
+      - app: PawsPlus.com
+        process: Display Customer Profile
+        transformation: filter
+      - app: CommsPlatform
+        process: Communication Preferences
+        transformation: filter
+      - app: Enterprise Data Warehouse
+        process: Customer Analytics Dataset
+        transformation: aggregate
+    legs:
+      - from: Customer Hub
+        to: PawsPlus.com
+        flow_style: real-time
+        protocol: REST
+        avg_volume: 280K lookups/day
+      - from: Customer Hub
+        to: CommsPlatform
+        flow_style: near-real-time
+        protocol: Kafka
+        avg_volume: 50K updates/day
+      - from: Customer Hub
+        to: Enterprise Data Warehouse
+        flow_style: near-real-time
+        protocol: Kafka
+        avg_volume: 50K events/day
+
+  - name: Inventory Replenishment Cycle
+    description: Inventory data flowing from stores/DCs through demand planning to purchase orders
+    data_entity: Inventory Position
+    contains_pii: false
+    stages:
+      - app: Warehouse Management System
+        process: Record Stock Movement
+        transformation: passthrough
+      - app: Inventory Service
+        process: Update Inventory Position
+        transformation: aggregate
+      - app: Demand Planner
+        process: Forecast Demand
+        transformation: transform
+      - app: SAP ERP
+        process: Generate Purchase Order
+        transformation: transform
+      - app: Vendor Portal
+        process: Notify Supplier
+        transformation: filter
+    legs:
+      - from: Warehouse Management System
+        to: Inventory Service
+        flow_style: real-time
+        protocol: Kafka
+        avg_volume: 85K adjustments/day
+      - from: Inventory Service
+        to: Demand Planner
+        flow_style: near-real-time
+        protocol: Kafka
+        avg_volume: 150 snapshots/day
+      - from: Demand Planner
+        to: SAP ERP
+        flow_style: batch
+        protocol: SOAP
+        avg_volume: 200 POs/day
+      - from: SAP ERP
+        to: Vendor Portal
+        flow_style: batch
+        protocol: SFTP
+        avg_volume: 200 POs/day
+
+  - name: Subscription Autoship Pipeline
+    description: Recurring subscription orders from eligibility check through fulfillment
+    data_entity: Subscription
+    contains_pii: true
+    stages:
+      - app: PawsCare+ Platform
+        process: Evaluate Autoship Eligibility
+        transformation: filter
+      - app: Payment Gateway
+        process: Charge Recurring Payment
+        transformation: enrich
+      - app: Order Management System
+        process: Create Autoship Order
+        transformation: transform
+      - app: Warehouse Management System
+        process: Fulfill Autoship
+        transformation: passthrough
+    legs:
+      - from: PawsCare+ Platform
+        to: Payment Gateway
+        flow_style: real-time
+        protocol: REST
+        avg_volume: 12K charges/day
+      - from: PawsCare+ Platform
+        to: Order Management System
+        flow_style: real-time
+        protocol: REST
+        avg_volume: 12K orders/day
+      - from: Order Management System
+        to: Warehouse Management System
+        flow_style: real-time
+        protocol: Kafka
+        avg_volume: 12K shipments/day
+
+  - name: Prescription Fulfillment Flow
+    description: Vet prescription from clinic through pharmacy to customer notification
+    data_entity: Prescription
+    contains_pii: true
+    stages:
+      - app: VetConnect
+        process: Record Prescription
+        transformation: passthrough
+      - app: RxManager
+        process: Validate & Queue Prescription
+        transformation: enrich
+      - app: CommsPlatform
+        process: Notify Customer
+        transformation: filter
+    legs:
+      - from: VetConnect
+        to: RxManager
+        flow_style: real-time
+        protocol: REST
+        avg_volume: 1.8K prescriptions/day
+      - from: RxManager
+        to: CommsPlatform
+        flow_style: near-real-time
+        protocol: Kafka
+        avg_volume: 1.8K notifications/day
