@@ -28,6 +28,7 @@ from etcion.metamodel.motivation import (  # noqa: E402
     Goal,  # noqa: E402
     Stakeholder,
 )
+from etcion.metamodel.profiles import Profile  # noqa: E402
 from etcion.metamodel.relationships import (  # noqa: E402
     Access,
     Association,
@@ -607,3 +608,258 @@ class TestWriteModel_2:
         name_node = root.find(f"{{{ARCHIMATE_NS}}}name")
         assert name_node is not None
         assert name_node.text == "My Model"
+
+
+# ---------------------------------------------------------------------------
+# Issue #49: Profile and extended attribute XML serialization
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def profiled_model() -> Model:
+    profile = Profile(
+        name="Cloud",
+        specializations={ApplicationComponent: ["Microservice", "API Gateway"]},
+        attribute_extensions={ApplicationComponent: {"region": str, "cost": float}},
+    )
+    m = Model()
+    m.apply_profile(profile)
+    svc = ApplicationComponent(
+        name="Order Service",
+        specialization="Microservice",
+        extended_attributes={"region": "eu-west-1", "cost": 42.0},
+    )
+    gw = ApplicationComponent(
+        name="Gateway",
+        specialization="API Gateway",
+        extended_attributes={"region": "us-east-1", "cost": 10.5},
+    )
+    m.add(svc)
+    m.add(gw)
+    return m
+
+
+class TestProfileXmlSerialization:
+    """Issue #49 — serialize profiles and extended attributes into XML."""
+
+    def _root(self, profiled_model: Model) -> etree._Element:
+        return serialize_model(profiled_model).getroot()
+
+    def test_serialize_model_has_property_definitions(self, profiled_model: Model) -> None:
+        root = self._root(profiled_model)
+        node = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        assert node is not None
+
+    def test_property_definition_count(self, profiled_model: Model) -> None:
+        root = self._root(profiled_model)
+        pd_container = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        assert pd_container is not None
+        assert len(pd_container) == 2  # region + cost
+
+    def test_property_definition_has_identifier(self, profiled_model: Model) -> None:
+        root = self._root(profiled_model)
+        pd_container = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        assert pd_container is not None
+        identifiers = {pd.get("identifier") for pd in pd_container}
+        assert "propdef-ApplicationComponent-region" in identifiers
+        assert "propdef-ApplicationComponent-cost" in identifiers
+
+    def test_property_definition_has_name(self, profiled_model: Model) -> None:
+        root = self._root(profiled_model)
+        pd_container = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        assert pd_container is not None
+        name_texts = set()
+        for pd in pd_container:
+            name_node = pd.find(f"{{{ARCHIMATE_NS}}}name")
+            assert name_node is not None
+            name_texts.add(name_node.text)
+        assert "region" in name_texts
+        assert "cost" in name_texts
+
+    def test_property_definition_has_type(self, profiled_model: Model) -> None:
+        root = self._root(profiled_model)
+        pd_container = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        assert pd_container is not None
+        type_by_id: dict[str, str] = {}
+        for pd in pd_container:
+            pd_id = pd.get("identifier", "")
+            type_by_id[pd_id] = pd.get("type", "")
+        assert type_by_id["propdef-ApplicationComponent-region"] == "string"
+        assert type_by_id["propdef-ApplicationComponent-cost"] == "real"
+
+    def test_element_has_specialization_attr(self, profiled_model: Model) -> None:
+        root = self._root(profiled_model)
+        elements_node = root.find(f"{{{ARCHIMATE_NS}}}elements")
+        assert elements_node is not None
+        specializations = [el.get("specialization") for el in elements_node]
+        assert "Microservice" in specializations
+
+    def test_element_has_properties(self, profiled_model: Model) -> None:
+        root = self._root(profiled_model)
+        elements_node = root.find(f"{{{ARCHIMATE_NS}}}elements")
+        assert elements_node is not None
+        for el in elements_node:
+            props = el.find(f"{{{ARCHIMATE_NS}}}properties")
+            assert props is not None, f"<properties> missing on element {el.get('identifier')}"
+
+    def test_element_property_count(self, profiled_model: Model) -> None:
+        root = self._root(profiled_model)
+        elements_node = root.find(f"{{{ARCHIMATE_NS}}}elements")
+        assert elements_node is not None
+        for el in elements_node:
+            props = el.find(f"{{{ARCHIMATE_NS}}}properties")
+            assert props is not None
+            assert len(props) == 2, f"Expected 2 properties, got {len(props)}"
+
+    def test_element_property_has_value(self, profiled_model: Model) -> None:
+        root = self._root(profiled_model)
+        elements_node = root.find(f"{{{ARCHIMATE_NS}}}elements")
+        assert elements_node is not None
+        for el in elements_node:
+            props = el.find(f"{{{ARCHIMATE_NS}}}properties")
+            assert props is not None
+            for prop in props:
+                val_node = prop.find(f"{{{ARCHIMATE_NS}}}value")
+                assert val_node is not None
+                assert val_node.text is not None and val_node.text != ""
+
+    def test_element_no_specialization_when_none(self, simple_model: Model) -> None:
+        # simple_model has no profiles; elements must not carry specialization attr
+        root = serialize_model(simple_model).getroot()
+        elements_node = root.find(f"{{{ARCHIMATE_NS}}}elements")
+        assert elements_node is not None
+        for el in elements_node:
+            assert el.get("specialization") is None
+
+
+class TestProfileXmlRoundTrip:
+    """Issue #49 — round-trip fidelity for profiles, specializations, and extended attrs."""
+
+    def _round_trip(self, model: Model) -> Model:
+        tree = serialize_model(model)
+        return deserialize_model(tree)
+
+    def test_round_trip_specialization_preserved(self, profiled_model: Model) -> None:
+        restored = self._round_trip(profiled_model)
+        specializations = {e.specialization for e in restored.elements}
+        assert "Microservice" in specializations
+
+    def test_round_trip_extended_attributes_preserved(self, profiled_model: Model) -> None:
+        restored = self._round_trip(profiled_model)
+        svc = next(e for e in restored.elements if e.name == "Order Service")
+        assert svc.extended_attributes == {"region": "eu-west-1", "cost": 42.0}
+
+    def test_round_trip_profile_reconstructed(self, profiled_model: Model) -> None:
+        restored = self._round_trip(profiled_model)
+        assert len(restored.profiles) == 1
+
+    def test_round_trip_validate_passes(self, profiled_model: Model) -> None:
+        restored = self._round_trip(profiled_model)
+        errors = restored.validate()
+        assert errors == []
+
+    def test_no_profile_backward_compatible(self, simple_model: Model) -> None:
+        restored = self._round_trip(simple_model)
+        # No profiles, no errors
+        assert restored.profiles == []
+        assert len(restored.elements) == len(simple_model.elements)
+
+
+class TestProfileXmlRoundTripIntegrity:
+    """Issue #50 — comprehensive round-trip integrity for XML profile serialization."""
+
+    def _round_trip(self, model: Model) -> Model:
+        tree = serialize_model(model)
+        return deserialize_model(tree)
+
+    def test_xml_idempotency_element_data(self, profiled_model: Model) -> None:
+        """serialize → deserialize → serialize produces identical element data."""
+        tree1 = serialize_model(profiled_model)
+        restored = deserialize_model(tree1)
+        tree2 = serialize_model(restored)
+
+        root1 = tree1.getroot()
+        root2 = tree2.getroot()
+
+        # Compare elements
+        elems1 = root1.find(f"{{{ARCHIMATE_NS}}}elements")
+        elems2 = root2.find(f"{{{ARCHIMATE_NS}}}elements")
+        assert elems1 is not None and elems2 is not None
+        assert len(elems1) == len(elems2)
+
+        # Compare by name: each element should have same type, specialization, and properties
+        def _elem_key(el):
+            name_node = el.find(f"{{{ARCHIMATE_NS}}}name")
+            return name_node.text if name_node is not None else ""
+
+        for e1, e2 in zip(
+            sorted(elems1, key=_elem_key),
+            sorted(elems2, key=_elem_key),
+            strict=True,
+        ):
+            assert e1.get(f"{{{XSI_NS}}}type") == e2.get(f"{{{XSI_NS}}}type")
+            assert e1.get("specialization") == e2.get("specialization")
+            # Compare property values
+            props1 = e1.find(f"{{{ARCHIMATE_NS}}}properties")
+            props2 = e2.find(f"{{{ARCHIMATE_NS}}}properties")
+            if props1 is not None:
+                assert props2 is not None
+                assert len(props1) == len(props2)
+
+    def test_xml_idempotency_property_definitions(self, profiled_model: Model) -> None:
+        """propertyDefinitions survive round-trip."""
+        tree1 = serialize_model(profiled_model)
+        restored = deserialize_model(tree1)
+        tree2 = serialize_model(restored)
+
+        root1 = tree1.getroot()
+        root2 = tree2.getroot()
+
+        pd1 = root1.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        pd2 = root2.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        assert pd1 is not None and pd2 is not None
+        assert len(pd1) == len(pd2)
+
+    def test_empty_extended_attributes_no_properties_element(self) -> None:
+        """Elements without extended_attributes must NOT emit <properties>."""
+        actor = BusinessActor(name="Plain")
+        m = Model()
+        m.add(actor)
+        tree = serialize_model(m)
+        root = tree.getroot()
+        elems = root.find(f"{{{ARCHIMATE_NS}}}elements")
+        assert elems is not None
+        for el in elems:
+            props = el.find(f"{{{ARCHIMATE_NS}}}properties")
+            assert props is None, "Empty extended_attributes should not produce <properties>"
+
+    def test_no_property_definitions_without_profiles(self) -> None:
+        """Model without profiles should not emit <propertyDefinitions>."""
+        m = Model()
+        m.add(BusinessActor(name="A"))
+        tree = serialize_model(m)
+        root = tree.getroot()
+        pd = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        assert pd is None
+
+    def test_specializations_only_profile_round_trip(self) -> None:
+        """Profile with specializations but no attribute_extensions round-trips."""
+        profile = Profile(
+            name="Roles",
+            specializations={ApplicationComponent: ["Frontend", "Backend"]},
+        )
+        m = Model()
+        m.apply_profile(profile)
+        svc = ApplicationComponent(name="Web App", specialization="Frontend")
+        m.add(svc)
+
+        restored = self._round_trip(m)
+        assert len(restored.profiles) == 1
+        elem = next(e for e in restored.elements if e.name == "Web App")
+        assert elem.specialization == "Frontend"
+        assert restored.validate() == []
+
+    def test_validate_passes_after_round_trip(self, profiled_model: Model) -> None:
+        restored = self._round_trip(profiled_model)
+        assert restored.validate() == []
+        assert len(restored.profiles) > 0

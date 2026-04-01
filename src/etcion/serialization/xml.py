@@ -18,6 +18,7 @@ except ImportError as exc:
 
 from etcion.metamodel.concepts import Concept, Element, Relationship
 from etcion.metamodel.model import Model
+from etcion.metamodel.profiles import Profile
 from etcion.serialization.registry import (
     ARCHIMATE_NS,
     ARCHIMATE_SCHEMA_LOCATION,
@@ -31,6 +32,20 @@ from etcion.serialization.registry import (
 # Reverse registry: xml_tag -> concrete Concept subclass.
 # Built once at module load from TYPE_REGISTRY.
 _TAG_TO_TYPE: dict[str, type[Concept]] = {desc.xml_tag: cls for cls, desc in TYPE_REGISTRY.items()}
+
+# Python type <-> XSD type mapping for propertyDefinition/@type.
+_PY_TO_XSD_TYPE: dict[str, str] = {
+    "str": "string",
+    "int": "integer",
+    "float": "real",
+    "bool": "boolean",
+}
+_XSD_TO_PY_TYPE: dict[str, type] = {
+    "string": str,
+    "integer": int,
+    "real": float,
+    "boolean": bool,
+}
 
 
 def _to_exchange_id(internal_id: str) -> str:
@@ -53,6 +68,19 @@ def serialize_element(elem: Element) -> etree._Element:
         doc_el = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}documentation")
         doc_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
         doc_el.text = elem.description
+
+    if elem.specialization:
+        el.set("specialization", elem.specialization)
+
+    if elem.extended_attributes:
+        props_container = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}properties")
+        type_name = TYPE_REGISTRY[type(elem)].xml_tag
+        for attr_name, value in elem.extended_attributes.items():
+            prop_el = etree.SubElement(props_container, f"{{{ARCHIMATE_NS}}}property")
+            prop_el.set("propertyDefinitionRef", f"propdef-{type_name}-{attr_name}")
+            val_el = etree.SubElement(prop_el, f"{{{ARCHIMATE_NS}}}value")
+            val_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
+            val_el.text = str(value)
 
     return el
 
@@ -88,6 +116,19 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
     name_el = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}name")
     name_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
     name_el.text = model_name
+
+    if model.profiles:
+        propdefs = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        for profile in model.profiles:
+            for cls, attrs in profile.attribute_extensions.items():
+                type_name = TYPE_REGISTRY[cls].xml_tag
+                for attr_name, attr_type in attrs.items():
+                    pd = etree.SubElement(propdefs, f"{{{ARCHIMATE_NS}}}propertyDefinition")
+                    pd.set("identifier", f"propdef-{type_name}-{attr_name}")
+                    pd.set("type", _PY_TO_XSD_TYPE.get(attr_type.__name__, "string"))
+                    pd_name = etree.SubElement(pd, f"{{{ARCHIMATE_NS}}}name")
+                    pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
+                    pd_name.text = attr_name
 
     elements_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}elements")
     for elem in model.elements:
@@ -126,11 +167,18 @@ def _from_exchange_id(exchange_id: str) -> str:
     return exchange_id[3:] if exchange_id.startswith("id-") else exchange_id
 
 
-def _deserialize_element(node: etree._Element) -> Element | None:
+def _deserialize_element(
+    node: etree._Element,
+    propdef_map: dict[str, tuple[str, type]] | None = None,
+) -> Element | None:
     """Deserialize a single ``<element>`` node.
 
     Returns ``None`` and emits a :func:`warnings.warn` when the ArchiMate
     type attribute is not registered in ``_TAG_TO_TYPE``.
+
+    ``propdef_map`` maps a propertyDefinitionRef identifier to a tuple of
+    ``(attr_name, python_type)`` and is used to reconstruct extended
+    attributes.  Pass ``None`` (default) for models without profiles.
     """
     type_attr = node.get(f"{{{XSI_NS}}}type")
     if type_attr not in _TAG_TO_TYPE:
@@ -142,7 +190,24 @@ def _deserialize_element(node: etree._Element) -> Element | None:
     name: str = name_node.text or "" if name_node is not None else ""
     doc_node = node.find(f"{{{ARCHIMATE_NS}}}documentation")
     desc: str | None = doc_node.text if doc_node is not None else None
-    return cls(id=internal_id, name=name, description=desc)  # type: ignore[call-arg, return-value]
+
+    specialization: str | None = node.get("specialization")
+    extended_attributes: dict[str, Any] = {}
+    props_node = node.find(f"{{{ARCHIMATE_NS}}}properties")
+    if props_node is not None and propdef_map:
+        for prop_node in props_node:
+            ref = prop_node.get("propertyDefinitionRef", "")
+            val_node = prop_node.find(f"{{{ARCHIMATE_NS}}}value")
+            if ref in propdef_map and val_node is not None and val_node.text:
+                attr_name, attr_type = propdef_map[ref]
+                extended_attributes[attr_name] = attr_type(val_node.text)
+
+    kwargs: dict[str, Any] = {}
+    if specialization:
+        kwargs["specialization"] = specialization
+    if extended_attributes:
+        kwargs["extended_attributes"] = extended_attributes
+    return cls(id=internal_id, name=name, description=desc, **kwargs)  # type: ignore[call-arg, return-value]
 
 
 def _deserialize_relationship(
@@ -179,29 +244,74 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
     """Deserialize an Exchange Format :class:`lxml.etree._ElementTree` into a
     :class:`~etcion.metamodel.model.Model`.
 
-    Uses a two-phase approach:
+    Uses a four-phase approach:
 
-    1. Parse all ``<element>`` nodes and build an ``id_map`` keyed by the
-       exchange-format identifier (``id-<uuid>``).
-    2. Parse all ``<relationship>`` nodes, resolving ``source``/``target``
-       references against ``id_map``.
+    1. Parse ``<propertyDefinitions>`` to build a ``propdef_map`` and
+       ``attr_extensions`` for profile reconstruction.
+    2. Parse all ``<element>`` nodes into a list (not yet added to the model),
+       collecting specialization names per element type.
+    3. Reconstruct a synthetic ``"Imported"`` profile from the gathered data
+       and apply it to the model.
+    4. Add elements to the model, then parse relationships.
     """
     root = tree.getroot()
     model = Model()
 
-    # Phase 1: elements
+    # Phase 1: parse propertyDefinitions
+    propdef_map: dict[str, tuple[str, type]] = {}
+    attr_extensions: dict[type[Element], dict[str, type]] = {}
+    propdefs_node = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+    if propdefs_node is not None:
+        for pd_node in propdefs_node:
+            pd_id = pd_node.get("identifier", "")
+            pd_type_str = pd_node.get("type", "string")
+            py_type: type = _XSD_TO_PY_TYPE.get(pd_type_str, str)
+            pd_name_node = pd_node.find(f"{{{ARCHIMATE_NS}}}name")
+            attr_name = pd_name_node.text if pd_name_node is not None and pd_name_node.text else ""
+            propdef_map[pd_id] = (attr_name, py_type)
+            # Identifier scheme: "propdef-TypeName-attr_name"
+            parts = pd_id.split("-", 2)
+            if len(parts) == 3 and parts[1] in _TAG_TO_TYPE:
+                raw_cls = _TAG_TO_TYPE[parts[1]]
+                if not (isinstance(raw_cls, type) and issubclass(raw_cls, Element)):
+                    continue
+                elem_cls: type[Element] = raw_cls
+                if elem_cls not in attr_extensions:
+                    attr_extensions[elem_cls] = {}
+                attr_extensions[elem_cls][attr_name] = py_type
+
+    # Phase 2: parse elements (collect, do not add yet); gather specializations
     id_map: dict[str, Concept] = {}
+    parsed_elements: list[Element] = []
+    specializations: dict[type[Element], list[str]] = {}
     elements_node = root.find(f"{{{ARCHIMATE_NS}}}elements")
     if elements_node is not None:
         for el_node in elements_node:
-            concept = _deserialize_element(el_node)
+            concept = _deserialize_element(el_node, propdef_map if propdef_map else None)
             if concept is not None:
-                # Key by the EXCHANGE FORMAT id (with id- prefix) so that
-                # relationship source/target refs resolve correctly.
                 id_map[el_node.get("identifier", "")] = concept
-                model.add(concept)
+                parsed_elements.append(concept)
+                if concept.specialization:
+                    cls_type = type(concept)
+                    if cls_type not in specializations:
+                        specializations[cls_type] = []
+                    if concept.specialization not in specializations[cls_type]:
+                        specializations[cls_type].append(concept.specialization)
 
-    # Phase 2: relationships
+    # Phase 3: reconstruct and apply synthetic profile (if any profile data exists)
+    if attr_extensions or specializations:
+        profile = Profile(
+            name="Imported",
+            specializations=specializations,
+            attribute_extensions=attr_extensions,
+        )
+        model.apply_profile(profile)
+
+    # Phase 4: add elements to model
+    for elem in parsed_elements:
+        model.add(elem)
+
+    # Phase 5: relationships
     rels_node = root.find(f"{{{ARCHIMATE_NS}}}relationships")
     if rels_node is not None:
         for rel_node in rels_node:
@@ -213,7 +323,8 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
     opaque: list[etree._Element] = []
     for child in root:
         tag_local = etree.QName(child.tag).localname
-        if tag_local not in ("elements", "relationships", "name", "documentation"):
+        _opaque_skip = ("elements", "relationships", "name", "documentation", "propertyDefinitions")
+        if tag_local not in _opaque_skip:
             opaque.append(child)
     model._opaque_xml = opaque  # type: ignore[attr-defined]
 
