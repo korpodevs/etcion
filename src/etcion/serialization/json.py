@@ -49,6 +49,7 @@ def model_to_dict(model: Model) -> dict[str, Any]:
     during deserialization.
     """
     return {
+        "_schema_version": "1.0",
         "elements": [_serialize_concept(e) for e in model.elements],
         "relationships": [_serialize_concept(r) for r in model.relationships],
     }

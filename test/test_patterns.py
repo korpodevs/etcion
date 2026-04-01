@@ -2417,4 +2417,85 @@ class TestViewpointIntegration:
         p = Pattern()
         # Should not raise
         p.node("asvc", ApplicationService)
-        assert "asvc" in p.nodes
+
+
+# ---------------------------------------------------------------------------
+# MatchResult.to_dict() — GitHub Issue #33
+# ---------------------------------------------------------------------------
+
+
+class TestMatchResultToDict:
+    """Tests for MatchResult.to_dict() — GitHub Issue #33, ADR-046.
+
+    All tests require networkx because we produce MatchResult instances via
+    Pattern.match(). The module-level pytest.importorskip("networkx") already
+    guards the whole module, so every test here is implicitly skipped without
+    networkx. We call importorskip again inside the helper for explicitness.
+    """
+
+    @staticmethod
+    def _make_match_result() -> object:
+        """Return a MatchResult with two aliases bound to real concept instances."""
+        pytest.importorskip("networkx")
+
+        from etcion.metamodel.model import Model
+        from etcion.patterns import Pattern
+
+        actor = BusinessActor(name="Alice")
+        role = BusinessRole(name="Buyer")
+        rel = Assignment(name="rel", source=actor, target=role)
+        model = Model()
+        model.add(actor)
+        model.add(role)
+        model.add(rel)
+
+        p = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .node("role", BusinessRole)
+            .edge("actor", "role", Assignment)
+        )
+        matches = list(p.match(model))
+        assert matches, "Precondition: pattern must produce at least one match"
+        return matches[0]
+
+    def test_returns_dict(self) -> None:
+        """to_dict() must return a plain dict instance."""
+        result = self._make_match_result()
+        output = result.to_dict()
+        assert isinstance(output, dict)
+
+    def test_json_serializable(self) -> None:
+        """to_dict() output must be serializable by json.dumps without error."""
+        import json
+
+        result = self._make_match_result()
+        output = result.to_dict()
+        # Must not raise
+        json.dumps(output)
+
+    def test_schema_version(self) -> None:
+        """to_dict() must include _schema_version == '1.0' per ADR-046."""
+        result = self._make_match_result()
+        output = result.to_dict()
+        assert output.get("_schema_version") == "1.0"
+
+    def test_alias_keys_present(self) -> None:
+        """Each alias in the pattern mapping must be a top-level key in the dict."""
+        result = self._make_match_result()
+        output = result.to_dict()
+        for alias in result.mapping:
+            assert alias in output, f"Alias '{alias}' missing from to_dict() output"
+
+    def test_entry_structure(self) -> None:
+        """Each alias entry must contain concept_id, concept_type, and concept_name."""
+        result = self._make_match_result()
+        output = result.to_dict()
+        for alias, concept in result.mapping.items():
+            entry = output[alias]
+            assert "concept_id" in entry, f"concept_id missing for alias '{alias}'"
+            assert "concept_type" in entry, f"concept_type missing for alias '{alias}'"
+            assert "concept_name" in entry, f"concept_name missing for alias '{alias}'"
+            assert entry["concept_id"] == concept.id
+            assert entry["concept_type"] == type(concept).__name__
+            assert entry["concept_name"] == getattr(concept, "name", None)

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from etcion.comparison import ConceptChange, FieldChange
@@ -75,29 +77,130 @@ class TestMergeResult:
         assert bool(result) is False
 
     def test_to_dict_keys(self) -> None:
-        """to_dict() returns a dict with expected keys."""
+        """to_dict() returns a dict with ADR-046 top-level keys."""
         model = Model()
         result = MergeResult(merged_model=model, conflicts=(), violations=())
         d = result.to_dict()
+        assert "_schema_version" in d
         assert "conflicts" in d
         assert "violations" in d
-        assert "merged_element_count" in d
+        assert "merged_model_summary" in d
 
     def test_to_dict_counts(self) -> None:
-        """to_dict() counts match actual tuple lengths."""
+        """to_dict() lists have lengths matching actual tuple lengths."""
         actor = BusinessActor(id="a1", name="A")
         model = Model(concepts=[actor])
         cc = ConceptChange(concept_id="a1", concept_type="BusinessActor", changes={})
         result = MergeResult(merged_model=model, conflicts=(cc,), violations=())
         d = result.to_dict()
-        assert d["conflicts"] == 1
-        assert d["violations"] == 0
-        assert d["merged_element_count"] == 1
+        assert len(d["conflicts"]) == 1
+        assert len(d["violations"]) == 0
+        assert d["merged_model_summary"]["element_count"] == 1
 
     def test_str_delegates_to_summary(self) -> None:
         model = Model()
         result = MergeResult(merged_model=model, conflicts=(), violations=())
         assert str(result) == result.summary()
+
+
+# ---------------------------------------------------------------------------
+# TestMergeResultToDict -- ADR-046 contract for to_dict()
+# ---------------------------------------------------------------------------
+
+
+class TestMergeResultToDict:
+    """Verify MergeResult.to_dict() satisfies the ADR-046 contract."""
+
+    def _make_clean_result(self) -> MergeResult:
+        """Return a MergeResult with no conflicts and no violations."""
+        actor = BusinessActor(id="a1", name="Alice")
+        model = Model(concepts=[actor])
+        return MergeResult(merged_model=model, conflicts=(), violations=())
+
+    def _make_conflict_result(self) -> MergeResult:
+        """Return a MergeResult that carries one known conflict."""
+        base_actor = BusinessActor(id="conflict-id", name="Alice")
+        frag_actor = BusinessActor(id="conflict-id", name="Alicia")
+        base = Model(concepts=[base_actor])
+        fragment = Model(concepts=[frag_actor])
+        return merge_models(base, fragment, strategy="prefer_base")
+
+    def _make_violation_result(self) -> MergeResult:
+        """Return a MergeResult that carries one dangling-endpoint violation."""
+        actor_a = BusinessActor(id="actor-a", name="A")
+        ghost = BusinessActor(id="ghost", name="Ghost")
+        rel = Association(id="rel-dangling", name="ghostlink", source=actor_a, target=ghost)
+        base = Model(concepts=[actor_a])
+        fragment_actor_a = BusinessActor(id="actor-a", name="A")
+        fragment = Model(concepts=[fragment_actor_a, rel])
+        return merge_models(base, fragment)
+
+    def test_returns_dict(self) -> None:
+        """to_dict() must return a plain dict."""
+        result = self._make_clean_result()
+        assert isinstance(result.to_dict(), dict)
+
+    def test_json_serializable(self) -> None:
+        """to_dict() output must be serializable with json.dumps() without a custom encoder."""
+        result = self._make_conflict_result()
+        raw = result.to_dict()
+        # Must not raise
+        serialized = json.dumps(raw)
+        assert isinstance(serialized, str)
+
+    def test_schema_version(self) -> None:
+        """to_dict() must include _schema_version == '1.0'."""
+        result = self._make_clean_result()
+        d = result.to_dict()
+        assert "_schema_version" in d
+        assert d["_schema_version"] == "1.0"
+
+    def test_merged_model_summary(self) -> None:
+        """to_dict() must include merged_model_summary with element_count and relationship_count."""
+        actor = BusinessActor(id="a1", name="Alice")
+        model = Model(concepts=[actor])
+        result = MergeResult(merged_model=model, conflicts=(), violations=())
+        d = result.to_dict()
+        assert "merged_model_summary" in d
+        summary = d["merged_model_summary"]
+        assert "element_count" in summary
+        assert "relationship_count" in summary
+        assert summary["element_count"] == 1
+        assert summary["relationship_count"] == 0
+
+    def test_conflicts_detail(self) -> None:
+        """Each entry in conflicts must have concept_id, concept_type, and changed_fields."""
+        result = self._make_conflict_result()
+        d = result.to_dict()
+        assert "conflicts" in d
+        assert len(d["conflicts"]) == 1
+        entry = d["conflicts"][0]
+        assert "concept_id" in entry
+        assert "concept_type" in entry
+        assert "changed_fields" in entry
+        assert entry["concept_id"] == "conflict-id"
+        assert entry["concept_type"] == "BusinessActor"
+        assert isinstance(entry["changed_fields"], list)
+        assert "name" in entry["changed_fields"]
+
+    def test_violations_detail(self) -> None:
+        """Each entry in violations must have relationship_id and reason."""
+        result = self._make_violation_result()
+        d = result.to_dict()
+        assert "violations" in d
+        assert len(d["violations"]) >= 1
+        entry = d["violations"][0]
+        assert "relationship_id" in entry
+        assert "reason" in entry
+        assert entry["relationship_id"] == "rel-dangling"
+        assert isinstance(entry["reason"], str)
+
+    def test_empty_merge_to_dict(self) -> None:
+        """A clean merge (no conflicts, no violations) produces empty lists for both."""
+        result = self._make_clean_result()
+        d = result.to_dict()
+        assert d["conflicts"] == []
+        assert d["violations"] == []
 
 
 # ---------------------------------------------------------------------------

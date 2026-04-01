@@ -104,15 +104,38 @@ class MergeResult:
         return "".join(parts)
 
     def to_dict(self) -> dict[str, Any]:
-        """Return a JSON-serialisable summary dict.
+        """Return a JSON-serializable dict per ADR-046.
 
-        :returns: Dict with ``conflicts``, ``violations``, and
-            ``merged_element_count`` keys.
+        Includes ``_schema_version`` for forward compatibility.  All nested
+        objects are reduced to primitive types so that
+        ``json.dumps(result.to_dict())`` succeeds without a custom encoder.
+
+        :returns: Dict with keys ``_schema_version``,
+            ``merged_model_summary``, ``conflicts``, and ``violations``.
         """
         return {
-            "conflicts": len(self.conflicts),
-            "violations": len(self.violations),
-            "merged_element_count": len(self.merged_model) if self.merged_model else 0,
+            "_schema_version": "1.0",
+            "merged_model_summary": {
+                "element_count": len(self.merged_model.elements) if self.merged_model else 0,
+                "relationship_count": len(self.merged_model.relationships)
+                if self.merged_model
+                else 0,
+            },
+            "conflicts": [
+                {
+                    "concept_id": c.concept_id,
+                    "concept_type": c.concept_type,
+                    "changed_fields": list(c.changes.keys()),
+                }
+                for c in self.conflicts
+            ],
+            "violations": [
+                {
+                    "relationship_id": v.relationship.id,
+                    "reason": v.reason,
+                }
+                for v in self.violations
+            ],
         }
 
 
