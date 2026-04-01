@@ -28,6 +28,7 @@ dependencies = [
 [project.optional-dependencies]
 xml = ["lxml>=5.0,<6.0"]
 graph = ["networkx>=3.0,<4.0"]
+dataframe = ["pandas>=2.0"]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
@@ -36,6 +37,7 @@ dev = [
     "ruff>=0.4",
     "lxml>=5.0,<6.0",
     "networkx>=3.0,<4.0",
+    "pandas>=2.0",
     "build>=1.0",
     "twine>=5.0",
 ]
@@ -97,6 +99,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "networkx.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pandas.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

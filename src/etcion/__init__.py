@@ -8,6 +8,9 @@ try:
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "0.0.0.dev0"
 
+# Phase 6: ModelBuilder -- fluent construction API (ADR-044, Issue #19)
+from etcion.builder import ModelBuilder
+
 # Phase 4: Model comparison and diff utilities (EPIC-024, FEAT-24.1)
 from etcion.comparison import ConceptChange, FieldChange, ModelDiff, diff_models
 from etcion.conformance import CONFORMANCE, ConformanceProfile
@@ -32,6 +35,9 @@ from etcion.exceptions import (
 
 # Phase 5: Impact analysis engine (ADR-043, Issue #9)
 from etcion.impact import ImpactedConcept, ImpactResult, analyze_impact, chain_impacts
+
+# Phase 7: Model merge operations (ADR-045, Issue #22)
+from etcion.merge import MergeResult, apply_diff, merge_models
 
 # Phase 2: Application layer (EPIC-008)
 from etcion.metamodel.application import (
@@ -347,4 +353,10 @@ __all__: list[str] = [
     "ImpactedConcept",
     "ImpactResult",
     "analyze_impact",
+    # ModelBuilder -- fluent construction API (ADR-044, Issue #19)
+    "ModelBuilder",
+    # Model merge operations (ADR-045, Issue #22)
+    "MergeResult",
+    "merge_models",
+    "apply_diff",
 ]
