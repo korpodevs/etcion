@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 01 Apr 2026
+
+### Added
+
+- **JSON profile serialization** -- `model_to_dict()` now includes a `"profiles"`
+  key serializing `Profile` objects with type-name strings for class keys and
+  Python type-name strings for attribute types. `model_from_dict()` reconstructs
+  profiles and calls `apply_profile()` before adding elements. Specialization,
+  extended attributes, and `model.validate()` all survive JSON round-trip.
+- **XML profile serialization** -- `serialize_model()` emits
+  `<propertyDefinitions>` for profile attribute extensions; `serialize_element()`
+  emits a `specialization` attribute and `<properties>` sub-elements for
+  extended attributes. `deserialize_model()` reconstructs a synthetic profile
+  from property definitions and element specializations, applying it before
+  adding elements.
+- **Round-trip integrity tests** -- comprehensive idempotency and edge-case
+  coverage for both JSON and XML profile serialization, including dict
+  idempotency, XML element-data stability, empty-attributes noise checks,
+  and specializations-only profile round-trips.
+
 ## [0.4.1] - 01 Apr 2026
 
 ### Fixed
