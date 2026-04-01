@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "etcion"
-version = "0.5.1"
+version = "0.6.0"
 description = "Architecture as code — build, query, validate, and analyze enterprise architecture models in Python"
 readme = "README.md"
 license = "MIT"
@@ -29,6 +29,8 @@ dependencies = [
 xml = ["lxml>=5.0,<6.0"]
 graph = ["networkx>=3.0,<4.0"]
 dataframe = ["pandas>=2.0"]
+parquet = ["pandas>=2.0", "pyarrow>=14.0"]
+duckdb = ["pandas>=2.0", "duckdb>=0.10"]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
@@ -38,6 +40,8 @@ dev = [
     "lxml>=5.0,<6.0",
     "networkx>=3.0,<4.0",
     "pandas>=2.0",
+    "pyarrow>=14.0",
+    "duckdb>=0.10",
     "build>=1.0",
     "twine>=5.0",
 ]
@@ -104,6 +108,22 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "pandas.*"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pyarrow.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "duckdb"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "etcion.serialization.parquet"
+disable_error_code = ["import-untyped"]
+
+[[tool.mypy.overrides]]
+module = "etcion.serialization.duckdb_export"
+disable_error_code = ["import-untyped"]
 
 [[tool.mypy.overrides]]
 module = "etcion.serialization.xml"

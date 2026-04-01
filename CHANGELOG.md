@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 01 Apr 2026
+
+### Added
+
+- **Parquet export** -- `to_parquet(model, path)` writes
+  `{path}_elements.parquet` and `{path}_relationships.parquet` with column
+  schemas matching `to_dataframe()`. New optional extra: `pip install
+  etcion[parquet]` (requires pyarrow >= 14.0).
+- **DuckDB export** -- `to_duckdb(model, path)` writes `elements` and
+  `relationships` tables to a DuckDB database file. New optional extra:
+  `pip install etcion[duckdb]` (requires duckdb >= 0.10).
+- **View/Viewpoint metadata in JSON** -- `model_to_dict(model,
+  include_views=True)` adds `"viewpoints"` and `"views"` keys to the output
+  dict. Default behavior (`include_views=False`) is unchanged.
+- **Model.add_view() / Model.views** -- `Model` now stores views via
+  `add_view()` with a `views` read-only property.
+
 ## [0.5.1] - 01 Apr 2026
 
 ### Fixed

@@ -85,7 +85,7 @@ def _serialize_concept(concept: Concept) -> dict[str, Any]:
     return data
 
 
-def model_to_dict(model: Model) -> dict[str, Any]:
+def model_to_dict(model: Model, *, include_views: bool = False) -> dict[str, Any]:
     """Serialize a :class:`~etcion.metamodel.model.Model` to a JSON-compatible dictionary.
 
     The returned structure is::
@@ -105,13 +105,42 @@ def model_to_dict(model: Model) -> dict[str, Any]:
     ``attribute_extensions`` keys, with class keys serialized as
     ArchiMate type-name strings and Python type values serialized as
     type-name strings (e.g. ``"str"``, ``"float"``).
+
+    :param include_views: When ``True``, add ``"viewpoints"`` and ``"views"``
+        keys to the output.  Unique viewpoints are collected from all registered
+        views and serialized with ``name``, ``purpose``, and ``content``.  Each
+        view entry records the viewpoint name and the ordered list of concept IDs
+        it contains.  Defaults to ``False`` to preserve backward compatibility.
     """
-    return {
+    result: dict[str, Any] = {
         "_schema_version": "1.0",
         "profiles": [_serialize_profile(p) for p in model.profiles],
         "elements": [_serialize_concept(e) for e in model.elements],
         "relationships": [_serialize_concept(r) for r in model.relationships],
     }
+    if include_views:
+        # Deduplicate viewpoints by name (Viewpoint.concerns: list[Any] is not hashable).
+        seen_vp: dict[str, Any] = {}
+        for v in model.views:
+            vp = v.governing_viewpoint
+            if vp.name not in seen_vp:
+                seen_vp[vp.name] = vp
+        result["viewpoints"] = [
+            {
+                "name": vp.name,
+                "purpose": vp.purpose.value,
+                "content": vp.content.value,
+            }
+            for vp in seen_vp.values()
+        ]
+        result["views"] = [
+            {
+                "viewpoint": v.governing_viewpoint.name,
+                "concept_ids": [c.id for c in v.concepts],
+            }
+            for v in model.views
+        ]
+    return result
 
 
 def model_from_dict(data: dict[str, Any]) -> Model:

@@ -266,3 +266,80 @@ class TestProfileRoundTripIntegrity:
         restored = model_from_dict(data)
         assert restored.validate() == []
         assert len(restored.profiles) > 0
+
+
+@pytest.fixture
+def model_with_views() -> Model:
+    from etcion.enums import ContentCategory, PurposeCategory
+    from etcion.metamodel.viewpoints import View, Viewpoint
+
+    actor = BusinessActor(name="Alice")
+    proc = BusinessProcess(name="Order Handling")
+    rel = Serving(name="serves", source=actor, target=proc)
+    m = Model()
+    m.add(actor)
+    m.add(proc)
+    m.add(rel)
+
+    vp = Viewpoint(
+        name="Organization",
+        purpose=PurposeCategory.INFORMING,
+        content=ContentCategory.OVERVIEW,
+        permitted_concept_types=frozenset({BusinessActor, BusinessProcess, Serving}),
+    )
+    view = View(governing_viewpoint=vp, underlying_model=m)
+    view.add(actor)
+    view.add(proc)
+    view.add(rel)
+    m.add_view(view)
+    return m
+
+
+class TestModelToDictWithViews:
+    def test_default_no_views_key(self, model_with_views):
+        """Default call must not include viewpoints or views keys (backward compat)."""
+        result = model_to_dict(model_with_views)
+        assert "viewpoints" not in result
+        assert "views" not in result
+
+    def test_include_views_has_viewpoints_key(self, model_with_views):
+        result = model_to_dict(model_with_views, include_views=True)
+        assert "viewpoints" in result
+
+    def test_include_views_has_views_key(self, model_with_views):
+        result = model_to_dict(model_with_views, include_views=True)
+        assert "views" in result
+
+    def test_viewpoints_content(self, model_with_views):
+        result = model_to_dict(model_with_views, include_views=True)
+        vps = result["viewpoints"]
+        assert len(vps) == 1
+        vp = vps[0]
+        assert vp["name"] == "Organization"
+        assert vp["purpose"] == "Informing"
+        assert vp["content"] == "Overview"
+
+    def test_views_content(self, model_with_views):
+        result = model_to_dict(model_with_views, include_views=True)
+        views = result["views"]
+        assert len(views) == 1
+        v = views[0]
+        assert v["viewpoint"] == "Organization"
+        assert "concept_ids" in v
+
+    def test_views_concept_ids_match(self, model_with_views):
+        from etcion.metamodel.viewpoints import View
+
+        result = model_to_dict(model_with_views, include_views=True)
+        concept_ids_in_dict = set(result["views"][0]["concept_ids"])
+        # The view contains 3 concepts: actor, proc, rel
+        registered_view: View = model_with_views.views[0]
+        expected_ids = {c.id for c in registered_view.concepts}
+        assert concept_ids_in_dict == expected_ids
+
+    def test_no_views_on_model_empty_lists(self):
+        """A model with no views returns empty lists when include_views=True."""
+        m = Model()
+        result = model_to_dict(m, include_views=True)
+        assert result["viewpoints"] == []
+        assert result["views"] == []
