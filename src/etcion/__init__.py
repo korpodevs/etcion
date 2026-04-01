@@ -188,6 +188,14 @@ from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE, ViewpointC
 
 # Phase 3: Viewpoints (EPIC-017)
 from etcion.metamodel.viewpoints import Concern, View, Viewpoint
+
+# Phase 8: Built-in provenance metadata profile and query helpers (Issues #25, #26)
+from etcion.provenance import (
+    INGESTION_PROFILE,
+    elements_by_source,
+    low_confidence_elements,
+    unreviewed_elements,
+)
 from etcion.validation.permissions import is_permitted, warm_cache
 from etcion.validation.rules import ValidationRule
 
@@ -359,4 +367,9 @@ __all__: list[str] = [
     "MergeResult",
     "merge_models",
     "apply_diff",
+    # Built-in provenance metadata profile and query helpers (Issues #25, #26)
+    "INGESTION_PROFILE",
+    "unreviewed_elements",
+    "elements_by_source",
+    "low_confidence_elements",
 ]
