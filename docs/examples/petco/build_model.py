@@ -319,7 +319,7 @@ def _build_integrations(
             },
         )
         model.add(iface)
-        model.add(Assignment(name="", source=source_app, target=iface))
+        model.add(Composition(name="", source=source_app, target=iface))
 
 
 def _build_technology(

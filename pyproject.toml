@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "etcion"
-version = "0.5.0"
+version = "0.5.1"
 description = "Architecture as code — build, query, validate, and analyze enterprise architecture models in Python"
 readme = "README.md"
 license = "MIT"

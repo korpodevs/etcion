@@ -654,7 +654,7 @@ class TestProfileXmlSerialization:
         root = self._root(profiled_model)
         pd_container = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
         assert pd_container is not None
-        assert len(pd_container) == 2  # region + cost
+        assert len(pd_container) == 3  # specialization + region + cost
 
     def test_property_definition_has_identifier(self, profiled_model: Model) -> None:
         root = self._root(profiled_model)
@@ -685,14 +685,22 @@ class TestProfileXmlSerialization:
             pd_id = pd.get("identifier", "")
             type_by_id[pd_id] = pd.get("type", "")
         assert type_by_id["propdef-ApplicationComponent-region"] == "string"
-        assert type_by_id["propdef-ApplicationComponent-cost"] == "real"
+        assert type_by_id["propdef-ApplicationComponent-cost"] == "number"
 
-    def test_element_has_specialization_attr(self, profiled_model: Model) -> None:
+    def test_element_has_specialization_property(self, profiled_model: Model) -> None:
         root = self._root(profiled_model)
         elements_node = root.find(f"{{{ARCHIMATE_NS}}}elements")
         assert elements_node is not None
-        specializations = [el.get("specialization") for el in elements_node]
-        assert "Microservice" in specializations
+        spec_values: list[str] = []
+        for el in elements_node:
+            props = el.find(f"{{{ARCHIMATE_NS}}}properties")
+            if props is not None:
+                for prop in props:
+                    if prop.get("propertyDefinitionRef") == "propdef-specialization":
+                        val = prop.find(f"{{{ARCHIMATE_NS}}}value")
+                        if val is not None and val.text:
+                            spec_values.append(val.text)
+        assert "Microservice" in spec_values
 
     def test_element_has_properties(self, profiled_model: Model) -> None:
         root = self._root(profiled_model)
@@ -709,7 +717,7 @@ class TestProfileXmlSerialization:
         for el in elements_node:
             props = el.find(f"{{{ARCHIMATE_NS}}}properties")
             assert props is not None
-            assert len(props) == 2, f"Expected 2 properties, got {len(props)}"
+            assert len(props) == 3
 
     def test_element_property_has_value(self, profiled_model: Model) -> None:
         root = self._root(profiled_model)
@@ -724,12 +732,13 @@ class TestProfileXmlSerialization:
                 assert val_node.text is not None and val_node.text != ""
 
     def test_element_no_specialization_when_none(self, simple_model: Model) -> None:
-        # simple_model has no profiles; elements must not carry specialization attr
+        # simple_model has no profiles; elements must not carry specialization property
         root = serialize_model(simple_model).getroot()
         elements_node = root.find(f"{{{ARCHIMATE_NS}}}elements")
         assert elements_node is not None
         for el in elements_node:
-            assert el.get("specialization") is None
+            props = el.find(f"{{{ARCHIMATE_NS}}}properties")
+            assert props is None
 
 
 class TestProfileXmlRoundTrip:
@@ -798,7 +807,6 @@ class TestProfileXmlRoundTripIntegrity:
             strict=True,
         ):
             assert e1.get(f"{{{XSI_NS}}}type") == e2.get(f"{{{XSI_NS}}}type")
-            assert e1.get("specialization") == e2.get("specialization")
             # Compare property values
             props1 = e1.find(f"{{{ARCHIMATE_NS}}}properties")
             props2 = e2.find(f"{{{ARCHIMATE_NS}}}properties")
