@@ -19,6 +19,7 @@ from etcion.metamodel.profiles import Profile
 
 if TYPE_CHECKING:
     from etcion.exceptions import ValidationError
+    from etcion.metamodel.viewpoints import View
     from etcion.validation.rules import ValidationRule
 
 __all__: list[str] = ["Model"]
@@ -46,6 +47,7 @@ class Model:
         self._custom_rules: list[ValidationRule] = []
         # Graph cache — invalidated by add() (ADR-041).
         self._nx_graph: object | None = None
+        self._views: list[View] = []
         if concepts is not None:
             for concept in concepts:
                 self.add(concept)
@@ -86,6 +88,19 @@ class Model:
                     raise ValueError(f"Duplicate specialization name: '{name}'")
                 self._specialization_registry[name] = base_type
         self._profiles.append(profile)
+
+    def add_view(self, view: "View") -> None:
+        """Register a View with this model.
+
+        :param view: A :class:`~etcion.metamodel.viewpoints.View` instance whose
+            ``underlying_model`` is this model.
+        """
+        self._views.append(view)
+
+    @property
+    def views(self) -> "list[View]":
+        """Return a read-only copy of registered views."""
+        return list(self._views)
 
     def add_validation_rule(self, rule: ValidationRule) -> None:
         """Register a custom validation rule.
