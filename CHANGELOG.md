@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 31 Mar 2026
+
+### Added
+
+- **ModelBuilder fluent API** -- context manager and standalone usage with
+  snake_case factory methods for all 58 element types and 12 relationship types.
+  `ModelBuilder.from_dicts()` for batch construction from JSON/API output.
+  `ModelBuilder.from_dataframe()` for optional pandas integration.
+- **Model merge operations** -- `merge_models(base, fragment)` with four conflict
+  resolution strategies (`prefer_base`, `prefer_fragment`, `fail_on_conflict`,
+  `custom` with resolver callback). `apply_diff()` applies a `ModelDiff` as a
+  patch with round-trip fidelity.
+- **Provenance metadata** -- built-in `INGESTION_PROFILE` with `_provenance_source`,
+  `_provenance_confidence`, `_provenance_reviewed`, `_provenance_timestamp`
+  extended attributes. Query helpers: `unreviewed_elements()`,
+  `elements_by_source()`, `low_confidence_elements()`.
+- **CSV/TSV import/export** -- `from_csv()` / `to_csv()` in
+  `etcion.serialization.csv` with delimiter parameter and type resolution.
+- **DataFrame import/export** -- `from_dataframe()` / `to_dataframe()` in
+  `etcion.serialization.dataframe`. Optional pandas dependency via
+  `pip install etcion[dataframe]`.
+- **Notebook-friendly rendering** -- `_repr_html_()` on `ModelDiff`,
+  `ImpactResult`, `GapResult`, and `MergeResult` with color-coded inline-styled
+  HTML tables (green=added, red=removed, amber=modified).
+
 ## [0.2.0] - 30 Mar 2026
 
 ### Added
