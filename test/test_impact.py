@@ -1651,3 +1651,136 @@ class TestRemoveRelationship:
         result = analyze_impact(model, remove_relationship=rel)
         broken_ids = {r.id for r in result.broken_relationships}
         assert "rel-ab" in broken_ids
+
+
+# ---------------------------------------------------------------------------
+# TestImpactResultToDict
+# ---------------------------------------------------------------------------
+
+
+class TestImpactResultToDict:
+    """Tests for ImpactResult.to_dict() — GitHub Issue #30, ADR-046 D2."""
+
+    def _make_result_with_all_fields(self):  # type: ignore[return]
+        """Build a populated ImpactResult with affected, broken_relationships, violations."""
+        from etcion.impact import ImpactedConcept, ImpactResult, Violation
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.relationships import Association
+
+        actor = BusinessActor(id="a1", name="Alice")
+        role = BusinessRole(id="r1", name="Architect")
+        rel = Association(id="rel1", name="assoc", source=actor, target=role)
+
+        ic = ImpactedConcept(concept=actor, depth=1, path=("rel1",))
+        violation = Violation(relationship=rel, reason="not permitted")
+
+        return ImpactResult(
+            affected=(ic,),
+            broken_relationships=(rel,),
+            violations=(violation,),
+        )
+
+    def test_returns_dict(self) -> None:
+        result = self._make_result_with_all_fields()
+        assert isinstance(result.to_dict(), dict)
+
+    def test_json_serializable(self) -> None:
+        import json
+
+        result = self._make_result_with_all_fields()
+        # Must not raise
+        serialized = json.dumps(result.to_dict())
+        assert isinstance(serialized, str)
+
+    def test_schema_version(self) -> None:
+        result = self._make_result_with_all_fields()
+        d = result.to_dict()
+        assert d["_schema_version"] == "1.0"
+
+    def test_affected_entries_structure(self) -> None:
+        result = self._make_result_with_all_fields()
+        d = result.to_dict()
+        assert len(d["affected"]) == 1
+        entry = d["affected"][0]
+        assert "concept_id" in entry
+        assert "concept_type" in entry
+        assert "concept_name" in entry
+        assert "depth" in entry
+        assert "path" in entry
+        assert "layer" in entry
+
+    def test_affected_entry_values(self) -> None:
+        result = self._make_result_with_all_fields()
+        d = result.to_dict()
+        entry = d["affected"][0]
+        assert entry["concept_id"] == "a1"
+        assert entry["concept_type"] == "BusinessActor"
+        assert entry["concept_name"] == "Alice"
+        assert entry["depth"] == 1
+        assert entry["path"] == ["rel1"]
+
+    def test_broken_relationships_structure(self) -> None:
+        result = self._make_result_with_all_fields()
+        d = result.to_dict()
+        assert len(d["broken_relationships"]) == 1
+        entry = d["broken_relationships"][0]
+        assert "id" in entry
+        assert "type" in entry
+        assert "source_id" in entry
+        assert "target_id" in entry
+
+    def test_broken_relationships_values(self) -> None:
+        result = self._make_result_with_all_fields()
+        d = result.to_dict()
+        entry = d["broken_relationships"][0]
+        assert entry["id"] == "rel1"
+        assert entry["type"] == "Association"
+        assert entry["source_id"] == "a1"
+        assert entry["target_id"] == "r1"
+
+    def test_violations_structure(self) -> None:
+        result = self._make_result_with_all_fields()
+        d = result.to_dict()
+        assert len(d["violations"]) == 1
+        entry = d["violations"][0]
+        assert "relationship_id" in entry
+        assert "reason" in entry
+
+    def test_violations_values(self) -> None:
+        result = self._make_result_with_all_fields()
+        d = result.to_dict()
+        entry = d["violations"][0]
+        assert entry["relationship_id"] == "rel1"
+        assert entry["reason"] == "not permitted"
+
+    def test_empty_result_to_dict(self) -> None:
+        from etcion.impact import ImpactResult
+
+        result = ImpactResult()
+        d = result.to_dict()
+        assert d["_schema_version"] == "1.0"
+        assert d["affected"] == []
+        assert d["broken_relationships"] == []
+        assert d["violations"] == []
+
+    def test_layer_is_string_or_none(self) -> None:
+        """layer value in affected entries must be a str (enum .value) or None."""
+        from etcion.impact import ImpactedConcept, ImpactResult
+        from etcion.metamodel.business import BusinessActor, BusinessRole
+        from etcion.metamodel.relationships import Association
+
+        actor = BusinessActor(id="a1", name="Alice")
+        role = BusinessRole(id="r1", name="Role")
+        rel = Association(id="rel1", name="assoc", source=actor, target=role)
+
+        ic_element = ImpactedConcept(concept=actor, depth=1)
+        ic_relationship = ImpactedConcept(concept=rel, depth=2)
+
+        result = ImpactResult(affected=(ic_element, ic_relationship))
+        d = result.to_dict()
+
+        for entry in d["affected"]:
+            layer_val = entry["layer"]
+            assert layer_val is None or isinstance(layer_val, str), (
+                f"layer must be str or None, got {type(layer_val)!r}: {layer_val!r}"
+            )

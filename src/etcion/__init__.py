@@ -196,6 +196,7 @@ from etcion.provenance import (
     low_confidence_elements,
     unreviewed_elements,
 )
+from etcion.serialization.graph_data import LAYER_COLORS, to_cytoscape_json, to_echarts_graph
 from etcion.validation.permissions import is_permitted, warm_cache
 from etcion.validation.rules import ValidationRule
 
@@ -372,4 +373,8 @@ __all__: list[str] = [
     "unreviewed_elements",
     "elements_by_source",
     "low_confidence_elements",
+    # Graph metadata export helpers (ADR-047, Issue #38; covers #45, #47)
+    "LAYER_COLORS",
+    "to_cytoscape_json",
+    "to_echarts_graph",
 ]

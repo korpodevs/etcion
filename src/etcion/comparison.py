@@ -60,6 +60,7 @@ class ModelDiff:
             }
 
         return {
+            "_schema_version": "1.0",
             "added": [_concept_entry(c) for c in self.added],
             "removed": [_concept_entry(c) for c in self.removed],
             "modified": [_change_entry(cc) for cc in self.modified],

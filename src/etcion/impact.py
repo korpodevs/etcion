@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from etcion.metamodel.concepts import Concept, Relationship
 
@@ -107,6 +107,49 @@ class ImpactResult:
     def __bool__(self) -> bool:
         """Return ``True`` if any concepts were affected."""
         return len(self.affected) > 0
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable dict representation of this result.
+
+        Includes a ``_schema_version`` key per ADR-046 D2.  All nested objects
+        are reduced to primitive types so that ``json.dumps(result.to_dict())``
+        succeeds without a custom encoder.
+
+        :returns: Dict with keys ``_schema_version``, ``affected``,
+            ``broken_relationships``, and ``violations``.
+        """
+        return {
+            "_schema_version": "1.0",
+            "affected": [
+                {
+                    "concept_id": ic.concept.id,
+                    "concept_type": type(ic.concept).__name__,
+                    "concept_name": getattr(ic.concept, "name", None),
+                    "depth": ic.depth,
+                    "path": list(ic.path),
+                    "layer": _layer.value
+                    if (_layer := getattr(type(ic.concept), "layer", None)) is not None
+                    else None,
+                }
+                for ic in self.affected
+            ],
+            "broken_relationships": [
+                {
+                    "id": r.id,
+                    "type": type(r).__name__,
+                    "source_id": r.source.id,
+                    "target_id": r.target.id,
+                }
+                for r in self.broken_relationships
+            ],
+            "violations": [
+                {
+                    "relationship_id": v.relationship.id,
+                    "reason": v.reason,
+                }
+                for v in self.violations
+            ],
+        }
 
     def _repr_html_(self) -> str:
         """Return an inline-styled HTML representation for Jupyter notebooks."""

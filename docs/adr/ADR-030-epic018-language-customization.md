@@ -86,6 +86,13 @@ Extended attributes declared via `attribute_extensions` are stored in a `dict[st
 
 This avoids mutating Pydantic model schemas at runtime while still providing a structured place for custom data that survives serialization.
 
+#### Serialization Round-Trip Contract
+
+Both JSON and XML serializers persist profiles and extended attributes such that a deserialized model passes `model.validate()` without requiring the consumer to manually reapply profiles. The serialization contracts are specified in ADR-031 (Decision 7a, 7b, and 9a). Concretely:
+
+- **JSON:** `model_to_dict()` includes a `"profiles"` key; `model_from_dict()` reconstructs and applies profiles before adding elements. `extended_attributes` and `specialization` on elements are included via Pydantic's `model_dump()`.
+- **XML:** Profiles map to `<propertyDefinitions>` at the model level; extended attributes map to `<properties>` on individual elements per the ArchiMate Exchange Format. The `specialization` field is emitted as an element attribute.
+
 ### 8. Exports Deferred to EPIC-020
 
 Consistent with ADR-026 and ADR-029, `Profile` is not added to `etcion.__init__.__all__` in EPIC-018. The `test_language_customization` xfail will be resolved when EPIC-020 wires the exports.

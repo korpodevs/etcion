@@ -99,10 +99,25 @@ Both live in `etcion.serialization.xml`. `write_model` emits UTF-8 encoded XML w
 |---|---|
 | Elements (type, id, name, documentation) | **Full** -- lossless round-trip |
 | Relationships (type, source, target, type-specific fields) | **Full** -- `access_mode`, `sign`, `direction`, etc. preserved |
-| Profiles and specializations | **Full** -- serialized as Exchange Format property definitions |
+| Profiles and specializations | **Full** -- see Decision 7a below |
+| Extended attributes | **Full** -- see Decision 7b below |
 | Visual/diagrammatic data (views, coordinates, bendpoints) | **Best-effort** -- stored as opaque `lxml` subtrees, re-emitted verbatim on write |
 
 Unknown XML elements encountered during read are preserved as raw `lxml.etree.Element` nodes attached to the `Model` (via an internal `_opaque_xml: list[etree._Element]` field) and re-emitted during write. This prevents data loss when round-tripping files produced by tools with proprietary extensions.
+
+### 7a. Profile and Specialization Serialization (XML)
+
+Profiles declared via `Model.apply_profile()` are serialized to XML using the ArchiMate Exchange Format's `<propertyDefinitions>` mechanism:
+
+1. **Write path:** `serialize_model()` emits a `<propertyDefinitions>` block at the model level. Each entry in `Profile.attribute_extensions` produces a `<propertyDefinition>` with an identifier, name, and type. The `specialization` field on elements is emitted as an element attribute when present.
+2. **Read path:** `deserialize_model()` reads `<propertyDefinitions>`, reconstructs `Profile` objects, and calls `model.apply_profile()` before adding elements. This ensures `model.validate()` passes immediately after deserialization without the consumer needing to manually reapply profiles.
+
+### 7b. Extended Attribute Serialization (XML)
+
+Extended attributes stored in `Element.extended_attributes` are serialized using the Exchange Format's `<properties>` mechanism:
+
+1. **Write path:** `serialize_element()` emits `<properties>` sub-elements for each non-empty `extended_attributes` entry, referencing the corresponding `<propertyDefinition>` by identifier.
+2. **Read path:** `_deserialize_element()` reads `<properties>` sub-elements and populates the element's `extended_attributes` dict. Elements with empty `extended_attributes` do not produce `<properties>` nodes.
 
 ### 8. XSD Validation: Optional, Explicit
 
@@ -122,6 +137,16 @@ def model_from_dict(data: dict[str, Any]) -> Model: ...
 ```
 
 This is a secondary format for programmatic interchange (APIs, databases), not for ArchiMate tool interop.
+
+#### 9a. Profile Serialization (JSON)
+
+`model_to_dict()` includes a `"profiles"` key in the top-level dict containing a list of profile dicts. Each profile dict contains:
+
+- `"name"`: the profile name string.
+- `"specializations"`: a dict keyed by ArchiMate type-name strings (e.g., `"ApplicationComponent"`), with values as lists of specialization name strings.
+- `"attribute_extensions"`: a dict keyed by ArchiMate type-name strings, with values as dicts mapping attribute names to Python type name strings (e.g., `"str"`, `"float"`).
+
+`model_from_dict()` reconstructs `Profile` instances from the `"profiles"` key and calls `model.apply_profile()` before adding elements. This ensures `model.validate()` passes immediately after deserialization. `extended_attributes` and `specialization` on individual elements are already included via Pydantic's `model_dump()` and require no special handling.
 
 ### 10. Unknown Element Handling on Read
 

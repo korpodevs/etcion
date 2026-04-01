@@ -187,7 +187,7 @@ class TestToDict:
     def test_empty_diff_to_dict(self) -> None:
         diff = ModelDiff(added=(), removed=(), modified=())
         d = diff.to_dict()
-        assert d == {"added": [], "removed": [], "modified": []}
+        assert d == {"_schema_version": "1.0", "added": [], "removed": [], "modified": []}
 
     def test_added_entry_structure(self) -> None:
         actor = BusinessActor(id="a1", name="Alice")
@@ -240,10 +240,15 @@ class TestToDict:
         m2 = Model(concepts=[a1_v2, a3])
         diff = diff_models(m1, m2)
         d = diff.to_dict()
-        assert set(d.keys()) == {"added", "removed", "modified"}
+        assert set(d.keys()) == {"_schema_version", "added", "removed", "modified"}
         assert len(d["added"]) == 1  # a3
         assert len(d["removed"]) == 1  # a2
         assert len(d["modified"]) == 1  # a1 renamed
+
+    def test_to_dict_has_schema_version(self) -> None:
+        diff = ModelDiff(added=(), removed=(), modified=())
+        d = diff.to_dict()
+        assert d["_schema_version"] == "1.0"
 
 
 # ---------------------------------------------------------------------------

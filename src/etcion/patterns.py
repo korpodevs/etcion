@@ -129,6 +129,20 @@ class MatchResult:
         """Return ``True`` if *alias* is present in this match."""
         return alias in self.mapping
 
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable dict representation.
+
+        Per ADR-046, includes ``_schema_version`` for forward compatibility.
+        """
+        result: dict[str, Any] = {"_schema_version": "1.0"}
+        for alias, concept in self.mapping.items():
+            result[alias] = {
+                "concept_id": concept.id,
+                "concept_type": type(concept).__name__,
+                "concept_name": getattr(concept, "name", None),
+            }
+        return result
+
 
 class _MatcherProto(Protocol):
     """Minimal protocol for ``DiGraphMatcher`` used by :meth:`Pattern._build_matcher`."""

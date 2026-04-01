@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 01 Apr 2026
+
+### Added
+
+- **Data export contracts** -- stable, versioned `to_dict()` on all analytical
+  result types (`ImpactResult`, `MatchResult`, `MergeResult`, `ModelDiff`,
+  `model_to_dict`). All include `_schema_version: "1.0"` per ADR-046.
+- **View materialization** -- `View.to_model(source)` produces a filtered,
+  deep-copied Model containing only viewpoint-permitted concepts.
+  `View.to_networkx()` chains materialization with graph conversion.
+- **DataFrame exports** -- `diff_to_dataframe()`, `impact_to_dataframe()`, and
+  `to_flat_dataframe()` for direct import into BI tools (Tableau, Power BI).
+  Denormalized flat export joins elements with relationships in a single table.
+- **Graph metadata export** -- `to_cytoscape_json()` and `to_echarts_graph()`
+  produce dicts matching Cytoscape.js and ECharts JSON schemas. `LAYER_COLORS`
+  constant maps ArchiMate layers to standard hex colors with `color_map`
+  override for custom theming.
+
 ## [0.3.0] - 31 Mar 2026
 
 ### Added

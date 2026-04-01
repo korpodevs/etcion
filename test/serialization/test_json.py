@@ -63,6 +63,10 @@ class TestModelToDict:
         json_str = json.dumps(result)
         assert isinstance(json_str, str)
 
+    def test_model_to_dict_has_schema_version(self, sample_model):
+        result = model_to_dict(sample_model)
+        assert result["_schema_version"] == "1.0"
+
 
 class TestModelFromDict:
     def test_round_trip_element_count(self, sample_model):
