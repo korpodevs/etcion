@@ -36,14 +36,13 @@ _TAG_TO_TYPE: dict[str, type[Concept]] = {desc.xml_tag: cls for cls, desc in TYP
 # Python type <-> XSD type mapping for propertyDefinition/@type.
 _PY_TO_XSD_TYPE: dict[str, str] = {
     "str": "string",
-    "int": "integer",
-    "float": "real",
+    "int": "number",
+    "float": "number",
     "bool": "boolean",
 }
 _XSD_TO_PY_TYPE: dict[str, type] = {
     "string": str,
-    "integer": int,
-    "real": float,
+    "number": float,
     "boolean": bool,
 }
 

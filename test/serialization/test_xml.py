@@ -685,7 +685,7 @@ class TestProfileXmlSerialization:
             pd_id = pd.get("identifier", "")
             type_by_id[pd_id] = pd.get("type", "")
         assert type_by_id["propdef-ApplicationComponent-region"] == "string"
-        assert type_by_id["propdef-ApplicationComponent-cost"] == "real"
+        assert type_by_id["propdef-ApplicationComponent-cost"] == "number"
 
     def test_element_has_specialization_attr(self, profiled_model: Model) -> None:
         root = self._root(profiled_model)
