@@ -12,7 +12,7 @@ from lxml import etree
 
 lxml = pytest.importorskip("lxml")
 
-from etcion.enums import AccessMode, InfluenceSign  # noqa: E402
+from etcion.enums import AccessMode, ContentCategory, InfluenceSign, PurposeCategory  # noqa: E402
 from etcion.metamodel.application import (  # noqa: E402
     ApplicationComponent,
     DataObject,  # noqa: E402
@@ -37,6 +37,7 @@ from etcion.metamodel.relationships import (  # noqa: E402
     Influence,  # noqa: E402
     Serving,  # noqa: E402
 )
+from etcion.metamodel.viewpoints import View, Viewpoint  # noqa: E402
 from etcion.serialization.registry import (  # noqa: E402
     ARCHIMATE_NS,  # noqa: E402
     XSI_NS,
@@ -396,30 +397,30 @@ class TestIdFormatCompliance:
 
 
 class TestOpaqueXmlPreservation:
-    def test_views_node_survives_round_trip(self):
-        """Inject a <views> node into XML; verify it survives deserialization + re-serialization."""
+    def test_unknown_opaque_node_survives_round_trip(self):
+        """Inject an unknown opaque child; verify it survives a round-trip."""
         a = BusinessActor(name="A")
         m = Model()
         m.add(a)
         tree = serialize_model(m)
         root = tree.getroot()
 
-        # Inject opaque <views> subtree
-        views = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}views")
-        diagram = etree.SubElement(views, f"{{{ARCHIMATE_NS}}}diagrams")
-        diagram.set("identifier", "id-view-001")
-        diagram.text = "opaque"
+        # Inject an opaque unknown subtree (not <views> — that is now parsed)
+        custom = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}organizations")
+        item = etree.SubElement(custom, f"{{{ARCHIMATE_NS}}}item")
+        item.set("identifier", "id-org-001")
+        item.text = "opaque-org"
 
         # Round-trip
         restored_model = deserialize_model(etree.ElementTree(root))
         re_tree = serialize_model(restored_model)
         re_root = re_tree.getroot()
 
-        views_out = re_root.find(f"{{{ARCHIMATE_NS}}}views")
-        assert views_out is not None, "Opaque <views> node lost during round-trip"
-        diag_out = views_out.find(f"{{{ARCHIMATE_NS}}}diagrams")
-        assert diag_out is not None
-        assert diag_out.get("identifier") == "id-view-001"
+        orgs_out = re_root.find(f"{{{ARCHIMATE_NS}}}organizations")
+        assert orgs_out is not None, "Opaque <organizations> node lost during round-trip"
+        item_out = orgs_out.find(f"{{{ARCHIMATE_NS}}}item")
+        assert item_out is not None
+        assert item_out.get("identifier") == "id-org-001"
 
 
 class TestValidateExchangeFormat:
@@ -871,3 +872,162 @@ class TestProfileXmlRoundTripIntegrity:
         restored = self._round_trip(profiled_model)
         assert restored.validate() == []
         assert len(restored.profiles) > 0
+
+
+# ---------------------------------------------------------------------------
+# Issue #61: Views and Viewpoints in XML Exchange Format
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def model_with_views() -> Model:
+    actor = BusinessActor(name="Alice")
+    proc = BusinessProcess(name="Order Handling")
+    rel = Serving(name="serves", source=actor, target=proc)
+    m = Model()
+    m.add(actor)
+    m.add(proc)
+    m.add(rel)
+
+    vp = Viewpoint(
+        name="Organization",
+        purpose=PurposeCategory.INFORMING,
+        content=ContentCategory.OVERVIEW,
+        permitted_concept_types=frozenset({BusinessActor, BusinessProcess, Serving}),
+    )
+    view = View(governing_viewpoint=vp, underlying_model=m)
+    view.add(actor)
+    view.add(proc)
+    view.add(rel)
+    m.add_view(view)
+    return m
+
+
+def _get_root(model: Model) -> etree._Element:
+    return serialize_model(model).getroot()
+
+
+def _views_el(root: etree._Element) -> etree._Element | None:
+    return root.find(f"{{{ARCHIMATE_NS}}}views")
+
+
+def _diagrams_el(root: etree._Element) -> etree._Element | None:
+    views = _views_el(root)
+    if views is None:
+        return None
+    return views.find(f"{{{ARCHIMATE_NS}}}diagrams")
+
+
+def _view_els(root: etree._Element) -> list[etree._Element]:
+    diagrams = _diagrams_el(root)
+    if diagrams is None:
+        return []
+    return diagrams.findall(f"{{{ARCHIMATE_NS}}}view")
+
+
+class TestViewXmlSerialization:
+    """Issue #61 — serialize Views/Viewpoints into the Exchange Format XML."""
+
+    def test_serialize_has_views_element(self, model_with_views: Model) -> None:
+        root = _get_root(model_with_views)
+        assert _views_el(root) is not None, "<views> element missing from serialized model"
+
+    def test_serialize_has_diagrams_element(self, model_with_views: Model) -> None:
+        root = _get_root(model_with_views)
+        assert _diagrams_el(root) is not None, "<diagrams> element missing from <views>"
+
+    def test_serialize_view_count(self, model_with_views: Model) -> None:
+        root = _get_root(model_with_views)
+        views = _view_els(root)
+        assert len(views) == 1, f"Expected 1 <view>, got {len(views)}"
+
+    def test_serialize_view_has_name(self, model_with_views: Model) -> None:
+        root = _get_root(model_with_views)
+        view_el = _view_els(root)[0]
+        name_el = view_el.find(f"{{{ARCHIMATE_NS}}}name")
+        assert name_el is not None, "<name> child missing from <view>"
+        assert name_el.text == "Organization"
+
+    def test_serialize_view_has_type_diagram(self, model_with_views: Model) -> None:
+        root = _get_root(model_with_views)
+        view_el = _view_els(root)[0]
+        xsi_type = view_el.get(f"{{{XSI_NS}}}type")
+        assert xsi_type == "Diagram", f"Expected xsi:type='Diagram', got {xsi_type!r}"
+
+    def test_serialize_node_count(self, model_with_views: Model) -> None:
+        root = _get_root(model_with_views)
+        view_el = _view_els(root)[0]
+        nodes = view_el.findall(f"{{{ARCHIMATE_NS}}}node")
+        # 2 elements (BusinessActor + BusinessProcess); the Serving relationship is a connection
+        assert len(nodes) == 2, f"Expected 2 <node> elements, got {len(nodes)}"
+
+    def test_serialize_node_has_element_ref(self, model_with_views: Model) -> None:
+        root = _get_root(model_with_views)
+        view_el = _view_els(root)[0]
+        for node in view_el.findall(f"{{{ARCHIMATE_NS}}}node"):
+            ref = node.get("elementRef")
+            assert ref is not None, "<node> missing elementRef attribute"
+            assert ref.startswith("id-"), f"elementRef does not carry id- prefix: {ref!r}"
+
+    def test_serialize_node_has_coordinates(self, model_with_views: Model) -> None:
+        root = _get_root(model_with_views)
+        view_el = _view_els(root)[0]
+        for node in view_el.findall(f"{{{ARCHIMATE_NS}}}node"):
+            for attr in ("x", "y", "w", "h"):
+                val = node.get(attr)
+                assert val is not None, f"<node> missing attribute '{attr}'"
+                assert val.lstrip("-").isdigit(), (
+                    f"<node> attribute '{attr}' is not numeric: {val!r}"
+                )
+
+    def test_serialize_connection_count(self, model_with_views: Model) -> None:
+        root = _get_root(model_with_views)
+        view_el = _view_els(root)[0]
+        conns = view_el.findall(f"{{{ARCHIMATE_NS}}}connection")
+        assert len(conns) == 1, f"Expected 1 <connection>, got {len(conns)}"
+
+    def test_serialize_connection_has_relationship_ref(self, model_with_views: Model) -> None:
+        root = _get_root(model_with_views)
+        view_el = _view_els(root)[0]
+        conn = view_el.findall(f"{{{ARCHIMATE_NS}}}connection")[0]
+        ref = conn.get("relationshipRef")
+        assert ref is not None, "<connection> missing relationshipRef attribute"
+        assert ref.startswith("id-"), f"relationshipRef does not carry id- prefix: {ref!r}"
+
+    def test_no_views_when_empty(self) -> None:
+        m = Model()
+        m.add(BusinessActor(name="Solo"))
+        root = _get_root(m)
+        assert _views_el(root) is None, "<views> must be absent when model has no views"
+
+
+class TestViewXmlRoundTrip:
+    """Issue #61 — deserialise Views back into View objects after serialisation."""
+
+    def _round_trip(self, model: Model) -> Model:
+        tree = serialize_model(model)
+        return deserialize_model(tree)
+
+    def test_round_trip_view_count(self, model_with_views: Model) -> None:
+        restored = self._round_trip(model_with_views)
+        assert len(restored.views) == 1, (
+            f"Expected 1 view after round-trip, got {len(restored.views)}"
+        )
+
+    def test_round_trip_view_concepts(self, model_with_views: Model) -> None:
+        restored = self._round_trip(model_with_views)
+        view = restored.views[0]
+        # 2 elements + 1 relationship = 3 concepts total
+        assert len(view.concepts) == 3, (
+            f"Expected 3 concepts in round-tripped view, got {len(view.concepts)}"
+        )
+
+    def test_round_trip_viewpoint_name(self, model_with_views: Model) -> None:
+        restored = self._round_trip(model_with_views)
+        view = restored.views[0]
+        assert view.governing_viewpoint.name == "Organization"
+
+    def test_no_views_backward_compatible(self, sample_model: Model) -> None:
+        """Models without views round-trip without error and produce no views."""
+        restored = self._round_trip(sample_model)
+        assert len(restored.views) == 0
