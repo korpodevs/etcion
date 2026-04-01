@@ -235,7 +235,7 @@ def _register_all() -> None:
     )
     TYPE_REGISTRY[Flow] = TypeDescriptor(
         xml_tag="Flow",
-        extra_attrs={"flowType": lambda r: r.flow_type},
+        extra_attrs={},
     )
     TYPE_REGISTRY[Junction] = TypeDescriptor(
         xml_tag="Junction",

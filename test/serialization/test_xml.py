@@ -174,12 +174,13 @@ class TestSerializeRelationshipExtraAttrs:
         el = serialize_relationship(rel)
         assert el.get("modifier") is None
 
-    def test_flow_flow_type(self):
+    def test_flow_flow_type_not_serialized(self):
+        """flowType is not part of the ArchiMate Exchange Format XSD."""
         a = BusinessProcess(name="P1")
         b = BusinessProcess(name="P2")
         rel = Flow(name="data flow", source=a, target=b, flow_type="data")
         el = serialize_relationship(rel)
-        assert el.get("flowType") == "data"
+        assert el.get("flowType") is None
 
     def test_association_is_directed(self):
         from etcion.enums import AssociationDirection
