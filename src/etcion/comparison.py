@@ -79,6 +79,70 @@ class ModelDiff:
     def __bool__(self) -> bool:
         return bool(self.added or self.removed or self.modified)
 
+    def _repr_html_(self) -> str:
+        """Return an inline-styled HTML representation for Jupyter notebooks."""
+        if not self.added and not self.removed and not self.modified:
+            return (
+                "<div style='padding:8px;color:#666;font-family:sans-serif;'>"
+                "No changes detected.</div>"
+            )
+        parts = ["<div style='font-family:sans-serif;font-size:13px;'>"]
+        parts.append(
+            f"<h4 style='margin:4px 0;'>ModelDiff: {len(self.added)} added, "
+            f"{len(self.removed)} removed, {len(self.modified)} modified</h4>"
+        )
+        if self.added:
+            parts.append("<table style='border-collapse:collapse;width:100%;margin:4px 0;'>")
+            parts.append(
+                "<tr style='background:#d4edda;'>"
+                "<th style='text-align:left;padding:4px;'>Added</th>"
+                "<th style='padding:4px;'>Type</th>"
+                "</tr>"
+            )
+            for c in self.added:
+                parts.append(
+                    f"<tr style='background:#d4edda;'>"
+                    f"<td style='padding:4px;'>{getattr(c, 'name', c.id)}</td>"
+                    f"<td style='padding:4px;'>{type(c).__name__}</td>"
+                    f"</tr>"
+                )
+            parts.append("</table>")
+        if self.removed:
+            parts.append("<table style='border-collapse:collapse;width:100%;margin:4px 0;'>")
+            parts.append(
+                "<tr style='background:#f8d7da;'>"
+                "<th style='text-align:left;padding:4px;'>Removed</th>"
+                "<th style='padding:4px;'>Type</th>"
+                "</tr>"
+            )
+            for c in self.removed:
+                parts.append(
+                    f"<tr style='background:#f8d7da;'>"
+                    f"<td style='padding:4px;'>{getattr(c, 'name', c.id)}</td>"
+                    f"<td style='padding:4px;'>{type(c).__name__}</td>"
+                    f"</tr>"
+                )
+            parts.append("</table>")
+        if self.modified:
+            parts.append("<table style='border-collapse:collapse;width:100%;margin:4px 0;'>")
+            parts.append(
+                "<tr style='background:#fff3cd;'>"
+                "<th style='text-align:left;padding:4px;'>Modified</th>"
+                "<th style='padding:4px;'>Fields</th>"
+                "</tr>"
+            )
+            for change in self.modified:
+                fields = ", ".join(change.changes.keys())
+                parts.append(
+                    f"<tr style='background:#fff3cd;'>"
+                    f"<td style='padding:4px;'>{change.concept_id[:12]}...</td>"
+                    f"<td style='padding:4px;'>{fields}</td>"
+                    f"</tr>"
+                )
+            parts.append("</table>")
+        parts.append("</div>")
+        return "".join(parts)
+
 
 def _build_key(concept: Concept, match_by: Literal["id", "type_name"]) -> str | tuple[str, str]:
     """Return the lookup key for a concept."""

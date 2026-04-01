@@ -85,6 +85,25 @@ class GapResult:
     element: Concept
     missing: list[str]
 
+    def _repr_html_(self) -> str:
+        """Return an inline-styled HTML representation for Jupyter notebooks."""
+        name = getattr(self.element, "name", None) or self.element.id
+        element_type = type(self.element).__name__
+        parts = [
+            "<div style='font-family:sans-serif;font-size:13px;padding:4px;'>",
+            f"<h4 style='margin:4px 0;'>GapResult: {name} "
+            f"<span style='font-weight:normal;color:#666;'>({element_type})</span></h4>",
+        ]
+        if self.missing:
+            parts.append("<ul style='margin:4px 0;padding-left:20px;'>")
+            for desc in self.missing:
+                parts.append(f"<li style='color:#721c24;padding:2px 0;'>{desc}</li>")
+            parts.append("</ul>")
+        else:
+            parts.append("<p style='color:#155724;margin:4px 0;'>No missing connections.</p>")
+        parts.append("</div>")
+        return "".join(parts)
+
 
 @dataclass(frozen=True)
 class MatchResult:

@@ -55,6 +55,54 @@ class MergeResult:
         """Return ``True`` when there are unresolved conflicts."""
         return len(self.conflicts) > 0
 
+    def _repr_html_(self) -> str:
+        """Return an inline-styled HTML representation for Jupyter notebooks."""
+        if not self.conflicts and not self.violations:
+            element_count = len(self.merged_model) if self.merged_model else 0
+            return (
+                f"<div style='padding:8px;color:#155724;font-family:sans-serif;'>"
+                f"Clean merge &mdash; {element_count} element(s), no conflicts.</div>"
+            )
+        parts = ["<div style='font-family:sans-serif;font-size:13px;'>"]
+        parts.append(
+            f"<h4 style='margin:4px 0;'>MergeResult: {len(self.conflicts)} conflict(s), "
+            f"{len(self.violations)} violation(s)</h4>"
+        )
+        if self.conflicts:
+            parts.append("<table style='border-collapse:collapse;width:100%;margin:4px 0;'>")
+            parts.append(
+                "<tr style='background:#fff3cd;'>"
+                "<th style='text-align:left;padding:4px;'>Concept ID</th>"
+                "<th style='padding:4px;'>Type</th>"
+                "<th style='padding:4px;'>Conflicting Fields</th>"
+                "</tr>"
+            )
+            for change in self.conflicts:
+                fields = ", ".join(change.changes.keys())
+                parts.append(
+                    f"<tr style='background:#fff3cd;'>"
+                    f"<td style='padding:4px;'>{change.concept_id}</td>"
+                    f"<td style='padding:4px;'>{change.concept_type}</td>"
+                    f"<td style='padding:4px;'>{fields}</td>"
+                    f"</tr>"
+                )
+            parts.append("</table>")
+        if self.violations:
+            parts.append("<h5 style='margin:6px 0 2px 0;color:#721c24;'>Violations</h5>")
+            parts.append("<table style='border-collapse:collapse;width:100%;margin:4px 0;'>")
+            parts.append(
+                "<tr style='background:#f8d7da;'>"
+                "<th style='text-align:left;padding:4px;'>Reason</th>"
+                "</tr>"
+            )
+            for v in self.violations:
+                parts.append(
+                    f"<tr style='background:#f8d7da;'><td style='padding:4px;'>{v.reason}</td></tr>"
+                )
+            parts.append("</table>")
+        parts.append("</div>")
+        return "".join(parts)
+
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-serialisable summary dict.
 

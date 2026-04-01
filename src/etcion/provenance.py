@@ -107,8 +107,7 @@ def unreviewed_elements(model: Model) -> list[Element]:
     return [
         e
         for e in model.elements
-        if _has_provenance(e)
-        and not e.extended_attributes.get("_provenance_reviewed", False)
+        if _has_provenance(e) and not e.extended_attributes.get("_provenance_reviewed", False)
     ]
 
 
@@ -126,8 +125,7 @@ def elements_by_source(model: Model, source: str) -> list[Element]:
     return [
         e
         for e in model.elements
-        if _has_provenance(e)
-        and e.extended_attributes.get("_provenance_source") == source
+        if _has_provenance(e) and e.extended_attributes.get("_provenance_source") == source
     ]
 
 

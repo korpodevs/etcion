@@ -108,6 +108,68 @@ class ImpactResult:
         """Return ``True`` if any concepts were affected."""
         return len(self.affected) > 0
 
+    def _repr_html_(self) -> str:
+        """Return an inline-styled HTML representation for Jupyter notebooks."""
+        if not self.affected and not self.broken_relationships and not self.violations:
+            return (
+                "<div style='padding:8px;color:#666;font-family:sans-serif;'>"
+                "No impact detected.</div>"
+            )
+        parts = ["<div style='font-family:sans-serif;font-size:13px;'>"]
+        parts.append(
+            f"<h4 style='margin:4px 0;'>ImpactResult: {len(self.affected)} affected, "
+            f"{len(self.broken_relationships)} broken relationship(s)</h4>"
+        )
+        if self.affected:
+            parts.append("<table style='border-collapse:collapse;width:100%;margin:4px 0;'>")
+            parts.append(
+                "<tr style='background:#cce5ff;'>"
+                "<th style='text-align:left;padding:4px;'>Affected</th>"
+                "<th style='padding:4px;'>Type</th>"
+                "<th style='padding:4px;'>Depth</th>"
+                "</tr>"
+            )
+            for ic in self.affected:
+                name = getattr(ic.concept, "name", None) or ic.concept.id
+                parts.append(
+                    f"<tr>"
+                    f"<td style='padding:4px;'>{name}</td>"
+                    f"<td style='padding:4px;'>{type(ic.concept).__name__}</td>"
+                    f"<td style='padding:4px;'>{ic.depth}</td>"
+                    f"</tr>"
+                )
+            parts.append("</table>")
+        if self.broken_relationships:
+            parts.append("<h5 style='margin:6px 0 2px 0;color:#721c24;'>Broken Relationships</h5>")
+            parts.append("<table style='border-collapse:collapse;width:100%;margin:4px 0;'>")
+            parts.append(
+                "<tr style='background:#f8d7da;'>"
+                "<th style='text-align:left;padding:4px;'>ID</th>"
+                "<th style='padding:4px;'>Type</th>"
+                "<th style='padding:4px;'>Source</th>"
+                "<th style='padding:4px;'>Target</th>"
+                "</tr>"
+            )
+            for rel in self.broken_relationships:
+                src_name = getattr(rel.source, "name", None) or rel.source.id
+                tgt_name = getattr(rel.target, "name", None) or rel.target.id
+                parts.append(
+                    f"<tr style='background:#f8d7da;'>"
+                    f"<td style='padding:4px;'>{rel.id[:12]}...</td>"
+                    f"<td style='padding:4px;'>{type(rel).__name__}</td>"
+                    f"<td style='padding:4px;'>{src_name}</td>"
+                    f"<td style='padding:4px;'>{tgt_name}</td>"
+                    f"</tr>"
+                )
+            parts.append("</table>")
+        if self.violations:
+            parts.append(
+                f"<p style='color:#856404;margin:4px 0;'>"
+                f"{len(self.violations)} violation(s) detected.</p>"
+            )
+        parts.append("</div>")
+        return "".join(parts)
+
 
 def _find_rel_id(graph: object, node_a: str, node_b: str) -> str:
     """Find any relationship ID between two nodes (either direction).
