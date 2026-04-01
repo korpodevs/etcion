@@ -47,6 +47,14 @@ index of every ADR in the repository.
 | ADR-037 | Model Comparison and Diff Utilities | ACCEPTED |
 | ADR-038 | Plugin and Extension System | ACCEPTED |
 | ADR-039 | Documentation and API Reference | ACCEPTED |
+| ADR-040 | Packaging, Distribution, and CI/CD | PROPOSED |
+| ADR-041 | NetworkX Graph Conversion | PROPOSED |
+| ADR-042 | Pattern and Gap Analysis | PROPOSED |
+| ADR-043 | Impact Analysis Engine | PROPOSED |
+| ADR-044 | Model Builder API | PROPOSED |
+| ADR-045 | Model Merge Operations | PROPOSED |
+| ADR-046 | Data Export Contract Architecture | PROPOSED |
+| ADR-047 | Graph Metadata Export for Visualization Libraries | PROPOSED |
 
 !!! note "Regenerating this table"
     Run `python scripts/generate_adr_index.py` to regenerate the table from
