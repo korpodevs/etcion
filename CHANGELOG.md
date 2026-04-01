@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 01 Apr 2026
+
+### Fixed
+
+- **XML property type mapping** -- replaced invalid XSD type values `"real"` and
+  `"integer"` with `"number"` per the ArchiMate Exchange Format enumeration
+  (`string`, `boolean`, `currency`, `date`, `time`, `number`).
+- **XML element ordering** -- moved `<propertyDefinitions>` after `<elements>`,
+  `<relationships>`, and `<organizations>` to match the `ModelType` sequence
+  required by the XSD.
+- **XML specialization encoding** -- serialized `specialization` as a
+  `<property>` referencing a well-known `propdef-specialization` property
+  definition instead of an invalid XML attribute on `<element>`.
+- **XML dangling property refs** -- `serialize_model()` now emits
+  `<propertyDefinition>` entries for all extended attributes used by elements,
+  not just those declared in profile `attribute_extensions`.
+- **Petco example** -- changed ApplicationComponent → ApplicationInterface
+  relationship from `Assignment` to `Composition` per ArchiMate spec.
+
 ## [0.5.0] - 01 Apr 2026
 
 ### Added

@@ -46,6 +46,9 @@ _XSD_TO_PY_TYPE: dict[str, type] = {
     "boolean": bool,
 }
 
+# Well-known propertyDefinition identifier for the specialization field.
+_SPECIALIZATION_PROPDEF_ID = "propdef-specialization"
+
 
 def _to_exchange_id(internal_id: str) -> str:
     """Wrap bare UUID as ``id-{uuid}``; pass through if already prefixed."""
@@ -68,18 +71,25 @@ def serialize_element(elem: Element) -> etree._Element:
         doc_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
         doc_el.text = elem.description
 
-    if elem.specialization:
-        el.set("specialization", elem.specialization)
-
-    if elem.extended_attributes:
+    has_props = bool(elem.specialization or elem.extended_attributes)
+    if has_props:
         props_container = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}properties")
-        type_name = TYPE_REGISTRY[type(elem)].xml_tag
-        for attr_name, value in elem.extended_attributes.items():
+
+        if elem.specialization:
             prop_el = etree.SubElement(props_container, f"{{{ARCHIMATE_NS}}}property")
-            prop_el.set("propertyDefinitionRef", f"propdef-{type_name}-{attr_name}")
+            prop_el.set("propertyDefinitionRef", _SPECIALIZATION_PROPDEF_ID)
             val_el = etree.SubElement(prop_el, f"{{{ARCHIMATE_NS}}}value")
             val_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
-            val_el.text = str(value)
+            val_el.text = elem.specialization
+
+        if elem.extended_attributes:
+            type_name = TYPE_REGISTRY[type(elem)].xml_tag
+            for attr_name, value in elem.extended_attributes.items():
+                prop_el = etree.SubElement(props_container, f"{{{ARCHIMATE_NS}}}property")
+                prop_el.set("propertyDefinitionRef", f"propdef-{type_name}-{attr_name}")
+                val_el = etree.SubElement(prop_el, f"{{{ARCHIMATE_NS}}}value")
+                val_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
+                val_el.text = str(value)
 
     return el
 
@@ -116,19 +126,6 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
     name_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
     name_el.text = model_name
 
-    if model.profiles:
-        propdefs = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}propertyDefinitions")
-        for profile in model.profiles:
-            for cls, attrs in profile.attribute_extensions.items():
-                type_name = TYPE_REGISTRY[cls].xml_tag
-                for attr_name, attr_type in attrs.items():
-                    pd = etree.SubElement(propdefs, f"{{{ARCHIMATE_NS}}}propertyDefinition")
-                    pd.set("identifier", f"propdef-{type_name}-{attr_name}")
-                    pd.set("type", _PY_TO_XSD_TYPE.get(attr_type.__name__, "string"))
-                    pd_name = etree.SubElement(pd, f"{{{ARCHIMATE_NS}}}name")
-                    pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
-                    pd_name.text = attr_name
-
     elements_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}elements")
     for elem in model.elements:
         elements_container.append(serialize_element(elem))
@@ -140,6 +137,60 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
     opaque = getattr(model, "_opaque_xml", [])
     for node in opaque:
         root.append(node)
+
+    # XSD requires <propertyDefinitions> after elements, relationships, and
+    # organizations (see ModelType in archimate3_Model.xsd).
+    # Collect every propdef identifier actually referenced by elements so that
+    # no dangling propertyDefinitionRef values remain.
+    has_specializations = any(e.specialization for e in model.elements)
+
+    # Build set of profile-declared propdef ids and collect all element refs.
+    declared_ids: set[str] = set()
+    for profile in model.profiles:
+        for cls, attrs in profile.attribute_extensions.items():
+            type_name = TYPE_REGISTRY[cls].xml_tag
+            for attr_name in attrs:
+                declared_ids.add(f"propdef-{type_name}-{attr_name}")
+
+    # Discover undeclared extended attributes on elements.
+    undeclared: dict[str, str] = {}  # propdef_id -> attr_name
+    for elem in model.elements:
+        if elem.extended_attributes:
+            type_name = TYPE_REGISTRY[type(elem)].xml_tag
+            for attr_name in elem.extended_attributes:
+                pid = f"propdef-{type_name}-{attr_name}"
+                if pid not in declared_ids:
+                    undeclared[pid] = attr_name
+
+    if has_specializations or declared_ids or undeclared:
+        propdefs = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+
+        if has_specializations:
+            pd = etree.SubElement(propdefs, f"{{{ARCHIMATE_NS}}}propertyDefinition")
+            pd.set("identifier", _SPECIALIZATION_PROPDEF_ID)
+            pd.set("type", "string")
+            pd_name = etree.SubElement(pd, f"{{{ARCHIMATE_NS}}}name")
+            pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
+            pd_name.text = "specialization"
+
+        for profile in model.profiles:
+            for cls, attrs in profile.attribute_extensions.items():
+                type_name = TYPE_REGISTRY[cls].xml_tag
+                for attr_name, attr_type in attrs.items():
+                    pd = etree.SubElement(propdefs, f"{{{ARCHIMATE_NS}}}propertyDefinition")
+                    pd.set("identifier", f"propdef-{type_name}-{attr_name}")
+                    pd.set("type", _PY_TO_XSD_TYPE.get(attr_type.__name__, "string"))
+                    pd_name = etree.SubElement(pd, f"{{{ARCHIMATE_NS}}}name")
+                    pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
+                    pd_name.text = attr_name
+
+        for pid, attr_name in undeclared.items():
+            pd = etree.SubElement(propdefs, f"{{{ARCHIMATE_NS}}}propertyDefinition")
+            pd.set("identifier", pid)
+            pd.set("type", "string")
+            pd_name = etree.SubElement(pd, f"{{{ARCHIMATE_NS}}}name")
+            pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
+            pd_name.text = attr_name
 
     return etree.ElementTree(root)
 
@@ -190,14 +241,18 @@ def _deserialize_element(
     doc_node = node.find(f"{{{ARCHIMATE_NS}}}documentation")
     desc: str | None = doc_node.text if doc_node is not None else None
 
-    specialization: str | None = node.get("specialization")
+    specialization: str | None = None
     extended_attributes: dict[str, Any] = {}
     props_node = node.find(f"{{{ARCHIMATE_NS}}}properties")
-    if props_node is not None and propdef_map:
+    if props_node is not None:
         for prop_node in props_node:
             ref = prop_node.get("propertyDefinitionRef", "")
             val_node = prop_node.find(f"{{{ARCHIMATE_NS}}}value")
-            if ref in propdef_map and val_node is not None and val_node.text:
+            if val_node is None or not val_node.text:
+                continue
+            if ref == _SPECIALIZATION_PROPDEF_ID:
+                specialization = val_node.text
+            elif propdef_map and ref in propdef_map:
                 attr_name, attr_type = propdef_map[ref]
                 extended_attributes[attr_name] = attr_type(val_node.text)
 
