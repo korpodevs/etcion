@@ -33,6 +33,7 @@ nav:
     - Serialization: user-guide/serialization.md
     - Viewpoints: user-guide/viewpoints.md
     - Profiles: user-guide/profiles.md
+    - Conformance: user-guide/conformance.md
     - Provenance: user-guide/provenance.md
     - Querying: user-guide/querying.md
     - Patterns: user-guide/patterns.md
