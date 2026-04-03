@@ -49,9 +49,7 @@ class TestElementCounts:
     def test_application_component_count(self, petco_model):
         model, _ = petco_model
         apps = model.elements_of_type(ApplicationComponent)
-        assert len(apps) == 25, (
-            f"Expected 25 ApplicationComponents, got {len(apps)}"
-        )
+        assert len(apps) == 25, f"Expected 25 ApplicationComponents, got {len(apps)}"
 
     def test_capability_count_minimum(self, petco_model):
         model, _ = petco_model
@@ -63,23 +61,17 @@ class TestElementCounts:
     def test_data_object_count(self, petco_model):
         model, _ = petco_model
         dos = model.elements_of_type(DataObject)
-        assert len(dos) == 13, (
-            f"Expected 13 DataObjects, got {len(dos)}"
-        )
+        assert len(dos) == 13, f"Expected 13 DataObjects, got {len(dos)}"
 
     def test_node_count_minimum(self, petco_model):
         model, _ = petco_model
         nodes = model.elements_of_type(Node)
-        assert len(nodes) >= 4, (
-            f"Expected at least 4 Nodes (EKS clusters), got {len(nodes)}"
-        )
+        assert len(nodes) >= 4, f"Expected at least 4 Nodes (EKS clusters), got {len(nodes)}"
 
     def test_system_software_count_minimum(self, petco_model):
         model, _ = petco_model
         sw = model.elements_of_type(SystemSoftware)
-        assert len(sw) >= 10, (
-            f"Expected at least 10 SystemSoftware instances, got {len(sw)}"
-        )
+        assert len(sw) >= 10, f"Expected at least 10 SystemSoftware instances, got {len(sw)}"
 
 
 # ---------------------------------------------------------------------------
@@ -140,26 +132,29 @@ class TestRelationshipIntegrity:
 class TestProfileApplication:
     """4.3 — Profiles applied to the model must match the PawsPlus spec."""
 
-    _EXPECTED_PROFILE_NAMES = frozenset({
-        "PortfolioManagement",
-        "IntegrationManagement",
-        "TechnologyLifecycle",
-        "DataGovernance",
-        "DataFlowManagement",
-    })
+    _EXPECTED_PROFILE_NAMES = frozenset(
+        {
+            "PortfolioManagement",
+            "IntegrationManagement",
+            "TechnologyLifecycle",
+            "DataGovernance",
+            "DataFlowManagement",
+        }
+    )
 
-    _EXPECTED_APP_ATTRS = frozenset({
-        "lifecycle_status",
-        "fitness_score",
-        "annual_tco",
-        "owning_team",
-    })
+    _EXPECTED_APP_ATTRS = frozenset(
+        {
+            "lifecycle_status",
+            "fitness_score",
+            "annual_tco",
+            "owning_team",
+        }
+    )
 
     def test_model_has_five_profiles(self, petco_model):
         model, _ = petco_model
-        assert len(model.profiles) == 5, (
-            f"Expected 5 profiles, got {len(model.profiles)}: "
-            + str([p.name for p in model.profiles])
+        assert len(model.profiles) == 5, f"Expected 5 profiles, got {len(model.profiles)}: " + str(
+            [p.name for p in model.profiles]
         )
 
     def test_profile_names_match_expected_set(self, petco_model):
@@ -195,15 +190,11 @@ class TestViewpointCoverage:
 
     def test_five_viewpoints_defined(self, petco_model):
         _, viewpoints = petco_model
-        assert len(viewpoints) == 5, (
-            f"Expected 5 viewpoints, got {len(viewpoints)}"
-        )
+        assert len(viewpoints) == 5, f"Expected 5 viewpoints, got {len(viewpoints)}"
 
     def test_five_views_in_model(self, petco_model):
         model, _ = petco_model
-        assert len(model.views) == 5, (
-            f"Expected 5 views in model, got {len(model.views)}"
-        )
+        assert len(model.views) == 5, f"Expected 5 views in model, got {len(model.views)}"
 
     def test_view_concepts_comply_with_viewpoint_type_constraints(self, petco_model):
         """No concept in any view may violate its viewpoint's permitted_concept_types."""
@@ -236,7 +227,8 @@ class TestCapabilityHierarchyIntegrity:
     def _capability_composition_rels(self, model: Model):
         """Return Composition relationships where both endpoints are Capabilities."""
         return [
-            r for r in model.relationships_of_type(Composition)
+            r
+            for r in model.relationships_of_type(Composition)
             if isinstance(r.source, Capability) and isinstance(r.target, Capability)
         ]
 
@@ -252,9 +244,8 @@ class TestCapabilityHierarchyIntegrity:
         assert l0_caps, "No L0 capabilities found — model may be empty"
 
         childless_l0 = [c for c in l0_caps if c.id not in comp_sources]
-        assert not childless_l0, (
-            f"L0 capabilities without children: "
-            + str([c.name for c in childless_l0])
+        assert not childless_l0, f"L0 capabilities without children: " + str(
+            [c.name for c in childless_l0]
         )
 
     def test_no_orphan_capabilities(self, petco_model):
@@ -313,8 +304,7 @@ class TestCapabilityHierarchyIntegrity:
                     break
 
         assert not cycle_found, (
-            f"Cycle detected in Capability Composition hierarchy. "
-            f"Cycle involves node: {cycle_path}"
+            f"Cycle detected in Capability Composition hierarchy. Cycle involves node: {cycle_path}"
         )
 
 
@@ -342,9 +332,8 @@ class TestDataGovernanceCompleteness:
                 do_write_access.setdefault(rel.target.id, []).append(rel)
 
         missing_sor = [do for do in dos if do.id not in do_write_access]
-        assert not missing_sor, (
-            f"DataObjects without a system of record (WRITE Access): "
-            + str([do.name for do in missing_sor])
+        assert not missing_sor, f"DataObjects without a system of record (WRITE Access): " + str(
+            [do.name for do in missing_sor]
         )
 
     def test_data_object_classification_values_are_valid(self, petco_model):
@@ -356,9 +345,8 @@ class TestDataGovernanceCompleteness:
             cls = do.extended_attributes.get("classification")
             if cls not in self._VALID_CLASSIFICATIONS:
                 invalid.append(f"'{do.name}': classification={cls!r}")
-        assert not invalid, (
-            f"DataObjects with invalid classification:\n"
-            + "\n".join(f"  - {v}" for v in invalid)
+        assert not invalid, f"DataObjects with invalid classification:\n" + "\n".join(
+            f"  - {v}" for v in invalid
         )
 
     def test_data_object_quality_score_range(self, petco_model):
@@ -374,9 +362,8 @@ class TestDataGovernanceCompleteness:
                 out_of_range.append(f"'{do.name}': quality_score is not numeric ({qs!r})")
             elif not (0.0 <= float(qs) <= 1.0):
                 out_of_range.append(f"'{do.name}': quality_score={qs} is out of [0.0, 1.0]")
-        assert not out_of_range, (
-            f"DataObjects with invalid quality_score:\n"
-            + "\n".join(f"  - {v}" for v in out_of_range)
+        assert not out_of_range, f"DataObjects with invalid quality_score:\n" + "\n".join(
+            f"  - {v}" for v in out_of_range
         )
 
 
@@ -423,6 +410,5 @@ def test_xml_export_validates_against_xsd(petco_model):
     error_messages = [str(e) for e in schema.error_log]
     assert is_valid, (
         f"Serialized PawsPlus XML failed XSD validation "
-        f"({len(error_messages)} error(s)):\n"
-        + "\n".join(f"  - {e}" for e in error_messages[:10])
+        f"({len(error_messages)} error(s)):\n" + "\n".join(f"  - {e}" for e in error_messages[:10])
     )

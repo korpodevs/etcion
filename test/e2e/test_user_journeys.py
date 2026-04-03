@@ -168,8 +168,7 @@ def test_enterprise_architect_import_analyze_reexport(
         # "views not expected" error is therefore accepted; any other error is
         # a genuine regression.
         non_views_errors = [
-            e for e in errors
-            if "views" not in e.lower() and "view" not in e.lower()
+            e for e in errors if "views" not in e.lower() and "view" not in e.lower()
         ]
         assert non_views_errors == [], (
             f"Unexpected XSD validation errors (views-related errors are tolerated): "
@@ -386,9 +385,7 @@ def test_data_governance_audit_confidential(
     # We use a simple pattern to anchor on DataObjects with classification=confidential,
     # then post-filter for the cardinality constraint (>2 READ Access from AppComponents).
     confidential_pattern = (
-        Pattern()
-        .node("obj", DataObject)
-        .where_attr("obj", "classification", "==", "confidential")
+        Pattern().node("obj", DataObject).where_attr("obj", "classification", "==", "confidential")
     )
     confidential_matches = list(confidential_pattern.match(model))
     assert len(confidential_matches) > 0, (
@@ -423,9 +420,14 @@ def test_data_governance_audit_confidential(
 
     # Always audit at least all confidential objects, even if none exceed the
     # >2 threshold — this ensures features 4 and 5 are exercised regardless.
-    objects_to_audit = high_access_objects if high_access_objects else [
-        m["obj"] for m in confidential_matches[:3]  # type: ignore[misc]
-    ]
+    objects_to_audit = (
+        high_access_objects
+        if high_access_objects
+        else [
+            m["obj"]
+            for m in confidential_matches[:3]  # type: ignore[misc]
+        ]
+    )
 
     for data_obj in objects_to_audit:
         result = analyze_impact(model, remove=data_obj)

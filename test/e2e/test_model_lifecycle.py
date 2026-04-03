@@ -389,9 +389,7 @@ class TestJsonRoundTrip:
         data = model_to_dict(model)
         recovered = model_from_dict(data)
 
-        assert sorted(e.name for e in recovered.elements) == sorted(
-            e.name for e in model.elements
-        )
+        assert sorted(e.name for e in recovered.elements) == sorted(e.name for e in model.elements)
 
     def test_relationship_source_target_preserved(self) -> None:
         """Relationship source/target IDs survive a JSON round-trip."""
@@ -574,9 +572,7 @@ class TestBuilderFluentApiEquivalence:
         manual = self._build_manual()
         built = self._build_via_builder()
 
-        assert sorted(e.name for e in built.elements) == sorted(
-            e.name for e in manual.elements
-        )
+        assert sorted(e.name for e in built.elements) == sorted(e.name for e in manual.elements)
 
     def test_diff_models_reports_no_structural_differences(self) -> None:
         """diff_models() with match_by='type_name' finds no added/removed/modified concepts.
@@ -594,9 +590,7 @@ class TestBuilderFluentApiEquivalence:
         # Relationships have no name, so they will share the ("Serving", "") key;
         # source/target IDs differ between models (expected — IDs are per-instance).
         # We assert that element-level changes are empty.
-        element_changes = [
-            cc for cc in result.modified if cc.concept_type not in ("Serving",)
-        ]
+        element_changes = [cc for cc in result.modified if cc.concept_type not in ("Serving",)]
         assert not element_changes, f"Unexpected element modifications: {element_changes}"
 
     def test_builder_context_manager_produces_equivalent_model(self) -> None:

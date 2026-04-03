@@ -545,9 +545,7 @@ def test_xml_performance_gate(
     elapsed = time.perf_counter() - start
 
     assert xml_path.exists(), "write_model must produce a file"
-    assert elapsed < 2.0, (
-        f"XML serialization exceeded 2 s regression gate: {elapsed:.3f} s"
-    )
+    assert elapsed < 2.0, f"XML serialization exceeded 2 s regression gate: {elapsed:.3f} s"
 
 
 @pytest.mark.integration
@@ -562,6 +560,4 @@ def test_json_performance_gate(
     elapsed = time.perf_counter() - start
 
     assert data is not None
-    assert elapsed < 1.0, (
-        f"JSON serialization exceeded 1 s regression gate: {elapsed:.3f} s"
-    )
+    assert elapsed < 1.0, f"JSON serialization exceeded 1 s regression gate: {elapsed:.3f} s"

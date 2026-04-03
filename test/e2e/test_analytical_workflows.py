@@ -237,9 +237,7 @@ class TestImpactAnalysisRetiringTechnology:
         result: ImpactResult = analyze_impact(model, remove=oracle)
 
         affected_cap_names = {
-            ic.concept.name
-            for ic in result.affected
-            if isinstance(ic.concept, Capability)
+            ic.concept.name for ic in result.affected if isinstance(ic.concept, Capability)
         }
         # Capabilities directly realized by the 3 served apps
         expected_caps = {
@@ -300,9 +298,7 @@ class TestImpactAnalysisRetiringTechnology:
         oracle = self._oracle(model)
         result: ImpactResult = analyze_impact(model, remove=oracle)
         # The model is highly connected — retiring the shared DB touches most elements
-        assert len(result) >= 100, (
-            f"Expected at least 100 affected concepts, got {len(result)}"
-        )
+        assert len(result) >= 100, f"Expected at least 100 affected concepts, got {len(result)}"
 
 
 # ---------------------------------------------------------------------------
@@ -392,9 +388,7 @@ class TestModelDiffKnownChanges:
         target_app.name = "Renamed Application XYZZY"
 
         diff = diff_models(baseline, model)
-        change = next(
-            (cc for cc in diff.modified if cc.concept_id == target_app.id), None
-        )
+        change = next((cc for cc in diff.modified if cc.concept_id == target_app.id), None)
         assert change is not None
         assert "name" in change.changes, (
             f"Expected 'name' in changed fields, got {list(change.changes.keys())}"
@@ -509,9 +503,7 @@ class TestModelMergeConflictDetection:
         branch_a, branch_b = self._make_divergent_copies(model)
 
         result: MergeResult = merge_models(branch_a, branch_b)
-        assert len(result.conflicts) >= 1, (
-            f"Expected at least 1 conflict, got {result.conflicts}"
-        )
+        assert len(result.conflicts) >= 1, f"Expected at least 1 conflict, got {result.conflicts}"
 
     def test_merge_conflict_field_is_name(self, petco_model_copy):
         """The reported conflict includes the 'name' field."""
@@ -519,11 +511,7 @@ class TestModelMergeConflictDetection:
         branch_a, branch_b = self._make_divergent_copies(model)
 
         result: MergeResult = merge_models(branch_a, branch_b)
-        conflict_fields = {
-            field
-            for cc in result.conflicts
-            for field in cc.changes.keys()
-        }
+        conflict_fields = {field for cc in result.conflicts for field in cc.changes.keys()}
         assert "name" in conflict_fields, (
             f"Expected 'name' among conflict fields, got {conflict_fields}"
         )
@@ -548,10 +536,7 @@ class TestModelMergeConflictDetection:
         branch_a, branch_b = self._make_divergent_copies(model)
 
         result: MergeResult = merge_models(branch_a, branch_b)
-        merged_names = {
-            c.name
-            for c in result.merged_model.elements_of_type(ApplicationComponent)
-        }
+        merged_names = {c.name for c in result.merged_model.elements_of_type(ApplicationComponent)}
         assert "Branch B Exclusive App" in merged_names, (
             f"Branch B's exclusive element missing from merged model. "
             f"ApplicationComponents in merged: {sorted(merged_names)}"
@@ -563,10 +548,7 @@ class TestModelMergeConflictDetection:
         branch_a, branch_b = self._make_divergent_copies(model)
 
         result: MergeResult = merge_models(branch_a, branch_b)
-        merged_names = {
-            c.name
-            for c in result.merged_model.elements_of_type(ApplicationComponent)
-        }
+        merged_names = {c.name for c in result.merged_model.elements_of_type(ApplicationComponent)}
         assert "Branch A Exclusive App" in merged_names, (
             f"Branch A's exclusive element missing from merged model."
         )
