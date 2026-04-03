@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 02 Apr 2026
+
+### Added
+
+- **View/Viewpoint XML serialization** -- `serialize_model()` now emits
+  `<views>` with `<diagrams><view>` elements containing nodes and connections.
+  `deserialize_model()` reconstructs `View` and `Viewpoint` instances from the
+  XML, enabling full round-trip of architectural views. Closes #61.
+- **Element icon identifiers** -- `ELEMENT_ICONS` dict maps all 60 concrete
+  Element types to stable lowercase icon strings (e.g. `"component"`,
+  `"data-object"`, `"value-stream"`) for graph visualization tooling.
+  Closes #46.
+- **Petco example views** -- `build_model.py` now generates one `View` per
+  viewpoint, giving the team concrete examples to reference.
+
 ## [0.6.0] - 01 Apr 2026
 
 ### Added
