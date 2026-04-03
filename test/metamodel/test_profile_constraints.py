@@ -410,9 +410,7 @@ class TestValidateMultipleConstraintsComposed:
         m.add(elem)
         errors = m.validate()
         constraint_errors = [
-            e
-            for e in errors
-            if any(k in str(e) for k in ["risk_score", "tco", "owner"])
+            e for e in errors if any(k in str(e) for k in ["risk_score", "tco", "owner"])
         ]
         assert constraint_errors == []
 
@@ -435,9 +433,7 @@ class TestValidateMultipleConstraintsComposed:
         )
         m.add(elem)
         errors = m.validate()
-        attr_errors = [
-            e for e in errors if "risk_score" in str(e) or "tco" in str(e)
-        ]
+        attr_errors = [e for e in errors if "risk_score" in str(e) or "tco" in str(e)]
         assert len(attr_errors) >= 2
 
     def test_bare_type_profile_still_validates_as_before(self) -> None:

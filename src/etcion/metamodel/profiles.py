@@ -219,9 +219,7 @@ class Profile(BaseModel):
 
         return self
 
-    def get_constraints(
-        self, elem_type: type[Element]
-    ) -> dict[str, AttributeConstraint]:
+    def get_constraints(self, elem_type: type[Element]) -> dict[str, AttributeConstraint]:
         """Return the normalized :class:`AttributeConstraint` map for *elem_type*.
 
         Returns all constraints declared for *elem_type* in this profile,

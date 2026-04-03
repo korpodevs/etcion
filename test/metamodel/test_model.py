@@ -856,9 +856,7 @@ class TestElementsWhere:
         m.add(low)
         m.add(neutral)
 
-        result = m.elements_where(
-            lambda e: e.extended_attributes.get("risk_score") == "high"
-        )
+        result = m.elements_where(lambda e: e.extended_attributes.get("risk_score") == "high")
         assert len(result) == 1
         assert result[0] is high
 

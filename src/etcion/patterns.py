@@ -40,9 +40,7 @@ from etcion.metamodel.concepts import Concept, Element, Relationship, Relationsh
 _SENTINEL = object()
 
 # Supported operators for where_attr() declarative predicates (ADR-048, Issue #53).
-_VALID_OPERATORS: frozenset[str] = frozenset(
-    ["==", "!=", "<", "<=", ">", ">=", "in", "not_in"]
-)
+_VALID_OPERATORS: frozenset[str] = frozenset(["==", "!=", "<", "<=", ">", ">=", "in", "not_in"])
 
 
 @dataclass(frozen=True)
@@ -448,8 +446,7 @@ class Pattern:
             raise ValueError(f"Unknown alias '{alias}': register it with .node() first.")
         if operator not in _VALID_OPERATORS:
             raise ValueError(
-                f"Unsupported operator {operator!r}. "
-                f"Valid operators: {sorted(_VALID_OPERATORS)}"
+                f"Unsupported operator {operator!r}. Valid operators: {sorted(_VALID_OPERATORS)}"
             )
         self._attr_predicates.setdefault(alias, []).append(
             AttrPredicate(alias=alias, attr_name=attr_name, operator=operator, value=value)

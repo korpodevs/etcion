@@ -255,8 +255,10 @@ class TestWhereAttrOperators:
 
         actor = _make_actor_with_attr("env", "prod")
         model = Model(concepts=[actor])
-        p = Pattern().node("actor", BusinessActor).where_attr(
-            "actor", "env", "in", ["prod", "staging"]
+        p = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .where_attr("actor", "env", "in", ["prod", "staging"])
         )
         assert len(p.match(model)) == 1
 
@@ -267,8 +269,10 @@ class TestWhereAttrOperators:
 
         actor = _make_actor_with_attr("env", "dev")
         model = Model(concepts=[actor])
-        p = Pattern().node("actor", BusinessActor).where_attr(
-            "actor", "env", "in", ["prod", "staging"]
+        p = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .where_attr("actor", "env", "in", ["prod", "staging"])
         )
         assert p.match(model) == []
 
@@ -279,8 +283,10 @@ class TestWhereAttrOperators:
 
         actor = _make_actor_with_attr("env", "dev")
         model = Model(concepts=[actor])
-        p = Pattern().node("actor", BusinessActor).where_attr(
-            "actor", "env", "not_in", ["prod", "staging"]
+        p = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .where_attr("actor", "env", "not_in", ["prod", "staging"])
         )
         assert len(p.match(model)) == 1
 
@@ -291,8 +297,10 @@ class TestWhereAttrOperators:
 
         actor = _make_actor_with_attr("env", "prod")
         model = Model(concepts=[actor])
-        p = Pattern().node("actor", BusinessActor).where_attr(
-            "actor", "env", "not_in", ["prod", "staging"]
+        p = (
+            Pattern()
+            .node("actor", BusinessActor)
+            .where_attr("actor", "env", "not_in", ["prod", "staging"])
         )
         assert p.match(model) == []
 
@@ -492,11 +500,7 @@ class TestPatternToDictWhereAttr:
         """When a node has lambda predicates, to_dict() sets has_lambda_predicates=True."""
         from etcion.patterns import Pattern
 
-        p = (
-            Pattern()
-            .node("actor", BusinessActor)
-            .where("actor", lambda c: c.name == "Alice")
-        )
+        p = Pattern().node("actor", BusinessActor).where("actor", lambda c: c.name == "Alice")
         d = p.to_dict()
         assert d["nodes"]["actor"].get("has_lambda_predicates") is True
 
@@ -573,9 +577,7 @@ class TestPatternFromDictWhereAttr:
         from etcion.patterns import Pattern
 
         original = (
-            Pattern()
-            .node("actor", BusinessActor)
-            .where_attr("actor", "risk_score", "==", "high")
+            Pattern().node("actor", BusinessActor).where_attr("actor", "risk_score", "==", "high")
         )
         d = original.to_dict()
         reconstructed = Pattern.from_dict(d)
@@ -596,9 +598,7 @@ class TestPatternFromDictWhereAttr:
         model = Model(concepts=[actor_high, actor_low])
 
         original = (
-            Pattern()
-            .node("actor", BusinessActor)
-            .where_attr("actor", "risk_score", "==", "high")
+            Pattern().node("actor", BusinessActor).where_attr("actor", "risk_score", "==", "high")
         )
         reconstructed = Pattern.from_dict(original.to_dict())
 
@@ -659,11 +659,7 @@ class TestPatternFromDictWhereAttr:
         """
         from etcion.patterns import Pattern
 
-        p = (
-            Pattern()
-            .node("actor", BusinessActor)
-            .where("actor", lambda c: True)
-        )
+        p = Pattern().node("actor", BusinessActor).where("actor", lambda c: True)
         d = p.to_dict()
         assert d["nodes"]["actor"].get("has_lambda_predicates") is True
 
