@@ -33,6 +33,7 @@ nav:
     - Viewpoints: user-guide/viewpoints.md
     - Profiles: user-guide/profiles.md
     - Querying: user-guide/querying.md
+    - Patterns: user-guide/patterns.md
     - Diffing: user-guide/diffing.md
     - Extending: user-guide/extending.md
   - Architecture:
