@@ -10,7 +10,7 @@ Reference: ADR-010.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from typing import TYPE_CHECKING
 
 from etcion.enums import Aspect, Layer
@@ -160,6 +160,24 @@ class Model:
     def elements_by_layer(self, layer: Layer) -> list[Element]:
         """Return elements whose class-level ``layer`` ClassVar matches."""
         return [e for e in self.elements if getattr(type(e), "layer", None) is layer]
+
+    def elements_where(self, predicate: Callable[[Element], bool]) -> list[Element]:
+        """Return elements for which *predicate* returns ``True``.
+
+        A thin convenience over a list comprehension, consistent with
+        :meth:`elements_of_type` and :meth:`elements_by_layer`.
+
+        :param predicate: A callable that accepts an :class:`Element` and
+            returns ``True`` to include it in the result.
+        :returns: List of matching :class:`Element` instances in insertion order.
+
+        Example::
+
+            high_risk = model.elements_where(
+                lambda e: e.extended_attributes.get("risk_score") == "high"
+            )
+        """
+        return [e for e in self.elements if predicate(e)]
 
     def elements_by_aspect(self, aspect: Aspect) -> list[Element]:
         """Return elements whose class-level ``aspect`` ClassVar matches."""
@@ -352,28 +370,95 @@ class Model:
                         errors.append(err)
 
             # Check extended_attributes against profile declarations
-            if elem.extended_attributes:
-                # Build allowed attrs for this element's type from all profiles
-                allowed: dict[str, type] = {}
-                for prof in self._profiles:
-                    for prof_type, attrs in prof.attribute_extensions.items():
-                        if isinstance(elem, prof_type):
-                            allowed.update(attrs)
-                for attr_name, attr_value in elem.extended_attributes.items():
-                    if attr_name not in allowed:
+            # Build the constraint map for this element type from all profiles.
+            from etcion.metamodel.profiles import AttributeConstraint
+
+            declared_constraints: dict[str, AttributeConstraint] = {}
+            for prof in self._profiles:
+                declared_constraints.update(prof.get_constraints(type(elem)))
+
+            # Check undeclared attributes (present on element but not in any profile).
+            for attr_name in elem.extended_attributes:
+                if attr_name not in declared_constraints:
+                    err = ValidationError(
+                        f"Element '{elem.id}': extended attribute "
+                        f"'{attr_name}' is not declared in any profile"
+                    )
+                    if strict:
+                        raise err
+                    errors.append(err)
+
+            # Check declared constraints against actual attribute values.
+            for attr_name, constraint in declared_constraints.items():
+                attr_value = elem.extended_attributes.get(attr_name)
+
+                # required: attribute must be present and non-None.
+                if constraint.required and attr_value is None:
+                    err = ValidationError(
+                        f"Element '{elem.id}': extended attribute "
+                        f"'{attr_name}' is required but missing"
+                    )
+                    if strict:
+                        raise err
+                    errors.append(err)
+                    continue  # no further checks if the value is absent
+
+                # Skip remaining checks if the attribute is absent (and not required).
+                if attr_value is None:
+                    continue
+
+                # type check
+                if not isinstance(attr_value, constraint.attr_type):
+                    err = ValidationError(
+                        f"Element '{elem.id}': extended attribute "
+                        f"'{attr_name}' expected type "
+                        f"{constraint.attr_type.__name__}, "
+                        f"got {type(attr_value).__name__}"
+                    )
+                    if strict:
+                        raise err
+                    errors.append(err)
+                    continue  # skip value checks when type is wrong
+
+                # allowed list check
+                if constraint.allowed is not None and attr_value not in constraint.allowed:
+                    err = ValidationError(
+                        f"Element '{elem.id}': extended attribute "
+                        f"'{attr_name}' value {attr_value!r} is not in the "
+                        f"allowed list {constraint.allowed!r}"
+                    )
+                    if strict:
+                        raise err
+                    errors.append(err)
+
+                # min/max bound checks — attr_value is Any from extended_attributes;
+                # the type check above ensures it is numeric when constraint.min/max
+                # are set on numeric types.  Cast via comparison to avoid mypy errors.
+                if constraint.min is not None:
+                    try:
+                        below_min: bool = attr_value < constraint.min  # type: ignore[operator]
+                    except TypeError:
+                        below_min = False
+                    if below_min:
                         err = ValidationError(
                             f"Element '{elem.id}': extended attribute "
-                            f"'{attr_name}' is not declared in any profile"
+                            f"'{attr_name}' value {attr_value!r} is below "
+                            f"min {constraint.min!r}"
                         )
                         if strict:
                             raise err
                         errors.append(err)
-                    elif not isinstance(attr_value, allowed[attr_name]):
+
+                if constraint.max is not None:
+                    try:
+                        above_max: bool = attr_value > constraint.max  # type: ignore[operator]
+                    except TypeError:
+                        above_max = False
+                    if above_max:
                         err = ValidationError(
                             f"Element '{elem.id}': extended attribute "
-                            f"'{attr_name}' expected type "
-                            f"{allowed[attr_name].__name__}, "
-                            f"got {type(attr_value).__name__}"
+                            f"'{attr_name}' value {attr_value!r} is above "
+                            f"max {constraint.max!r}"
                         )
                         if strict:
                             raise err

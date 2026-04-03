@@ -39,6 +39,9 @@ from etcion.metamodel.concepts import Concept, Element, Relationship, Relationsh
 # Sentinel used in node_match to distinguish "attribute absent" from None values.
 _SENTINEL = object()
 
+# Supported operators for where_attr() declarative predicates (ADR-048, Issue #53).
+_VALID_OPERATORS: frozenset[str] = frozenset(["==", "!=", "<", "<=", ">", ">=", "in", "not_in"])
+
 
 @dataclass(frozen=True)
 class CardinalityConstraint:
@@ -56,6 +59,65 @@ class CardinalityConstraint:
     min_count: int | None = None
     max_count: int | None = None
     direction: str = "any"
+
+
+@dataclass(frozen=True)
+class AttrPredicate:
+    """A declarative, serializable predicate for :meth:`Pattern.where_attr`.
+
+    Encodes a single ``(attr_name, operator, value)`` comparison against a
+    :class:`~etcion.metamodel.concepts.Concept` instance.  At match time the
+    predicate reads ``concept.extended_attributes.get(attr_name)`` first, and
+    falls back to ``getattr(concept, attr_name, None)`` for direct model fields.
+
+    :param alias: The pattern alias this predicate is attached to.
+    :param attr_name: Name of the attribute to compare.
+    :param operator: One of ``"=="``, ``"!="`` , ``"<"``, ``"<="``,
+        ``">"``, ``">="``, ``"in"``, ``"not_in"``.
+    :param value: The value to compare against.  For ``"in"`` / ``"not_in"``
+        this should be an iterable (e.g. a list).
+    """
+
+    alias: str
+    attr_name: str
+    operator: str
+    value: Any
+
+    def evaluate(self, concept: object) -> bool:
+        """Return ``True`` when *concept* satisfies this predicate.
+
+        :param concept: Any object that may have ``extended_attributes`` and/or
+            direct attributes.
+        :returns: Predicate result.
+        """
+        # Resolve the attribute value: extended_attributes first, then direct field.
+        ext = getattr(concept, "extended_attributes", {})
+        if isinstance(ext, dict) and self.attr_name in ext:
+            actual = ext[self.attr_name]
+        else:
+            actual = getattr(concept, self.attr_name, None)
+
+        op = self.operator
+        if op == "==":
+            return bool(actual == self.value)
+        if op == "!=":
+            return bool(actual != self.value)
+        # For ordering and membership operators the operands must support
+        # the operation at runtime; we accept the dynamic nature here.
+        if op == "<":
+            return bool(actual < self.value)
+        if op == "<=":
+            return bool(actual <= self.value)
+        if op == ">":
+            return bool(actual > self.value)
+        if op == ">=":
+            return bool(actual >= self.value)
+        if op == "in":
+            return bool(actual in self.value)
+        if op == "not_in":
+            return bool(actual not in self.value)
+        # Should be unreachable — construction validates the operator.
+        raise ValueError(f"Unsupported operator: {op!r}")  # pragma: no cover
 
 
 if TYPE_CHECKING:
@@ -212,6 +274,7 @@ class Pattern:
         self._edges: list[tuple[str, str, type]] = []
         self._constraints: dict[str, dict[str, object]] = {}
         self._predicates: dict[str, list[Callable[[Concept], bool]]] = {}
+        self._attr_predicates: dict[str, list[AttrPredicate]] = {}
         self._cardinality: list[CardinalityConstraint] = []
         self._viewpoint: Viewpoint | None = viewpoint
 
@@ -329,6 +392,65 @@ class Pattern:
         if alias not in self._nodes:
             raise ValueError(f"Unknown alias '{alias}': register it with .node() first.")
         self._predicates.setdefault(alias, []).append(predicate)
+        return self
+
+    def where_attr(
+        self,
+        alias: str,
+        attr_name: str,
+        operator: str,
+        value: object,
+    ) -> Pattern:
+        """Register a declarative, serializable predicate for a pattern node.
+
+        Unlike :meth:`where`, which accepts an arbitrary lambda, ``where_attr``
+        encodes the predicate as a ``(attr_name, operator, value)`` triple that
+        can be stored in a rule repository, transmitted over the wire, or
+        round-tripped through :meth:`to_dict` / :meth:`from_dict`.
+
+        At match time the predicate reads
+        ``concept.extended_attributes.get(attr_name)`` first; if the key is
+        absent there it falls back to ``getattr(concept, attr_name, None)``.
+        This allows targeting both ``extended_attributes`` entries (the common
+        case) and direct model fields.
+
+        Multiple ``where_attr`` calls on the same alias are ANDed together and
+        also ANDed with any lambda predicates registered via :meth:`where`.
+
+        Supported operators: ``"=="``, ``"!="``, ``"<"``, ``"<="``, ``">"``,
+        ``">="``, ``"in"``, ``"not_in"``.
+
+        Example::
+
+            pattern = (
+                Pattern()
+                .node("service", ApplicationService)
+                # equivalent to:
+                # .where("service", lambda e: e.extended_attributes.get("risk_score") == "high")
+                .where_attr("service", "risk_score", "==", "high")
+            )
+
+        :param alias: The alias of the node to constrain.  Must already be
+            registered via :meth:`node`.
+        :param attr_name: Name of the attribute to compare.
+        :param operator: One of the 8 supported comparison operators.
+        :param value: The value to compare against.  For ``"in"`` / ``"not_in"``
+            this must be an iterable (e.g. a list).
+        :returns: ``self`` for method chaining.
+        :raises ValueError: If *alias* has not yet been registered with
+            :meth:`node`, or if *operator* is not one of the supported values.
+
+        Reference: ADR-048, Issue #53.
+        """
+        if alias not in self._nodes:
+            raise ValueError(f"Unknown alias '{alias}': register it with .node() first.")
+        if operator not in _VALID_OPERATORS:
+            raise ValueError(
+                f"Unsupported operator {operator!r}. Valid operators: {sorted(_VALID_OPERATORS)}"
+            )
+        self._attr_predicates.setdefault(alias, []).append(
+            AttrPredicate(alias=alias, attr_name=attr_name, operator=operator, value=value)
+        )
         return self
 
     def min_edges(
@@ -449,6 +571,11 @@ class Pattern:
             result._predicates[alias] = list(preds)
         for alias, preds in other._predicates.items():
             result._predicates.setdefault(alias, []).extend(preds)
+        # Merge attr predicates (ADR-048).
+        for alias, attr_preds in self._attr_predicates.items():
+            result._attr_predicates[alias] = list(attr_preds)
+        for alias, attr_preds in other._attr_predicates.items():
+            result._attr_predicates.setdefault(alias, []).extend(attr_preds)
         # Merge cardinality.
         result._cardinality = list(self._cardinality) + list(other._cardinality)
         return result
@@ -493,6 +620,9 @@ class Pattern:
             entry: dict[str, Any] = {"type": elem_type.__name__}
             if alias in self._constraints:
                 entry["constraints"] = {k: str(v) for k, v in self._constraints[alias].items()}
+            # Mark nodes that have unserializable lambda predicates (ADR-048).
+            if self._predicates.get(alias):
+                entry["has_lambda_predicates"] = True
             nodes[alias] = entry
 
         edges = [
@@ -508,9 +638,22 @@ class Pattern:
             }
             for cc in self._cardinality
         ]
+        # Serialize declarative attr predicates (ADR-048, Issue #53).
+        attr_predicates: list[dict[str, Any]] = [
+            {
+                "alias": ap.alias,
+                "attr_name": ap.attr_name,
+                "operator": ap.operator,
+                "value": ap.value,
+            }
+            for alias_preds in self._attr_predicates.values()
+            for ap in alias_preds
+        ]
         result: dict[str, Any] = {"version": 1, "nodes": nodes, "edges": edges}
         if cardinality:
             result["cardinality"] = cardinality
+        if attr_predicates:
+            result["attr_predicates"] = attr_predicates
         return result
 
     @classmethod
@@ -564,6 +707,21 @@ class Pattern:
                     count=cc_data["max_count"],
                     direction=cc_data.get("direction", "any"),
                 )
+        # Reconstruct declarative attr predicates (ADR-048, Issue #53).
+        for ap_data in data.get("attr_predicates", []):
+            ap_alias: str = ap_data["alias"]
+            ap_operator: str = ap_data["operator"]
+            if ap_alias not in p._nodes:  # noqa: SLF001
+                raise ValueError(
+                    f"Unknown alias '{ap_alias}' in attr_predicates: "
+                    "all aliases must be declared in 'nodes'."
+                )
+            if ap_operator not in _VALID_OPERATORS:
+                raise ValueError(
+                    f"Unsupported operator {ap_operator!r} in attr_predicates. "
+                    f"Valid operators: {sorted(_VALID_OPERATORS)}"
+                )
+            p.where_attr(ap_alias, ap_data["attr_name"], ap_operator, ap_data["value"])
         return p
 
     # ------------------------------------------------------------------
@@ -904,11 +1062,19 @@ class Pattern:
         g: object = nx.MultiDiGraph()
 
         for alias, elem_type in self._nodes.items():
+            # Build the combined predicate list: lambda predicates from .where()
+            # followed by AttrPredicate.evaluate wrappers from .where_attr().
+            # Both are callables (Concept) -> bool, ANDed in node_match.
+            combined_predicates: list[Callable[[Concept], bool]] = list(
+                self._predicates.get(alias, [])
+            )
+            for ap in self._attr_predicates.get(alias, []):
+                combined_predicates.append(ap.evaluate)
             g.add_node(  # type: ignore[attr-defined]
                 alias,
                 type=elem_type,
                 constraints=self._constraints.get(alias, {}),
-                predicates=self._predicates.get(alias, []),
+                predicates=combined_predicates,
             )
 
         for src_alias, tgt_alias, rel_type in self._edges:

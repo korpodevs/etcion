@@ -23,6 +23,9 @@ def _serialize_profile(profile: Profile) -> dict[str, Any]:
     replaced with its ``xml_tag`` string from :data:`TYPE_REGISTRY`.  Python
     ``type`` values in ``attribute_extensions`` are replaced with their
     ``__name__`` strings (e.g. ``"str"``, ``"float"``).
+
+    For constraint dicts (Issue #52), the ``type`` value is replaced with its
+    ``__name__`` string and all other constraint keys are preserved verbatim.
     """
     type_to_name: dict[type, str] = {cls: desc.xml_tag for cls, desc in TYPE_REGISTRY.items()}
 
@@ -30,11 +33,20 @@ def _serialize_profile(profile: Profile) -> dict[str, Any]:
     for cls, names in profile.specializations.items():
         serialized_specs[type_to_name[cls]] = names
 
-    serialized_attrs: dict[str, dict[str, str]] = {}
+    serialized_attrs: dict[str, dict[str, Any]] = {}
     for cls, attrs in profile.attribute_extensions.items():
-        serialized_attrs[type_to_name[cls]] = {
-            attr_name: attr_type.__name__ for attr_name, attr_type in attrs.items()
-        }
+        type_name = type_to_name[cls]
+        serialized_attr_map: dict[str, Any] = {}
+        for attr_name, raw_value in attrs.items():
+            if isinstance(raw_value, type):
+                # Bare type form: serialize as a plain type-name string (backward compat).
+                serialized_attr_map[attr_name] = raw_value.__name__
+            else:
+                # Constraint dict form: replace 'type' value with __name__, keep rest.
+                constraint_copy = dict(raw_value)
+                constraint_copy["type"] = raw_value["type"].__name__
+                serialized_attr_map[attr_name] = constraint_copy
+        serialized_attrs[type_name] = serialized_attr_map
 
     return {
         "name": profile.name,
@@ -49,6 +61,10 @@ def _deserialize_profile(data: dict[str, Any]) -> Profile:
     Type-name strings are resolved back to classes via :data:`_NAME_TO_TYPE`.
     Attribute type strings are resolved via a restricted allow-list of safe
     built-in types (``str``, ``int``, ``float``, ``bool``).
+
+    Supports both the bare string form (``"attr": "float"``) and the
+    constraint dict form (``"attr": {"type": "float", "min": 0.0, ...}``),
+    round-tripping Issue #52 constraint declarations transparently.
     """
     _ALLOWED_TYPES: dict[str, type] = {"str": str, "int": int, "float": float, "bool": bool}
 
@@ -56,12 +72,20 @@ def _deserialize_profile(data: dict[str, Any]) -> Profile:
     for type_name, names in data.get("specializations", {}).items():
         specs[_NAME_TO_TYPE[type_name]] = names  # type: ignore[index]
 
-    attrs: dict[type[Element], dict[str, type]] = {}
+    attrs: dict[type[Element], dict[str, Any]] = {}
     for type_name, attr_map in data.get("attribute_extensions", {}).items():
         cls = _NAME_TO_TYPE[type_name]
-        attrs[cls] = {  # type: ignore[index]
-            attr_name: _ALLOWED_TYPES[type_str] for attr_name, type_str in attr_map.items()
-        }
+        resolved_map: dict[str, Any] = {}
+        for attr_name, raw_value in attr_map.items():
+            if isinstance(raw_value, str):
+                # Bare type-name string (backward-compatible form).
+                resolved_map[attr_name] = _ALLOWED_TYPES[raw_value]
+            else:
+                # Constraint dict form: resolve the "type" key and pass rest through.
+                constraint_copy = dict(raw_value)
+                constraint_copy["type"] = _ALLOWED_TYPES[raw_value["type"]]
+                resolved_map[attr_name] = constraint_copy
+        attrs[cls] = resolved_map  # type: ignore[index]
 
     return Profile(name=data["name"], specializations=specs, attribute_extensions=attrs)
 

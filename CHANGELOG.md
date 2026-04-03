@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 02 Apr 2026
+
+### Added
+
+- **`Model.elements_where()`** -- predicate query method for filtering elements
+  by arbitrary conditions (extended attributes, type checks, name filters,
+  compound predicates). Closes #51.
+- **Declarative profile constraints** -- `attribute_extensions` values now accept
+  constraint dicts with `allowed`, `min`/`max`, and `required` keys alongside
+  the bare type form. `Model.validate()` enforces constraints. JSON and XML
+  round-trip supported. ADR-030 updated. Closes #52.
+- **`Pattern.where_attr()`** -- serializable declarative predicates for pattern
+  matching with 8 operators (`==`, `!=`, `<`, `<=`, `>`, `>=`, `in`,
+  `not_in`). `Pattern.to_dict()` / `Pattern.from_dict()` enable standalone
+  pattern serialization for rule repositories. ADR-048 added. Closes #53.
+
 ## [0.7.0] - 02 Apr 2026
 
 ### Added

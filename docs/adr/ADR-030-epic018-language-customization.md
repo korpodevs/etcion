@@ -56,11 +56,47 @@ The field is added to `Element` in `concepts.py`, not to each concrete subclass,
 |---|---|---|---|
 | `name` | `str` | Yes | Non-empty; identifies the profile |
 | `specializations` | `dict[type[Element], list[str]]` | No | Maps base element types to specialization names; defaults to `{}` |
-| `attribute_extensions` | `dict[type[Element], dict[str, type]]` | No | Maps element types to additional attribute name/type pairs; defaults to `{}` |
+| `attribute_extensions` | `dict[type[Element], dict[str, type \| ConstraintDict]]` | No | Maps element types to additional attribute name/type pairs or constraint dicts; defaults to `{}` |
 
 `specializations` uses `type[Element]` keys (class references, not strings) to maintain the type-safe pattern established by `Viewpoint.permitted_concept_types` (ADR-029). The value is `list[str]` because a single base type may have multiple named specializations within one profile.
 
 `attribute_extensions` maps element types to dictionaries of attribute names and their Python types. These are metadata declarations; they do not alter the Pydantic schema of existing classes at runtime. Extended attributes are stored in a separate runtime store on the model (Decision 6), not injected into class fields.
+
+#### Extended Constraint Syntax (Issue #52)
+
+Each value in the inner `dict[str, ...]` of `attribute_extensions` accepts either:
+
+- **Bare type** (backward-compatible): `"attr": float` — only a type check is enforced.
+- **Constraint dict**: `"attr": {"type": float, ...}` — type check plus optional value constraints.
+
+Recognized constraint keys:
+
+| Key | Value type | Semantics |
+|---|---|---|
+| `type` | `type` | **Required** in dict form. The Python type the attribute value must satisfy. |
+| `allowed` | `list` | Permitted values; `Model.validate()` rejects any value not in this list. |
+| `min` | `int \| float` | Inclusive lower bound; checked with `<`. |
+| `max` | `int \| float` | Inclusive upper bound; checked with `>`. |
+| `required` | `bool` | When `True`, the attribute must be present (non-`None`) on every element of the declared type. |
+
+Example:
+
+```python
+Profile(
+    name="RiskManagement",
+    attribute_extensions={
+        ApplicationService: {
+            "risk_score": {"type": str, "allowed": ["low", "medium", "high", "critical"]},
+            "tco": {"type": float, "min": 0.0},
+            "owner": {"type": str, "required": True},
+        },
+    },
+)
+```
+
+Constraint validation is performed at `Profile` construction time (unknown keys or bad value types raise `pydantic.ValidationError`) and at `Model.validate()` time (constraint violations yield `etcion.ValidationError`). Constraints survive both JSON and XML serialization round-trips.
+
+Internally, both forms are normalized to `AttributeConstraint` instances (see `src/etcion/metamodel/profiles.py`) via the `resolve_constraint()` helper. The normalized map is accessible through `Profile.get_constraints(elem_type)`.
 
 ### 5. Profile Validation
 

@@ -5,6 +5,7 @@ Reference: ADR-031.
 
 from __future__ import annotations
 
+import json
 import uuid
 import warnings
 from pathlib import Path
@@ -48,8 +49,17 @@ _XSD_TO_PY_TYPE: dict[str, type] = {
     "boolean": bool,
 }
 
+# Allowed Python type name strings for constraint deserialization.
+_ALLOWED_TYPES: dict[str, type] = {"str": str, "int": int, "float": float, "bool": bool}
+
 # Well-known propertyDefinition identifier for the specialization field.
 _SPECIALIZATION_PROPDEF_ID = "propdef-specialization"
+
+# Custom namespace for etcion-specific extension elements (Issue #52).
+# These elements are written outside the XSD-governed portion of the
+# Exchange Format and are captured / re-emitted via the _opaque_xml mechanism.
+_ETCION_NS = "https://etcion.dev/xml/1.0"
+_ETCION_NSMAP: dict[str | None, str] = {**NSMAP, "etcion": _ETCION_NS}
 
 
 def _to_exchange_id(internal_id: str) -> str:
@@ -243,7 +253,11 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
         for profile in model.profiles:
             for cls, attrs in profile.attribute_extensions.items():
                 type_name = TYPE_REGISTRY[cls].xml_tag
-                for attr_name, attr_type in attrs.items():
+                for attr_name, raw_value in attrs.items():
+                    # Resolve the Python type whether raw_value is a bare type or dict.
+                    attr_type: type = (
+                        raw_value if isinstance(raw_value, type) else raw_value["type"]
+                    )
                     pd = etree.SubElement(propdefs, f"{{{ARCHIMATE_NS}}}propertyDefinition")
                     pd.set("identifier", f"propdef-{type_name}-{attr_name}")
                     pd.set("type", _PY_TO_XSD_TYPE.get(attr_type.__name__, "string"))
@@ -259,6 +273,31 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
             pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
             pd_name.text = attr_name
 
+    # Emit constraint metadata for profiles that use the dict constraint form
+    # (Issue #52).  This element lives in the etcion custom namespace and is
+    # captured by the opaque mechanism on round-trip so it survives read_model.
+    # Format:
+    #   <etcion:profileConstraints xmlns:etcion="...">
+    #     <etcion:profile name="ProfileName">
+    #       <etcion:elementType tag="ApplicationService">
+    #         <etcion:attr name="risk_score">{"type":"str","allowed":["low","high"]}</etcion:attr>
+    #       </etcion:elementType>
+    #     </etcion:profile>
+    #   </etcion:profileConstraints>
+    constraint_profiles = _collect_constraint_profiles(model)
+    if constraint_profiles:
+        pc_root = etree.SubElement(root, f"{{{_ETCION_NS}}}profileConstraints")
+        for prof_name, type_attrs in constraint_profiles.items():
+            p_el = etree.SubElement(pc_root, f"{{{_ETCION_NS}}}profile")
+            p_el.set("name", prof_name)
+            for xml_tag, attr_map in type_attrs.items():
+                et_el = etree.SubElement(p_el, f"{{{_ETCION_NS}}}elementType")
+                et_el.set("tag", xml_tag)
+                for attr_name, constraint_dict in attr_map.items():
+                    a_el = etree.SubElement(et_el, f"{{{_ETCION_NS}}}attr")
+                    a_el.set("name", attr_name)
+                    a_el.text = json.dumps(constraint_dict, ensure_ascii=False)
+
     # XSD requires <views> to come after <propertyDefinitions>.
     if model.views:
         views_el = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}views")
@@ -267,6 +306,39 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
             _serialize_view(view, diagrams_el)
 
     return etree.ElementTree(root)
+
+
+def _collect_constraint_profiles(
+    model: Model,
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Collect constraint metadata from profiles that use the dict constraint form.
+
+    Returns a nested dict::
+
+        {profile_name: {xml_tag: {attr_name: constraint_dict}}}
+
+    where ``constraint_dict`` is a JSON-serializable representation of the
+    constraint with the ``type`` key replaced by the type's ``__name__`` string.
+
+    Only profiles that have at least one dict-form constraint are included.
+    """
+    result: dict[str, dict[str, dict[str, Any]]] = {}
+    for profile in model.profiles:
+        type_map: dict[str, dict[str, Any]] = {}
+        for cls, attrs in profile.attribute_extensions.items():
+            xml_tag = TYPE_REGISTRY[cls].xml_tag
+            attr_map: dict[str, Any] = {}
+            for attr_name, raw_value in attrs.items():
+                if not isinstance(raw_value, type):
+                    # Dict constraint form — serialize 'type' as __name__ string.
+                    serialized = dict(raw_value)
+                    serialized["type"] = raw_value["type"].__name__
+                    attr_map[attr_name] = serialized
+            if attr_map:
+                type_map[xml_tag] = attr_map
+        if type_map:
+            result[profile.name] = type_map
+    return result
 
 
 def write_model(model: Model, path: str | Path, *, model_name: str = "Untitled Model") -> None:
@@ -408,6 +480,45 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
                     attr_extensions[elem_cls] = {}
                 attr_extensions[elem_cls][attr_name] = py_type
 
+    # Phase 1b: parse <etcion:profileConstraints> if present (Issue #52).
+    # This element carries the full constraint metadata for profiles that use
+    # the dict constraint form and was written by serialize_model.
+    # Constraint metadata is indexed by (xml_tag, attr_name) to allow overlay
+    # onto the attr_extensions built from <propertyDefinitions>.
+    imported_constraints: dict[type[Element], dict[str, Any]] = {}
+    pc_node = root.find(f"{{{_ETCION_NS}}}profileConstraints")
+    if pc_node is not None:
+        for prof_el in pc_node:
+            for et_el in prof_el:
+                xml_tag = et_el.get("tag", "")
+                elem_cls_raw = _TAG_TO_TYPE.get(xml_tag)
+                if elem_cls_raw is None or not (
+                    isinstance(elem_cls_raw, type) and issubclass(elem_cls_raw, Element)
+                ):
+                    continue
+                elem_cls_ct: type[Element] = elem_cls_raw
+                for a_el in et_el:
+                    a_name = a_el.get("name", "")
+                    raw_text = a_el.text or "{}"
+                    try:
+                        constraint_dict: dict[str, Any] = json.loads(raw_text)
+                        # Resolve type string back to a Python type.
+                        constraint_dict["type"] = _ALLOWED_TYPES.get(
+                            constraint_dict.get("type", "str"), str
+                        )
+                        if elem_cls_ct not in imported_constraints:
+                            imported_constraints[elem_cls_ct] = {}
+                        imported_constraints[elem_cls_ct][a_name] = constraint_dict
+                    except (json.JSONDecodeError, KeyError):
+                        pass  # gracefully skip malformed constraint entries
+
+    # Merge imported_constraints on top of attr_extensions (constraint dict
+    # form takes precedence over bare-type form from propertyDefinitions).
+    for cls, attrs in imported_constraints.items():
+        if cls not in attr_extensions:
+            attr_extensions[cls] = {}
+        attr_extensions[cls].update(attrs)
+
     # Phase 2: parse elements (collect, do not add yet); gather specializations
     id_map: dict[str, Concept] = {}
     parsed_elements: list[Element] = []
@@ -495,10 +606,16 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
                 model.add_view(view)
 
     # Capture opaque children for lossless round-trip.
-    # <views> is now parsed explicitly above and must not be captured as opaque.
+    # <views> and <etcion:profileConstraints> are parsed explicitly above and
+    # must not be captured as opaque (to avoid double-emission on round-trip).
     opaque: list[etree._Element] = []
     for child in root:
-        tag_local = etree.QName(child.tag).localname
+        child_qname = etree.QName(child.tag)
+        tag_local = child_qname.localname
+        tag_ns = child_qname.namespace
+        # Skip etcion-namespace elements: they are parsed explicitly.
+        if tag_ns == _ETCION_NS:
+            continue
         _opaque_skip = (
             "elements",
             "relationships",
