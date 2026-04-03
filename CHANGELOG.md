@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 02 Apr 2026
+
+### Added
+
+- **End-to-end test infrastructure** -- `test/e2e/conftest.py` with session-scoped
+  `petco_model`, function-scoped `petco_model_copy`, and `minimal_model` fixtures.
+  Closes #66.
+- **PawsPlus regression harness** -- 20 structural regression tests asserting
+  element counts, relationship integrity, profile application, viewpoint
+  coverage, capability hierarchy, and data governance completeness. Closes #67.
+- **Serialization format matrix** -- 42 parametrized tests across 8 formats
+  (XML, JSON, CSV, DataFrame, Parquet, DuckDB, Cytoscape, ECharts) × 4 model
+  variants with round-trip and write-only validation. Closes #68.
+- **Analytical workflow tests** -- 35 tests for pattern matching, impact
+  analysis, model diff, and model merge against PawsPlus. Closes #69.
+- **Model lifecycle tests** -- 42 tests covering build → profile → viewpoint →
+  view → serialize → deserialize → validate chains. Closes #70.
+- **Negative path tests** -- 28 tests for invalid relationships, duplicate IDs,
+  malformed XML, viewpoint violations, profile mismatches, and cycle safety.
+  Closes #71.
+- **User journey simulations** -- 4 end-to-end tests simulating enterprise
+  architect, analyst, platform team, and data governance workflows. Closes #72.
+- **CI marker-based test gating** -- `test-fast` (unit only) on every push,
+  `test-full` (unit + integration) on develop/main/release, nightly schedule
+  for slow benchmarks. Added `e2e` marker alias. Closes #73.
+
 ## [0.8.0] - 02 Apr 2026
 
 ### Added
