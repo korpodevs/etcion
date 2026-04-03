@@ -28,6 +28,7 @@ nav:
   - Getting Started: getting-started.md
   - User Guide:
     - Building Models: user-guide/building-models.md
+    - ModelBuilder: user-guide/builder.md
     - Validation: user-guide/validation.md
     - Serialization: user-guide/serialization.md
     - Viewpoints: user-guide/viewpoints.md
