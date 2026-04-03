@@ -10,7 +10,93 @@ from pydantic import ValidationError as PydanticValidationError
 
 from etcion import VIEWPOINT_CATALOGUE
 from etcion.enums import ContentCategory, PurposeCategory
+from etcion.metamodel.application import (
+    ApplicationCollaboration,
+    ApplicationComponent,
+    ApplicationEvent,
+    ApplicationFunction,
+    ApplicationInteraction,
+    ApplicationInterface,
+    ApplicationProcess,
+    ApplicationService,
+    DataObject,
+)
+from etcion.metamodel.business import (
+    BusinessActor,
+    BusinessCollaboration,
+    BusinessEvent,
+    BusinessFunction,
+    BusinessInteraction,
+    BusinessInterface,
+    BusinessObject,
+    BusinessProcess,
+    BusinessRole,
+    BusinessService,
+    Contract,
+    Product,
+    Representation,
+)
 from etcion.metamodel.concepts import Concept
+from etcion.metamodel.elements import Grouping, Location
+from etcion.metamodel.implementation_migration import (
+    Deliverable,
+    Gap,
+    ImplementationEvent,
+    Plateau,
+    WorkPackage,
+)
+from etcion.metamodel.motivation import (
+    Assessment,
+    Constraint,
+    Driver,
+    Goal,
+    Meaning,
+    Outcome,
+    Principle,
+    Requirement,
+    Stakeholder,
+    Value,
+)
+from etcion.metamodel.physical import (
+    DistributionNetwork,
+    Equipment,
+    Facility,
+    Material,
+)
+from etcion.metamodel.relationships import (
+    Access,
+    Aggregation,
+    Assignment,
+    Association,
+    Composition,
+    Flow,
+    Influence,
+    Realization,
+    Serving,
+    Specialization,
+    Triggering,
+)
+from etcion.metamodel.strategy import (
+    Capability,
+    CourseOfAction,
+    Resource,
+    ValueStream,
+)
+from etcion.metamodel.technology import (
+    Artifact,
+    CommunicationNetwork,
+    Device,
+    Node,
+    Path,
+    SystemSoftware,
+    TechnologyCollaboration,
+    TechnologyEvent,
+    TechnologyFunction,
+    TechnologyInteraction,
+    TechnologyInterface,
+    TechnologyProcess,
+    TechnologyService,
+)
 from etcion.metamodel.viewpoints import Viewpoint
 
 # ---------------------------------------------------------------------------
@@ -21,8 +107,6 @@ from etcion.metamodel.viewpoints import Viewpoint
 def _make_viewpoint(name: str = "Test") -> Viewpoint:
     """Return a minimal Viewpoint using a real concrete type as the sole
     permitted concept type so Pydantic validation passes."""
-    from etcion.metamodel.motivation import Goal
-
     return Viewpoint(
         name=name,
         purpose=PurposeCategory.DESIGNING,
@@ -30,6 +114,761 @@ def _make_viewpoint(name: str = "Test") -> Viewpoint:
         permitted_concept_types=frozenset({Goal}),
     )
 
+
+# ---------------------------------------------------------------------------
+# Expected permitted type sets — one entry per viewpoint
+# ---------------------------------------------------------------------------
+
+VIEWPOINT_EXPECTED: dict[str, tuple[PurposeCategory, ContentCategory, frozenset[type[Concept]]]] = {
+    "Organization": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                BusinessActor,
+                BusinessRole,
+                BusinessCollaboration,
+                BusinessInterface,
+                Location,
+                Composition,
+                Aggregation,
+                Assignment,
+                Serving,
+                Realization,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Application Platform": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.DETAILS,
+        frozenset(
+            {
+                ApplicationComponent,
+                ApplicationInterface,
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyInterface,
+                TechnologyService,
+                CommunicationNetwork,
+                Path,
+                Artifact,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Application Structure": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.DETAILS,
+        frozenset(
+            {
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                ApplicationService,
+                DataObject,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Access,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Information Structure": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.DETAILS,
+        frozenset(
+            {
+                BusinessObject,
+                Contract,
+                Representation,
+                DataObject,
+                Access,
+                Association,
+                Realization,
+                Composition,
+                Aggregation,
+                Specialization,
+            }
+        ),
+    ),
+    "Technology": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.DETAILS,
+        frozenset(
+            {
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyCollaboration,
+                TechnologyInterface,
+                Path,
+                CommunicationNetwork,
+                TechnologyFunction,
+                TechnologyProcess,
+                TechnologyInteraction,
+                TechnologyEvent,
+                TechnologyService,
+                Artifact,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Access,
+                Flow,
+                Triggering,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Layered": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.OVERVIEW,
+        frozenset(
+            {
+                # Strategy
+                Resource,
+                Capability,
+                ValueStream,
+                CourseOfAction,
+                # Business
+                BusinessActor,
+                BusinessRole,
+                BusinessCollaboration,
+                BusinessInterface,
+                BusinessProcess,
+                BusinessFunction,
+                BusinessInteraction,
+                BusinessEvent,
+                BusinessService,
+                BusinessObject,
+                Contract,
+                Representation,
+                Product,
+                # Application
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                ApplicationService,
+                DataObject,
+                # Technology
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyCollaboration,
+                TechnologyInterface,
+                Path,
+                CommunicationNetwork,
+                TechnologyFunction,
+                TechnologyProcess,
+                TechnologyInteraction,
+                TechnologyEvent,
+                TechnologyService,
+                Artifact,
+                # Physical
+                Equipment,
+                Facility,
+                DistributionNetwork,
+                Material,
+                # Motivation
+                Stakeholder,
+                Driver,
+                Assessment,
+                Goal,
+                Outcome,
+                Principle,
+                Requirement,
+                Constraint,
+                Meaning,
+                Value,
+                # Implementation & Migration
+                WorkPackage,
+                Deliverable,
+                ImplementationEvent,
+                Plateau,
+                Gap,
+                # Composite
+                Grouping,
+                Location,
+                # Relationships
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Access,
+                Influence,
+                Association,
+                Triggering,
+                Flow,
+                Specialization,
+            }
+        ),
+    ),
+    "Physical": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.DETAILS,
+        frozenset(
+            {
+                Equipment,
+                Facility,
+                DistributionNetwork,
+                Material,
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyInterface,
+                TechnologyService,
+                Artifact,
+                Location,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Flow,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Product": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                Product,
+                BusinessService,
+                BusinessInterface,
+                BusinessEvent,
+                BusinessRole,
+                BusinessActor,
+                BusinessObject,
+                Contract,
+                ApplicationService,
+                ApplicationComponent,
+                Serving,
+                Composition,
+                Aggregation,
+                Association,
+                Realization,
+                Specialization,
+            }
+        ),
+    ),
+    "Application Usage": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                BusinessProcess,
+                BusinessFunction,
+                BusinessInteraction,
+                BusinessEvent,
+                BusinessService,
+                BusinessRole,
+                BusinessActor,
+                BusinessCollaboration,
+                BusinessInterface,
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                ApplicationService,
+                DataObject,
+                Serving,
+                Realization,
+                Access,
+                Composition,
+                Aggregation,
+                Assignment,
+                Association,
+                Specialization,
+                Triggering,
+                Flow,
+            }
+        ),
+    ),
+    "Technology Usage": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                ApplicationService,
+                DataObject,
+                Artifact,
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyCollaboration,
+                TechnologyInterface,
+                Path,
+                CommunicationNetwork,
+                TechnologyFunction,
+                TechnologyProcess,
+                TechnologyInteraction,
+                TechnologyEvent,
+                TechnologyService,
+                Serving,
+                Realization,
+                Assignment,
+                Composition,
+                Aggregation,
+                Access,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Business Process Cooperation": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                BusinessProcess,
+                BusinessFunction,
+                BusinessInteraction,
+                BusinessEvent,
+                BusinessService,
+                BusinessActor,
+                BusinessRole,
+                BusinessCollaboration,
+                BusinessInterface,
+                BusinessObject,
+                Representation,
+                Location,
+                Flow,
+                Triggering,
+                Serving,
+                Composition,
+                Aggregation,
+                Assignment,
+                Association,
+                Specialization,
+                Realization,
+            }
+        ),
+    ),
+    "Application Cooperation": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                ApplicationService,
+                DataObject,
+                Location,
+                Serving,
+                Flow,
+                Triggering,
+                Realization,
+                Access,
+                Composition,
+                Aggregation,
+                Assignment,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Service Realization": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                BusinessService,
+                BusinessProcess,
+                BusinessFunction,
+                BusinessInteraction,
+                BusinessEvent,
+                BusinessActor,
+                BusinessRole,
+                BusinessCollaboration,
+                ApplicationService,
+                ApplicationComponent,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                TechnologyService,
+                TechnologyFunction,
+                TechnologyProcess,
+                TechnologyInteraction,
+                Realization,
+                Serving,
+                Assignment,
+                Composition,
+                Aggregation,
+                Triggering,
+                Flow,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Implementation and Deployment": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationService,
+                DataObject,
+                Artifact,
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyCollaboration,
+                TechnologyInterface,
+                Path,
+                CommunicationNetwork,
+                TechnologyService,
+                Assignment,
+                Realization,
+                Composition,
+                Aggregation,
+                Association,
+                Serving,
+                Specialization,
+            }
+        ),
+    ),
+    "Goal Realization": (
+        PurposeCategory.DECIDING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                Goal,
+                Outcome,
+                Requirement,
+                Constraint,
+                Principle,
+                Driver,
+                Assessment,
+                Stakeholder,
+                Realization,
+                Influence,
+                Association,
+                Composition,
+                Aggregation,
+                Specialization,
+            }
+        ),
+    ),
+    "Goal Contribution": (
+        PurposeCategory.DECIDING,
+        ContentCategory.DETAILS,
+        frozenset(
+            {
+                Goal,
+                Outcome,
+                Requirement,
+                Constraint,
+                Principle,
+                Influence,
+                Association,
+                Composition,
+                Aggregation,
+                Specialization,
+            }
+        ),
+    ),
+    "Principles": (
+        PurposeCategory.DECIDING,
+        ContentCategory.DETAILS,
+        frozenset(
+            {
+                Principle,
+                Requirement,
+                Constraint,
+                Goal,
+                Outcome,
+                Driver,
+                Assessment,
+                Stakeholder,
+                Realization,
+                Influence,
+                Association,
+                Composition,
+                Aggregation,
+                Specialization,
+            }
+        ),
+    ),
+    "Requirements Realization": (
+        PurposeCategory.DECIDING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                Requirement,
+                Constraint,
+                Goal,
+                Outcome,
+                Principle,
+                BusinessProcess,
+                BusinessFunction,
+                BusinessService,
+                BusinessActor,
+                BusinessRole,
+                ApplicationComponent,
+                ApplicationService,
+                Node,
+                TechnologyService,
+                WorkPackage,
+                Deliverable,
+                Realization,
+                Association,
+                Composition,
+                Aggregation,
+                Influence,
+                Specialization,
+            }
+        ),
+    ),
+    "Motivation": (
+        PurposeCategory.DECIDING,
+        ContentCategory.OVERVIEW,
+        frozenset(
+            {
+                Stakeholder,
+                Driver,
+                Assessment,
+                Goal,
+                Outcome,
+                Principle,
+                Requirement,
+                Constraint,
+                Meaning,
+                Value,
+                Composition,
+                Aggregation,
+                Influence,
+                Realization,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Strategy": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.OVERVIEW,
+        frozenset(
+            {
+                Resource,
+                Capability,
+                ValueStream,
+                CourseOfAction,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Flow,
+                Triggering,
+                Access,
+                Influence,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Capability Map": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.OVERVIEW,
+        frozenset(
+            {
+                Capability,
+                Resource,
+                Assignment,
+                Serving,
+                Composition,
+                Aggregation,
+                Specialization,
+                Association,
+                Realization,
+            }
+        ),
+    ),
+    "Outcome Realization": (
+        PurposeCategory.DECIDING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                Capability,
+                CourseOfAction,
+                Resource,
+                ValueStream,
+                Outcome,
+                Goal,
+                Realization,
+                Influence,
+                Composition,
+                Aggregation,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Resource Map": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.OVERVIEW,
+        frozenset(
+            {
+                Resource,
+                Capability,
+                Assignment,
+                Composition,
+                Aggregation,
+                Specialization,
+                Association,
+                Serving,
+            }
+        ),
+    ),
+    "Value Stream": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.DETAILS,
+        frozenset(
+            {
+                ValueStream,
+                Capability,
+                Resource,
+                CourseOfAction,
+                Flow,
+                Triggering,
+                Serving,
+                Composition,
+                Aggregation,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Project": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.DETAILS,
+        frozenset(
+            {
+                WorkPackage,
+                Deliverable,
+                ImplementationEvent,
+                BusinessActor,
+                BusinessRole,
+                Location,
+                Assignment,
+                Realization,
+                Triggering,
+                Flow,
+                Composition,
+                Aggregation,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Migration": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.COHERENCE,
+        frozenset(
+            {
+                Plateau,
+                Gap,
+                WorkPackage,
+                Composition,
+                Aggregation,
+                Triggering,
+                Association,
+                Realization,
+                Specialization,
+            }
+        ),
+    ),
+    "Implementation and Migration": (
+        PurposeCategory.DESIGNING,
+        ContentCategory.OVERVIEW,
+        frozenset(
+            {
+                WorkPackage,
+                Deliverable,
+                ImplementationEvent,
+                Plateau,
+                Gap,
+                Location,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Triggering,
+                Flow,
+                Association,
+                Specialization,
+            }
+        ),
+    ),
+    "Stakeholder": (
+        PurposeCategory.INFORMING,
+        ContentCategory.OVERVIEW,
+        frozenset(
+            {
+                Stakeholder,
+                Driver,
+                Assessment,
+                Goal,
+                Outcome,
+                Principle,
+                Requirement,
+                Constraint,
+                Influence,
+                Association,
+                Composition,
+                Aggregation,
+                Specialization,
+            }
+        ),
+    ),
+}
+
+ALL_VIEWPOINT_KEYS = list(VIEWPOINT_EXPECTED.keys())
 
 # ---------------------------------------------------------------------------
 # ViewpointCatalogue mechanics
@@ -127,583 +966,65 @@ class TestViewpointCatalogueSingleton:
 
 
 # ---------------------------------------------------------------------------
-# Fully-specified viewpoints (5 from the brief)
+# Parametrized: full permitted_concept_types set equality per viewpoint
 # ---------------------------------------------------------------------------
 
 
-class TestOrganizationViewpoint:
-    @pytest.fixture(autouse=True)
-    def vp(self):
-        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
-
-        self.vp = VIEWPOINT_CATALOGUE["Organization"]
-
-    def test_name(self) -> None:
-        assert self.vp.name == "Organization"
-
-    def test_purpose(self) -> None:
-        assert self.vp.purpose is PurposeCategory.DESIGNING
-
-    def test_content(self) -> None:
-        assert self.vp.content is ContentCategory.COHERENCE
-
-    def test_permitted_concept_types_non_empty(self) -> None:
-        assert len(self.vp.permitted_concept_types) > 0
-
-    def test_permitted_includes_business_actor(self) -> None:
-        from etcion.metamodel.business import BusinessActor
-
-        assert BusinessActor in self.vp.permitted_concept_types
-
-    def test_permitted_includes_business_role(self) -> None:
-        from etcion.metamodel.business import BusinessRole
-
-        assert BusinessRole in self.vp.permitted_concept_types
-
-    def test_permitted_includes_business_collaboration(self) -> None:
-        from etcion.metamodel.business import BusinessCollaboration
-
-        assert BusinessCollaboration in self.vp.permitted_concept_types
-
-    def test_permitted_includes_business_interface(self) -> None:
-        from etcion.metamodel.business import BusinessInterface
-
-        assert BusinessInterface in self.vp.permitted_concept_types
-
-    def test_permitted_includes_location(self) -> None:
-        from etcion.metamodel.elements import Location
-
-        assert Location in self.vp.permitted_concept_types
-
-    def test_permitted_includes_composition(self) -> None:
-        from etcion.metamodel.relationships import Composition
-
-        assert Composition in self.vp.permitted_concept_types
-
-    def test_permitted_includes_aggregation(self) -> None:
-        from etcion.metamodel.relationships import Aggregation
-
-        assert Aggregation in self.vp.permitted_concept_types
-
-    def test_permitted_includes_assignment(self) -> None:
-        from etcion.metamodel.relationships import Assignment
-
-        assert Assignment in self.vp.permitted_concept_types
-
-    def test_permitted_includes_serving(self) -> None:
-        from etcion.metamodel.relationships import Serving
-
-        assert Serving in self.vp.permitted_concept_types
-
-    def test_permitted_includes_association(self) -> None:
-        from etcion.metamodel.relationships import Association
-
-        assert Association in self.vp.permitted_concept_types
-
-    def test_permitted_includes_specialization(self) -> None:
-        from etcion.metamodel.relationships import Specialization
-
-        assert Specialization in self.vp.permitted_concept_types
-
-    def test_permitted_includes_realization(self) -> None:
-        from etcion.metamodel.relationships import Realization
-
-        assert Realization in self.vp.permitted_concept_types
-
-
-class TestApplicationCooperationViewpoint:
-    @pytest.fixture(autouse=True)
-    def vp(self):
-        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
-
-        self.vp = VIEWPOINT_CATALOGUE["Application Cooperation"]
-
-    def test_name(self) -> None:
-        assert self.vp.name == "Application Cooperation"
-
-    def test_purpose(self) -> None:
-        assert self.vp.purpose is PurposeCategory.DESIGNING
-
-    def test_content(self) -> None:
-        assert self.vp.content is ContentCategory.COHERENCE
-
-    def test_permitted_concept_types_non_empty(self) -> None:
-        assert len(self.vp.permitted_concept_types) > 0
-
-    def test_permitted_includes_application_component(self) -> None:
-        from etcion.metamodel.application import ApplicationComponent
-
-        assert ApplicationComponent in self.vp.permitted_concept_types
-
-    def test_permitted_includes_application_collaboration(self) -> None:
-        from etcion.metamodel.application import ApplicationCollaboration
-
-        assert ApplicationCollaboration in self.vp.permitted_concept_types
-
-    def test_permitted_includes_application_interface(self) -> None:
-        from etcion.metamodel.application import ApplicationInterface
-
-        assert ApplicationInterface in self.vp.permitted_concept_types
-
-    def test_permitted_includes_application_function(self) -> None:
-        from etcion.metamodel.application import ApplicationFunction
-
-        assert ApplicationFunction in self.vp.permitted_concept_types
-
-    def test_permitted_includes_application_interaction(self) -> None:
-        from etcion.metamodel.application import ApplicationInteraction
-
-        assert ApplicationInteraction in self.vp.permitted_concept_types
-
-    def test_permitted_includes_application_process(self) -> None:
-        from etcion.metamodel.application import ApplicationProcess
-
-        assert ApplicationProcess in self.vp.permitted_concept_types
-
-    def test_permitted_includes_application_event(self) -> None:
-        from etcion.metamodel.application import ApplicationEvent
-
-        assert ApplicationEvent in self.vp.permitted_concept_types
-
-    def test_permitted_includes_application_service(self) -> None:
-        from etcion.metamodel.application import ApplicationService
-
-        assert ApplicationService in self.vp.permitted_concept_types
-
-    def test_permitted_includes_data_object(self) -> None:
-        from etcion.metamodel.application import DataObject
-
-        assert DataObject in self.vp.permitted_concept_types
-
-    def test_permitted_includes_location(self) -> None:
-        from etcion.metamodel.elements import Location
-
-        assert Location in self.vp.permitted_concept_types
-
-    def test_permitted_includes_serving(self) -> None:
-        from etcion.metamodel.relationships import Serving
-
-        assert Serving in self.vp.permitted_concept_types
-
-    def test_permitted_includes_flow(self) -> None:
-        from etcion.metamodel.relationships import Flow
-
-        assert Flow in self.vp.permitted_concept_types
-
-    def test_permitted_includes_triggering(self) -> None:
-        from etcion.metamodel.relationships import Triggering
-
-        assert Triggering in self.vp.permitted_concept_types
-
-    def test_permitted_includes_realization(self) -> None:
-        from etcion.metamodel.relationships import Realization
-
-        assert Realization in self.vp.permitted_concept_types
-
-    def test_permitted_includes_access(self) -> None:
-        from etcion.metamodel.relationships import Access
-
-        assert Access in self.vp.permitted_concept_types
-
-    def test_permitted_includes_composition(self) -> None:
-        from etcion.metamodel.relationships import Composition
-
-        assert Composition in self.vp.permitted_concept_types
-
-    def test_permitted_includes_aggregation(self) -> None:
-        from etcion.metamodel.relationships import Aggregation
-
-        assert Aggregation in self.vp.permitted_concept_types
-
-    def test_permitted_includes_assignment(self) -> None:
-        from etcion.metamodel.relationships import Assignment
-
-        assert Assignment in self.vp.permitted_concept_types
-
-    def test_permitted_includes_association(self) -> None:
-        from etcion.metamodel.relationships import Association
-
-        assert Association in self.vp.permitted_concept_types
-
-    def test_permitted_includes_specialization(self) -> None:
-        from etcion.metamodel.relationships import Specialization
-
-        assert Specialization in self.vp.permitted_concept_types
-
-
-class TestMotivationViewpoint:
-    @pytest.fixture(autouse=True)
-    def vp(self):
-        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
-
-        self.vp = VIEWPOINT_CATALOGUE["Motivation"]
-
-    def test_name(self) -> None:
-        assert self.vp.name == "Motivation"
-
-    def test_purpose(self) -> None:
-        assert self.vp.purpose is PurposeCategory.DECIDING
-
-    def test_content(self) -> None:
-        assert self.vp.content is ContentCategory.OVERVIEW
-
-    def test_permitted_concept_types_non_empty(self) -> None:
-        assert len(self.vp.permitted_concept_types) > 0
-
-    def test_permitted_includes_stakeholder(self) -> None:
-        from etcion.metamodel.motivation import Stakeholder
-
-        assert Stakeholder in self.vp.permitted_concept_types
-
-    def test_permitted_includes_driver(self) -> None:
-        from etcion.metamodel.motivation import Driver
-
-        assert Driver in self.vp.permitted_concept_types
-
-    def test_permitted_includes_assessment(self) -> None:
-        from etcion.metamodel.motivation import Assessment
-
-        assert Assessment in self.vp.permitted_concept_types
-
-    def test_permitted_includes_goal(self) -> None:
-        from etcion.metamodel.motivation import Goal
-
-        assert Goal in self.vp.permitted_concept_types
-
-    def test_permitted_includes_outcome(self) -> None:
-        from etcion.metamodel.motivation import Outcome
-
-        assert Outcome in self.vp.permitted_concept_types
-
-    def test_permitted_includes_principle(self) -> None:
-        from etcion.metamodel.motivation import Principle
-
-        assert Principle in self.vp.permitted_concept_types
-
-    def test_permitted_includes_requirement(self) -> None:
-        from etcion.metamodel.motivation import Requirement
-
-        assert Requirement in self.vp.permitted_concept_types
-
-    def test_permitted_includes_constraint(self) -> None:
-        from etcion.metamodel.motivation import Constraint
-
-        assert Constraint in self.vp.permitted_concept_types
-
-    def test_permitted_includes_meaning(self) -> None:
-        from etcion.metamodel.motivation import Meaning
-
-        assert Meaning in self.vp.permitted_concept_types
-
-    def test_permitted_includes_value(self) -> None:
-        from etcion.metamodel.motivation import Value
-
-        assert Value in self.vp.permitted_concept_types
-
-    def test_permitted_includes_influence(self) -> None:
-        from etcion.metamodel.relationships import Influence
-
-        assert Influence in self.vp.permitted_concept_types
-
-    def test_permitted_includes_realization(self) -> None:
-        from etcion.metamodel.relationships import Realization
-
-        assert Realization in self.vp.permitted_concept_types
-
-    def test_permitted_includes_association(self) -> None:
-        from etcion.metamodel.relationships import Association
-
-        assert Association in self.vp.permitted_concept_types
-
-    def test_permitted_includes_specialization(self) -> None:
-        from etcion.metamodel.relationships import Specialization
-
-        assert Specialization in self.vp.permitted_concept_types
-
-    def test_permitted_includes_composition(self) -> None:
-        from etcion.metamodel.relationships import Composition
-
-        assert Composition in self.vp.permitted_concept_types
-
-    def test_permitted_includes_aggregation(self) -> None:
-        from etcion.metamodel.relationships import Aggregation
-
-        assert Aggregation in self.vp.permitted_concept_types
-
-
-class TestStrategyViewpoint:
-    @pytest.fixture(autouse=True)
-    def vp(self):
-        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
-
-        self.vp = VIEWPOINT_CATALOGUE["Strategy"]
-
-    def test_name(self) -> None:
-        assert self.vp.name == "Strategy"
-
-    def test_purpose(self) -> None:
-        assert self.vp.purpose is PurposeCategory.DESIGNING
-
-    def test_content(self) -> None:
-        assert self.vp.content is ContentCategory.OVERVIEW
-
-    def test_permitted_concept_types_non_empty(self) -> None:
-        assert len(self.vp.permitted_concept_types) > 0
-
-    def test_permitted_includes_resource(self) -> None:
-        from etcion.metamodel.strategy import Resource
-
-        assert Resource in self.vp.permitted_concept_types
-
-    def test_permitted_includes_capability(self) -> None:
-        from etcion.metamodel.strategy import Capability
-
-        assert Capability in self.vp.permitted_concept_types
-
-    def test_permitted_includes_value_stream(self) -> None:
-        from etcion.metamodel.strategy import ValueStream
-
-        assert ValueStream in self.vp.permitted_concept_types
-
-    def test_permitted_includes_course_of_action(self) -> None:
-        from etcion.metamodel.strategy import CourseOfAction
-
-        assert CourseOfAction in self.vp.permitted_concept_types
-
-    def test_permitted_includes_composition(self) -> None:
-        from etcion.metamodel.relationships import Composition
-
-        assert Composition in self.vp.permitted_concept_types
-
-    def test_permitted_includes_aggregation(self) -> None:
-        from etcion.metamodel.relationships import Aggregation
-
-        assert Aggregation in self.vp.permitted_concept_types
-
-    def test_permitted_includes_assignment(self) -> None:
-        from etcion.metamodel.relationships import Assignment
-
-        assert Assignment in self.vp.permitted_concept_types
-
-    def test_permitted_includes_realization(self) -> None:
-        from etcion.metamodel.relationships import Realization
-
-        assert Realization in self.vp.permitted_concept_types
-
-    def test_permitted_includes_serving(self) -> None:
-        from etcion.metamodel.relationships import Serving
-
-        assert Serving in self.vp.permitted_concept_types
-
-    def test_permitted_includes_flow(self) -> None:
-        from etcion.metamodel.relationships import Flow
-
-        assert Flow in self.vp.permitted_concept_types
-
-    def test_permitted_includes_triggering(self) -> None:
-        from etcion.metamodel.relationships import Triggering
-
-        assert Triggering in self.vp.permitted_concept_types
-
-    def test_permitted_includes_access(self) -> None:
-        from etcion.metamodel.relationships import Access
-
-        assert Access in self.vp.permitted_concept_types
-
-    def test_permitted_includes_influence(self) -> None:
-        from etcion.metamodel.relationships import Influence
-
-        assert Influence in self.vp.permitted_concept_types
-
-    def test_permitted_includes_association(self) -> None:
-        from etcion.metamodel.relationships import Association
-
-        assert Association in self.vp.permitted_concept_types
-
-    def test_permitted_includes_specialization(self) -> None:
-        from etcion.metamodel.relationships import Specialization
-
-        assert Specialization in self.vp.permitted_concept_types
-
-
-class TestImplementationAndMigrationViewpoint:
-    @pytest.fixture(autouse=True)
-    def vp(self):
-        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
-
-        self.vp = VIEWPOINT_CATALOGUE["Implementation and Migration"]
-
-    def test_name(self) -> None:
-        assert self.vp.name == "Implementation and Migration"
-
-    def test_purpose(self) -> None:
-        assert self.vp.purpose is PurposeCategory.DESIGNING
-
-    def test_content(self) -> None:
-        assert self.vp.content is ContentCategory.OVERVIEW
-
-    def test_permitted_concept_types_non_empty(self) -> None:
-        assert len(self.vp.permitted_concept_types) > 0
-
-    def test_permitted_includes_work_package(self) -> None:
-        from etcion.metamodel.implementation_migration import WorkPackage
-
-        assert WorkPackage in self.vp.permitted_concept_types
-
-    def test_permitted_includes_deliverable(self) -> None:
-        from etcion.metamodel.implementation_migration import Deliverable
-
-        assert Deliverable in self.vp.permitted_concept_types
-
-    def test_permitted_includes_implementation_event(self) -> None:
-        from etcion.metamodel.implementation_migration import ImplementationEvent
-
-        assert ImplementationEvent in self.vp.permitted_concept_types
-
-    def test_permitted_includes_plateau(self) -> None:
-        from etcion.metamodel.implementation_migration import Plateau
-
-        assert Plateau in self.vp.permitted_concept_types
-
-    def test_permitted_includes_gap(self) -> None:
-        from etcion.metamodel.implementation_migration import Gap
-
-        assert Gap in self.vp.permitted_concept_types
-
-    def test_permitted_includes_location(self) -> None:
-        from etcion.metamodel.elements import Location
-
-        assert Location in self.vp.permitted_concept_types
-
-    def test_permitted_includes_composition(self) -> None:
-        from etcion.metamodel.relationships import Composition
-
-        assert Composition in self.vp.permitted_concept_types
-
-    def test_permitted_includes_aggregation(self) -> None:
-        from etcion.metamodel.relationships import Aggregation
-
-        assert Aggregation in self.vp.permitted_concept_types
-
-    def test_permitted_includes_assignment(self) -> None:
-        from etcion.metamodel.relationships import Assignment
-
-        assert Assignment in self.vp.permitted_concept_types
-
-    def test_permitted_includes_realization(self) -> None:
-        from etcion.metamodel.relationships import Realization
-
-        assert Realization in self.vp.permitted_concept_types
-
-    def test_permitted_includes_serving(self) -> None:
-        from etcion.metamodel.relationships import Serving
-
-        assert Serving in self.vp.permitted_concept_types
-
-    def test_permitted_includes_triggering(self) -> None:
-        from etcion.metamodel.relationships import Triggering
-
-        assert Triggering in self.vp.permitted_concept_types
-
-    def test_permitted_includes_flow(self) -> None:
-        from etcion.metamodel.relationships import Flow
-
-        assert Flow in self.vp.permitted_concept_types
-
-    def test_permitted_includes_association(self) -> None:
-        from etcion.metamodel.relationships import Association
-
-        assert Association in self.vp.permitted_concept_types
-
-    def test_permitted_includes_specialization(self) -> None:
-        from etcion.metamodel.relationships import Specialization
-
-        assert Specialization in self.vp.permitted_concept_types
+@pytest.mark.parametrize(
+    "vp_name,expected", [(name, data[2]) for name, data in VIEWPOINT_EXPECTED.items()]
+)
+def test_viewpoint_permitted_types(vp_name: str, expected: frozenset) -> None:
+    """Assert exact permitted_concept_types set for each viewpoint."""
+    vp = VIEWPOINT_CATALOGUE[vp_name]
+    assert vp.permitted_concept_types == expected, (
+        f"Viewpoint '{vp_name}': permitted_concept_types mismatch.\n"
+        f"  Extra in actual:   {vp.permitted_concept_types - expected}\n"
+        f"  Missing in actual: {expected - vp.permitted_concept_types}"
+    )
 
 
 # ---------------------------------------------------------------------------
-# Parametric coverage: all 28 catalogue entries
+# Parametrized: structural properties per viewpoint
 # ---------------------------------------------------------------------------
 
-ALL_VIEWPOINT_KEYS = [
-    "Organization",
-    "Application Platform",
-    "Application Structure",
-    "Information Structure",
-    "Technology",
-    "Layered",
-    "Physical",
-    "Product",
-    "Application Usage",
-    "Technology Usage",
-    "Business Process Cooperation",
-    "Application Cooperation",
-    "Service Realization",
-    "Implementation and Deployment",
-    "Goal Realization",
-    "Goal Contribution",
-    "Principles",
-    "Requirements Realization",
-    "Motivation",
-    "Strategy",
-    "Capability Map",
-    "Outcome Realization",
-    "Resource Map",
-    "Value Stream",
-    "Project",
-    "Migration",
-    "Implementation and Migration",
-    "Stakeholder",
-]
+
+@pytest.mark.parametrize("vp_name", ALL_VIEWPOINT_KEYS)
+def test_viewpoint_name(vp_name: str) -> None:
+    vp = VIEWPOINT_CATALOGUE[vp_name]
+    assert vp.name == vp_name
 
 
-class TestAllViewpoints:
-    """Parametric tests covering all 28 catalogue entries."""
+@pytest.mark.parametrize(
+    "vp_name,expected", [(name, data[0]) for name, data in VIEWPOINT_EXPECTED.items()]
+)
+def test_viewpoint_purpose(vp_name: str, expected: PurposeCategory) -> None:
+    vp = VIEWPOINT_CATALOGUE[vp_name]
+    assert vp.purpose is expected
 
-    @pytest.fixture(autouse=True)
-    def catalogue(self):
-        from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE
 
-        self.catalogue = VIEWPOINT_CATALOGUE
+@pytest.mark.parametrize(
+    "vp_name,expected", [(name, data[1]) for name, data in VIEWPOINT_EXPECTED.items()]
+)
+def test_viewpoint_content(vp_name: str, expected: ContentCategory) -> None:
+    vp = VIEWPOINT_CATALOGUE[vp_name]
+    assert vp.content is expected
 
-    @pytest.mark.parametrize("key", ALL_VIEWPOINT_KEYS)
-    def test_key_exists_in_catalogue(self, key: str) -> None:
-        assert key in self.catalogue
 
-    @pytest.mark.parametrize("key", ALL_VIEWPOINT_KEYS)
-    def test_name_matches_key(self, key: str) -> None:
-        vp = self.catalogue[key]
-        assert vp.name == key
+@pytest.mark.parametrize("vp_name", ALL_VIEWPOINT_KEYS)
+def test_all_types_are_concept_subclasses(vp_name: str) -> None:
+    vp = VIEWPOINT_CATALOGUE[vp_name]
+    for t in vp.permitted_concept_types:
+        assert issubclass(t, Concept), (
+            f"Type {t!r} in '{vp_name}' permitted_concept_types is not a Concept subclass"
+        )
 
-    @pytest.mark.parametrize("key", ALL_VIEWPOINT_KEYS)
-    def test_purpose_is_valid_enum(self, key: str) -> None:
-        vp = self.catalogue[key]
-        assert isinstance(vp.purpose, PurposeCategory)
 
-    @pytest.mark.parametrize("key", ALL_VIEWPOINT_KEYS)
-    def test_content_is_valid_enum(self, key: str) -> None:
-        vp = self.catalogue[key]
-        assert isinstance(vp.content, ContentCategory)
-
-    @pytest.mark.parametrize("key", ALL_VIEWPOINT_KEYS)
-    def test_permitted_concept_types_non_empty(self, key: str) -> None:
-        vp = self.catalogue[key]
-        assert len(vp.permitted_concept_types) > 0
-
-    @pytest.mark.parametrize("key", ALL_VIEWPOINT_KEYS)
-    def test_all_types_are_concept_subclasses(self, key: str) -> None:
-        vp = self.catalogue[key]
-        for t in vp.permitted_concept_types:
-            assert issubclass(t, Concept), (
-                f"Type {t!r} in '{key}' permitted_concept_types is not a Concept subclass"
-            )
-
-    @pytest.mark.parametrize("key", ALL_VIEWPOINT_KEYS)
-    def test_caching_identity(self, key: str) -> None:
-        """Accessing the same key twice returns the identical object."""
-        first = self.catalogue[key]
-        second = self.catalogue[key]
-        assert first is second
+@pytest.mark.parametrize("vp_name", ALL_VIEWPOINT_KEYS)
+def test_caching_identity(vp_name: str) -> None:
+    """Accessing the same key twice returns the identical object."""
+    first = VIEWPOINT_CATALOGUE[vp_name]
+    second = VIEWPOINT_CATALOGUE[vp_name]
+    assert first is second
 
 
 # ---------------------------------------------------------------------------

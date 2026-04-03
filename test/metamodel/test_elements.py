@@ -27,6 +27,7 @@ from etcion.metamodel.elements import (
     Process,
     StructureElement,
 )
+from test.metamodel.conftest import StubActiveStructure, StubEvent, StubInteraction
 
 
 class TestStructureElementHierarchyABC:
@@ -117,7 +118,7 @@ class TestBehaviorElementInheritance:
 class TestInteractionValidatorOnConcreteSubclass:
     """Interaction.model_validator fires on concrete subclass only."""
 
-    class _ConcreteInteraction(Interaction):
+    class StubInteraction(Interaction):
         layer: ClassVar[Layer] = Layer.BUSINESS
         aspect: ClassVar[Aspect] = Aspect.BEHAVIOR
 
@@ -125,7 +126,7 @@ class TestInteractionValidatorOnConcreteSubclass:
         def _type_name(self) -> str:
             return "ConcreteInteraction"
 
-    class _ConcreteActiveStructure(ActiveStructureElement):
+    class StubActiveStructure(ActiveStructureElement):
         layer: ClassVar[Layer] = Layer.BUSINESS
         aspect: ClassVar[Aspect] = Aspect.ACTIVE_STRUCTURE
 
@@ -134,25 +135,25 @@ class TestInteractionValidatorOnConcreteSubclass:
             return "ConcreteActiveStructure"
 
     def test_fewer_than_two_raises_validation_error(self) -> None:
-        actor = self._ConcreteActiveStructure(name="a1")
+        actor = self.StubActiveStructure(name="a1")
         with pytest.raises(ValueError, match="requires >= 2"):
-            self._ConcreteInteraction(name="i", assigned_elements=[actor])
+            self.StubInteraction(name="i", assigned_elements=[actor])
 
     def test_zero_assigned_raises_validation_error(self) -> None:
         with pytest.raises(ValueError, match="requires >= 2"):
-            self._ConcreteInteraction(name="i")
+            self.StubInteraction(name="i")
 
     def test_two_assigned_is_valid(self) -> None:
-        a1 = self._ConcreteActiveStructure(name="a1")
-        a2 = self._ConcreteActiveStructure(name="a2")
-        interaction = self._ConcreteInteraction(name="i", assigned_elements=[a1, a2])
+        a1 = self.StubActiveStructure(name="a1")
+        a2 = self.StubActiveStructure(name="a2")
+        interaction = self.StubInteraction(name="i", assigned_elements=[a1, a2])
         assert len(interaction.assigned_elements) == 2
 
 
 class TestEventTimeField:
     """Event.time is present on concrete subclass."""
 
-    class _ConcreteEvent(Event):
+    class StubEvent(Event):
         layer: ClassVar[Layer] = Layer.BUSINESS
         aspect: ClassVar[Aspect] = Aspect.BEHAVIOR
 
@@ -161,16 +162,16 @@ class TestEventTimeField:
             return "ConcreteEvent"
 
     def test_time_defaults_to_none(self) -> None:
-        e = self._ConcreteEvent(name="ev")
+        e = self.StubEvent(name="ev")
         assert e.time is None
 
     def test_time_accepts_datetime(self) -> None:
         dt = datetime(2026, 1, 1, 12, 0)
-        e = self._ConcreteEvent(name="ev", time=dt)
+        e = self.StubEvent(name="ev", time=dt)
         assert e.time == dt
 
     def test_time_accepts_string(self) -> None:
-        e = self._ConcreteEvent(name="ev", time="Q3 2026")
+        e = self.StubEvent(name="ev", time="Q3 2026")
         assert e.time == "Q3 2026"
 
 
@@ -300,38 +301,6 @@ class TestLocationInheritance:
 
 
 # ---------------------------------------------------------------------------
-# Test-local concrete stubs
-# ---------------------------------------------------------------------------
-
-
-class _ConcreteActiveStructure(ActiveStructureElement):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.ACTIVE_STRUCTURE
-
-    @property
-    def _type_name(self) -> str:
-        return "ConcreteActive"
-
-
-class _ConcreteInteraction(Interaction):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.BEHAVIOR
-
-    @property
-    def _type_name(self) -> str:
-        return "ConcreteInteraction"
-
-
-class _ConcreteEvent(Event):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.BEHAVIOR
-
-    @property
-    def _type_name(self) -> str:
-        return "ConcreteEvent"
-
-
-# ---------------------------------------------------------------------------
 # STORY-04.6.1 / STORY-04.6.4: Interaction >= 2 assigned elements
 # ---------------------------------------------------------------------------
 
@@ -339,22 +308,22 @@ class _ConcreteEvent(Event):
 class TestInteractionValidation:
     def test_zero_assigned_raises(self) -> None:
         with pytest.raises(ValueError, match="requires >= 2"):
-            _ConcreteInteraction(name="i")
+            StubInteraction(name="i")
 
     def test_one_assigned_raises(self) -> None:
-        a = _ConcreteActiveStructure(name="a")
+        a = StubActiveStructure(name="a")
         with pytest.raises(ValueError, match="requires >= 2"):
-            _ConcreteInteraction(name="i", assigned_elements=[a])
+            StubInteraction(name="i", assigned_elements=[a])
 
     def test_two_assigned_valid(self) -> None:
-        a1 = _ConcreteActiveStructure(name="a1")
-        a2 = _ConcreteActiveStructure(name="a2")
-        i = _ConcreteInteraction(name="i", assigned_elements=[a1, a2])
+        a1 = StubActiveStructure(name="a1")
+        a2 = StubActiveStructure(name="a2")
+        i = StubInteraction(name="i", assigned_elements=[a1, a2])
         assert len(i.assigned_elements) == 2
 
     def test_three_assigned_valid(self) -> None:
-        actors = [_ConcreteActiveStructure(name=f"a{n}") for n in range(3)]
-        i = _ConcreteInteraction(name="i", assigned_elements=actors)
+        actors = [StubActiveStructure(name=f"a{n}") for n in range(3)]
+        i = StubInteraction(name="i", assigned_elements=actors)
         assert len(i.assigned_elements) == 3
 
 
@@ -381,19 +350,19 @@ class TestCollaborationValidation:
 
 class TestEventTime:
     def test_time_defaults_to_none(self) -> None:
-        e = _ConcreteEvent(name="ev")
+        e = StubEvent(name="ev")
         assert e.time is None
 
     def test_time_accepts_datetime(self) -> None:
         dt = datetime(2026, 6, 15, 9, 0)
-        e = _ConcreteEvent(name="ev", time=dt)
+        e = StubEvent(name="ev", time=dt)
         assert e.time == dt
 
     def test_time_accepts_string(self) -> None:
-        e = _ConcreteEvent(name="ev", time="end of Q2")
+        e = StubEvent(name="ev", time="end of Q2")
         assert e.time == "end of Q2"
 
     def test_time_in_model_dump(self) -> None:
-        e = _ConcreteEvent(name="ev", time="2026-Q3")
+        e = StubEvent(name="ev", time="2026-Q3")
         dump = e.model_dump()
         assert dump["time"] == "2026-Q3"

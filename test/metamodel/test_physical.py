@@ -1,4 +1,13 @@
-"""Merged tests for test_physical."""
+"""Physical-layer-specific tests.
+
+Generic property checks (layer, aspect, notation, type_name, instantiation)
+are covered by test_element_properties.py via the ELEMENT_SPECS registry.
+This file retains only behaviour unique to the physical layer:
+  - ABC instantiation guards
+  - Inheritance / subclass relationships
+  - PhysicalActiveStructureElement is NOT InternalActiveStructureElement
+  - Material passive-structure inheritance
+"""
 
 from __future__ import annotations
 
@@ -18,6 +27,8 @@ from etcion.metamodel.physical import (
     PhysicalActiveStructureElement,
     PhysicalPassiveStructureElement,
 )
+
+ALL_ACTIVE = [Equipment, Facility, DistributionNetwork]
 
 
 class TestPhysicalABCsCannotInstantiate:
@@ -60,30 +71,7 @@ class TestPhysicalPassiveStructureElementInheritance:
         assert PhysicalPassiveStructureElement.aspect is Aspect.PASSIVE_STRUCTURE
 
 
-ALL_ACTIVE = [Equipment, Facility, DistributionNetwork]
-
-
-class TestInstantiation_1:
-    @pytest.mark.parametrize("cls", ALL_ACTIVE)
-    def test_can_instantiate(self, cls: type) -> None:
-        obj = cls(name="test")
-        assert obj.name == "test"
-
-
-class TestTypeNames:
-    @pytest.mark.parametrize(
-        ("cls", "expected"),
-        [
-            (Equipment, "Equipment"),
-            (Facility, "Facility"),
-            (DistributionNetwork, "DistributionNetwork"),
-        ],
-    )
-    def test_type_name(self, cls: type, expected: str) -> None:
-        assert cls(name="x")._type_name == expected
-
-
-class TestInheritance_1:
+class TestActiveStructureInheritance:
     @pytest.mark.parametrize("cls", ALL_ACTIVE)
     def test_is_physical_active_structure(self, cls: type) -> None:
         assert issubclass(cls, PhysicalActiveStructureElement)
@@ -101,42 +89,7 @@ class TestInheritance_1:
         assert isinstance(cls(name="x"), ActiveStructureElement)
 
 
-class TestClassVars_1:
-    @pytest.mark.parametrize("cls", ALL_ACTIVE)
-    def test_layer_is_physical(self, cls: type) -> None:
-        assert cls.layer is Layer.PHYSICAL
-
-    @pytest.mark.parametrize("cls", ALL_ACTIVE)
-    def test_aspect_is_active_structure(self, cls: type) -> None:
-        assert cls.aspect is Aspect.ACTIVE_STRUCTURE
-
-
-class TestNotation_1:
-    @pytest.mark.parametrize("cls", ALL_ACTIVE)
-    def test_layer_color(self, cls: type) -> None:
-        assert cls.notation.layer_color == "#C9E7B7"
-
-    @pytest.mark.parametrize("cls", ALL_ACTIVE)
-    def test_badge_letter(self, cls: type) -> None:
-        assert cls.notation.badge_letter == "P"
-
-    @pytest.mark.parametrize("cls", ALL_ACTIVE)
-    def test_corner_shape_square(self, cls: type) -> None:
-        assert cls.notation.corner_shape == "square"
-
-
-class TestInstantiation_2:
-    def test_can_instantiate(self) -> None:
-        obj = Material(name="test")
-        assert obj.name == "test"
-
-
-class TestTypeName:
-    def test_material(self) -> None:
-        assert Material(name="x")._type_name == "Material"
-
-
-class TestInheritance_2:
+class TestMaterialInheritance:
     def test_is_physical_passive_structure_element(self) -> None:
         assert issubclass(Material, PhysicalPassiveStructureElement)
 
@@ -148,22 +101,3 @@ class TestInheritance_2:
 
     def test_isinstance_physical_passive_structure(self) -> None:
         assert isinstance(Material(name="x"), PhysicalPassiveStructureElement)
-
-
-class TestClassVars_2:
-    def test_layer_is_physical(self) -> None:
-        assert Material.layer is Layer.PHYSICAL
-
-    def test_aspect_is_passive_structure(self) -> None:
-        assert Material.aspect is Aspect.PASSIVE_STRUCTURE
-
-
-class TestNotation_2:
-    def test_layer_color(self) -> None:
-        assert Material.notation.layer_color == "#C9E7B7"
-
-    def test_badge_letter(self) -> None:
-        assert Material.notation.badge_letter == "P"
-
-    def test_corner_shape_square(self) -> None:
-        assert Material.notation.corner_shape == "square"
