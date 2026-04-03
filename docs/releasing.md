@@ -9,25 +9,40 @@
 
 1. **Confirm CI is green** on the `develop` branch.
 
-2. **Update version** in `pyproject.toml`:
+2. **Run pre-release checks** locally before touching version files:
+   ```bash
+   ruff format src/ test/          # Fix formatting (tdd-guide agents skip this)
+   ruff check src/ test/           # Lint
+   pytest --tb=short               # Full suite
+   ```
+   Commit any formatting fixes before proceeding.
+
+3. **Update version** in `pyproject.toml`:
    ```
    version = "X.Y.Z"
    ```
 
-3. **Update CHANGELOG.md**:
+4. **Update CHANGELOG.md**:
    - Add a new `## [X.Y.Z] - YYYY-MM-DD` section with release notes
    - Move items from any `## [Unreleased]` section into the new version
 
-4. **Update version assertions** in `test/test_packaging.py` and `test/test_scaffold.py`.
+5. **Update version assertions** in `test/test_packaging.py` and `test/test_scaffold.py`.
+   Search for the old version string and replace — both files have exactly one assertion each.
 
-5. **Commit and push to develop**:
+6. **Reinstall and verify** before committing:
+   ```bash
+   pip install -e . -q
+   pytest --tb=short
+   ```
+
+7. **Commit and push to develop**:
    ```bash
    git add pyproject.toml CHANGELOG.md test/test_packaging.py test/test_scaffold.py
    git commit -m "Release vX.Y.Z"
    git push origin develop
    ```
 
-6. **Create a PR from develop to main**:
+8. **Create a PR from develop to main**:
    ```bash
    gh pr create --base main --head develop \
      --title "Release vX.Y.Z" \
@@ -41,12 +56,12 @@
    - Wait for CI to pass on the PR
    - Review the diff as a final sanity check
 
-7. **Merge the PR** (merge commit, not squash):
+9. **Merge the PR** (merge commit, not squash):
    ```bash
    gh pr merge --merge
    ```
 
-8. **Tag and push**:
+10. **Tag and push**:
    ```bash
    git checkout main
    git pull origin main
@@ -55,19 +70,19 @@
    ```
    This triggers `.github/workflows/release.yml` which builds and publishes to PyPI.
 
-9. **Create a GitHub Release**:
+11. **Create a GitHub Release**:
    ```bash
    gh release create vX.Y.Z --title "vX.Y.Z: <title>" --notes "See CHANGELOG.md for details."
    ```
 
-10. **Return to develop**:
+12. **Return to develop**:
     ```bash
     git checkout develop
     git merge main   # pick up the merge commit
     git push origin develop
     ```
 
-11. **Verify the release**:
+13. **Verify the release**:
     - Watch the Actions tab for the release workflow
     - Confirm the package on [PyPI](https://pypi.org/project/etcion/)
     - `pip install etcion==X.Y.Z`
