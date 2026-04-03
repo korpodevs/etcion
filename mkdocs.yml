@@ -62,6 +62,9 @@ nav:
     - Merge: api/merge.md
     - Enums: api/enums.md
     - Exceptions: api/exceptions.md
+    - Provenance: api/provenance.md
+    - Conformance: api/conformance.md
+    - Graph Data: api/graph_data.md
   - Examples: examples/index.md
   - Changelog: changelog.md
 markdown_extensions:
