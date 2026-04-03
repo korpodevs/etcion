@@ -161,6 +161,24 @@ class Model:
         """Return elements whose class-level ``layer`` ClassVar matches."""
         return [e for e in self.elements if getattr(type(e), "layer", None) is layer]
 
+    def elements_where(self, predicate: Callable[[Element], bool]) -> list[Element]:
+        """Return elements for which *predicate* returns ``True``.
+
+        A thin convenience over a list comprehension, consistent with
+        :meth:`elements_of_type` and :meth:`elements_by_layer`.
+
+        :param predicate: A callable that accepts an :class:`Element` and
+            returns ``True`` to include it in the result.
+        :returns: List of matching :class:`Element` instances in insertion order.
+
+        Example::
+
+            high_risk = model.elements_where(
+                lambda e: e.extended_attributes.get("risk_score") == "high"
+            )
+        """
+        return [e for e in self.elements if predicate(e)]
+
     def elements_by_aspect(self, aspect: Aspect) -> list[Element]:
         """Return elements whose class-level ``aspect`` ClassVar matches."""
         return [e for e in self.elements if getattr(type(e), "aspect", None) is aspect]

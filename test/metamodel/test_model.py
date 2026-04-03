@@ -812,3 +812,95 @@ class TestIntegration:
         assert callable(full_model.connected_to)
         assert callable(full_model.sources_of)
         assert callable(full_model.targets_of)
+
+
+# -- elements_where ------------------------------------------------------------
+
+
+class TestElementsWhere:
+    def test_returns_matching_elements(self, model: Model) -> None:
+        """Predicate returning True for all elements yields all elements."""
+        result = model.elements_where(lambda e: True)
+        assert result == model.elements
+
+    def test_returns_empty_when_no_match(self, model: Model) -> None:
+        """Predicate that never matches returns an empty list."""
+        result = model.elements_where(lambda e: False)
+        assert result == []
+
+    def test_returns_list(self, model: Model) -> None:
+        """Return type is always list."""
+        result = model.elements_where(lambda e: True)
+        assert isinstance(result, list)
+
+    def test_name_filter_predicate(self, model: Model) -> None:
+        """Filter by name substring via predicate."""
+        result = model.elements_where(lambda e: e.name is not None and "CRM" in e.name)
+        assert len(result) == 2
+        names = {e.name for e in result}
+        assert names == {"CRM System", "CRM API"}
+
+    def test_type_check_predicate(self, model: Model) -> None:
+        """Filter by type via isinstance predicate."""
+        result = model.elements_where(lambda e: isinstance(e, BusinessActor))
+        assert len(result) == 2
+        assert all(isinstance(e, BusinessActor) for e in result)
+
+    def test_extended_attribute_predicate(self) -> None:
+        """Filter elements whose extended_attributes match a given key/value."""
+        m = Model()
+        high = BusinessActor(name="High Risk", extended_attributes={"risk_score": "high"})
+        low = BusinessActor(name="Low Risk", extended_attributes={"risk_score": "low"})
+        neutral = BusinessActor(name="Neutral")
+        m.add(high)
+        m.add(low)
+        m.add(neutral)
+
+        result = m.elements_where(
+            lambda e: e.extended_attributes.get("risk_score") == "high"
+        )
+        assert len(result) == 1
+        assert result[0] is high
+
+    def test_compound_predicate(self, model: Model) -> None:
+        """Compound predicate combining type and name checks."""
+        result = model.elements_where(
+            lambda e: isinstance(e, ApplicationComponent) and e.name == "CRM System"
+        )
+        assert len(result) == 1
+        assert result[0].name == "CRM System"
+
+    def test_empty_model_returns_empty(self) -> None:
+        """elements_where on an empty model always returns []."""
+        m = Model()
+        assert m.elements_where(lambda e: True) == []
+
+    def test_does_not_include_relationships(self) -> None:
+        """The predicate is applied only to Elements, not Relationships."""
+        src = BusinessActor(name="src")
+        tgt = BusinessActor(name="tgt")
+        rel = Assignment(source=src, target=tgt, name="rel")
+        m = Model()
+        m.add(src)
+        m.add(tgt)
+        m.add(rel)
+        # Predicate always True — relationships must not appear in the result.
+        result = m.elements_where(lambda e: True)
+        assert rel not in result
+        assert len(result) == 2
+
+    def test_preserves_insertion_order(self) -> None:
+        """Matching elements are returned in insertion order."""
+        m = Model()
+        e1 = BusinessActor(name="A")
+        e2 = BusinessActor(name="B")
+        e3 = BusinessActor(name="C")
+        m.add(e1)
+        m.add(e2)
+        m.add(e3)
+        result = m.elements_where(lambda e: e.name in ("A", "C"))
+        assert result == [e1, e3]
+
+    def test_is_callable(self, model: Model) -> None:
+        """elements_where is callable on Model."""
+        assert callable(model.elements_where)
