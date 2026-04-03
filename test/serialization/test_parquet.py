@@ -10,69 +10,55 @@ from pathlib import Path  # noqa: E402
 
 import pyarrow.parquet as pq  # noqa: E402
 
-from etcion.metamodel.business import BusinessActor, BusinessProcess  # noqa: E402
 from etcion.metamodel.model import Model  # noqa: E402
-from etcion.metamodel.relationships import Serving  # noqa: E402
 from etcion.serialization.parquet import to_parquet  # noqa: E402
 
 
-@pytest.fixture
-def sample_model() -> Model:
-    actor = BusinessActor(name="Alice")
-    proc = BusinessProcess(name="Order Handling")
-    rel = Serving(name="serves", source=actor, target=proc)
-    m = Model()
-    m.add(actor)
-    m.add(proc)
-    m.add(rel)
-    return m
-
-
 class TestToParquet:
-    def test_creates_elements_file(self, sample_model, tmp_path):
+    def test_creates_elements_file(self, simple_model, tmp_path):
         base = tmp_path / "model"
-        to_parquet(sample_model, base)
+        to_parquet(simple_model, base)
         assert (tmp_path / "model_elements.parquet").exists()
 
-    def test_creates_relationships_file(self, sample_model, tmp_path):
+    def test_creates_relationships_file(self, simple_model, tmp_path):
         base = tmp_path / "model"
-        to_parquet(sample_model, base)
+        to_parquet(simple_model, base)
         assert (tmp_path / "model_relationships.parquet").exists()
 
-    def test_elements_row_count(self, sample_model, tmp_path):
+    def test_elements_row_count(self, simple_model, tmp_path):
         base = tmp_path / "model"
-        to_parquet(sample_model, base)
+        to_parquet(simple_model, base)
         table = pq.read_table(tmp_path / "model_elements.parquet")
         assert table.num_rows == 2
 
-    def test_relationships_row_count(self, sample_model, tmp_path):
+    def test_relationships_row_count(self, simple_model, tmp_path):
         base = tmp_path / "model"
-        to_parquet(sample_model, base)
+        to_parquet(simple_model, base)
         table = pq.read_table(tmp_path / "model_relationships.parquet")
         assert table.num_rows == 1
 
-    def test_elements_columns(self, sample_model, tmp_path):
+    def test_elements_columns(self, simple_model, tmp_path):
         base = tmp_path / "model"
-        to_parquet(sample_model, base)
+        to_parquet(simple_model, base)
         table = pq.read_table(tmp_path / "model_elements.parquet")
         assert table.column_names == ["type", "id", "name", "documentation"]
 
-    def test_relationships_columns(self, sample_model, tmp_path):
+    def test_relationships_columns(self, simple_model, tmp_path):
         base = tmp_path / "model"
-        to_parquet(sample_model, base)
+        to_parquet(simple_model, base)
         table = pq.read_table(tmp_path / "model_relationships.parquet")
         assert table.column_names == ["type", "source", "target", "name"]
 
-    def test_elements_values(self, sample_model, tmp_path):
+    def test_elements_values(self, simple_model, tmp_path):
         base = tmp_path / "model"
-        to_parquet(sample_model, base)
+        to_parquet(simple_model, base)
         table = pq.read_table(tmp_path / "model_elements.parquet")
         names = set(table.column("name").to_pylist())
         assert names == {"Alice", "Order Handling"}
 
-    def test_relationships_type(self, sample_model, tmp_path):
+    def test_relationships_type(self, simple_model, tmp_path):
         base = tmp_path / "model"
-        to_parquet(sample_model, base)
+        to_parquet(simple_model, base)
         table = pq.read_table(tmp_path / "model_relationships.parquet")
         assert table.column("type").to_pylist() == ["Serving"]
 

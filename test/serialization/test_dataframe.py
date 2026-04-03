@@ -117,10 +117,6 @@ class TestFromDataFrame:
 
 
 class TestToDataFrame:
-    @pytest.fixture()
-    def simple_model(self) -> Model:
-        return _simple_model()
-
     def test_returns_two_dataframes(self, simple_model: Model) -> None:
         """to_dataframe returns a tuple of exactly two DataFrames."""
         from etcion.serialization.dataframe import to_dataframe

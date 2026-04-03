@@ -9,11 +9,9 @@ from pydantic import ValidationError as PydanticValidationError
 
 from etcion.enums import (
     AccessMode,
-    Aspect,
     AssociationDirection,
     InfluenceSign,
     JunctionType,
-    Layer,
     RelationshipCategory,
 )
 from etcion.exceptions import ValidationError
@@ -21,10 +19,9 @@ from etcion.metamodel.business import (
     BusinessActor,
     BusinessObject,
     BusinessProcess,
-    BusinessRole,
 )
 from etcion.metamodel.concepts import Concept, Relationship, RelationshipConnector
-from etcion.metamodel.elements import ActiveStructureElement, BehaviorElement, Grouping
+from etcion.metamodel.elements import Grouping
 from etcion.metamodel.model import Model
 from etcion.metamodel.relationships import (
     Access,
@@ -45,20 +42,7 @@ from etcion.metamodel.relationships import (
     Triggering,
 )
 from etcion.validation.permissions import is_permitted
-
-# ---------------------------------------------------------------------------
-# Test-local concrete element stub
-# ---------------------------------------------------------------------------
-
-
-class _ConcreteElement_1(ActiveStructureElement):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.ACTIVE_STRUCTURE
-
-    @property
-    def _type_name(self) -> str:
-        return "Stub"
-
+from test.metamodel.conftest import StubActiveStructure, StubBehavior
 
 # ---------------------------------------------------------------------------
 # ABC
@@ -67,7 +51,7 @@ class _ConcreteElement_1(ActiveStructureElement):
 
 class TestStructuralRelationshipABC:
     def test_cannot_instantiate(self) -> None:
-        e = _ConcreteElement_1(name="e")
+        e = StubActiveStructure(name="e")
         with pytest.raises(TypeError):
             StructuralRelationship(name="r", source=e, target=e)  # type: ignore[abstract, call-arg]
 
@@ -85,8 +69,8 @@ class TestStructuralRelationshipABC:
 
 class TestConcreteStructuralTypes:
     @pytest.fixture()
-    def pair(self) -> tuple[_ConcreteElement_1, _ConcreteElement_1]:
-        return _ConcreteElement_1(name="a"), _ConcreteElement_1(name="b")
+    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
+        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
 
     @pytest.mark.parametrize(
         ("cls", "expected_name"),
@@ -99,7 +83,7 @@ class TestConcreteStructuralTypes:
     )
     def test_instantiation_and_type_name(
         self,
-        pair: tuple[_ConcreteElement_1, _ConcreteElement_1],
+        pair: tuple[StubActiveStructure, StubActiveStructure],
         cls: type,
         expected_name: str,
     ) -> None:
@@ -127,28 +111,15 @@ class TestConcreteStructuralTypes:
 
 class TestIsNested:
     def test_defaults_to_false(self) -> None:
-        a, b = _ConcreteElement_1(name="a"), _ConcreteElement_1(name="b")
+        a, b = StubActiveStructure(name="a"), StubActiveStructure(name="b")
         c = Composition(name="c", source=a, target=b)
         assert c.is_nested is False
 
     def test_set_to_true(self) -> None:
-        a, b = _ConcreteElement_1(name="a"), _ConcreteElement_1(name="b")
+        a, b = StubActiveStructure(name="a"), StubActiveStructure(name="b")
         c = Composition(name="c", source=a, target=b, is_nested=True)
         assert c.is_nested is True
 
-
-# ---------------------------------------------------------------------------
-# Test-local concrete element stub
-# ---------------------------------------------------------------------------
-
-
-class _ConcreteElement_2(ActiveStructureElement):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.ACTIVE_STRUCTURE
-
-    @property
-    def _type_name(self) -> str:
-        return "Stub"
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +129,7 @@ class _ConcreteElement_2(ActiveStructureElement):
 
 class TestDependencyRelationshipABC:
     def test_cannot_instantiate(self) -> None:
-        e = _ConcreteElement_2(name="e")
+        e = StubActiveStructure(name="e")
         with pytest.raises(TypeError):
             DependencyRelationship(name="r", source=e, target=e)
 
@@ -179,10 +150,10 @@ class TestDependencyRelationshipABC:
 
 class TestServing:
     @pytest.fixture()
-    def pair(self) -> tuple[_ConcreteElement_2, _ConcreteElement_2]:
-        return _ConcreteElement_2(name="a"), _ConcreteElement_2(name="b")
+    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
+        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
 
-    def test_instantiation(self, pair: tuple[_ConcreteElement_2, _ConcreteElement_2]) -> None:
+    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
         a, b = pair
         r = Serving(name="s", source=a, target=b)
         assert r._type_name == "Serving"
@@ -197,30 +168,17 @@ class TestServing:
         assert issubclass(Serving, Concept)
 
     def test_is_derived_defaults_false(
-        self, pair: tuple[_ConcreteElement_2, _ConcreteElement_2]
+        self, pair: tuple[StubActiveStructure, StubActiveStructure]
     ) -> None:
         a, b = pair
         r = Serving(name="s", source=a, target=b)
         assert r.is_derived is False
 
-    def test_rejects_is_nested(self, pair: tuple[_ConcreteElement_2, _ConcreteElement_2]) -> None:
+    def test_rejects_is_nested(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
         a, b = pair
         with pytest.raises(PydanticValidationError):
             Serving(name="s", source=a, target=b, is_nested=True)  # type: ignore[call-arg]
 
-
-# ---------------------------------------------------------------------------
-# Test-local concrete element stub
-# ---------------------------------------------------------------------------
-
-
-class _ConcreteElement_3(ActiveStructureElement):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.ACTIVE_STRUCTURE
-
-    @property
-    def _type_name(self) -> str:
-        return "Stub"
 
 
 # ---------------------------------------------------------------------------
@@ -252,16 +210,16 @@ class TestAccessModeEnum:
 
 class TestAccess:
     @pytest.fixture()
-    def pair(self) -> tuple[_ConcreteElement_3, _ConcreteElement_3]:
-        return _ConcreteElement_3(name="a"), _ConcreteElement_3(name="b")
+    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
+        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
 
-    def test_instantiation(self, pair: tuple[_ConcreteElement_3, _ConcreteElement_3]) -> None:
+    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
         a, b = pair
         r = Access(name="acc", source=a, target=b)
         assert r._type_name == "Access"
 
     def test_access_mode_defaults_to_unspecified(
-        self, pair: tuple[_ConcreteElement_3, _ConcreteElement_3]
+        self, pair: tuple[StubActiveStructure, StubActiveStructure]
     ) -> None:
         a, b = pair
         r = Access(name="acc", source=a, target=b)
@@ -270,7 +228,7 @@ class TestAccess:
     @pytest.mark.parametrize("mode", list(AccessMode))
     def test_accepts_all_access_modes(
         self,
-        pair: tuple[_ConcreteElement_3, _ConcreteElement_3],
+        pair: tuple[StubActiveStructure, StubActiveStructure],
         mode: AccessMode,
     ) -> None:
         a, b = pair
@@ -284,25 +242,12 @@ class TestAccess:
         assert Access.category is RelationshipCategory.DEPENDENCY
 
     def test_invalid_access_mode_raises(
-        self, pair: tuple[_ConcreteElement_3, _ConcreteElement_3]
+        self, pair: tuple[StubActiveStructure, StubActiveStructure]
     ) -> None:
         a, b = pair
         with pytest.raises(Exception):  # noqa: B017
             Access(name="acc", source=a, target=b, access_mode="invalid")  # type: ignore[call-arg]
 
-
-# ---------------------------------------------------------------------------
-# Test-local concrete element stub
-# ---------------------------------------------------------------------------
-
-
-class _ConcreteElement_4(ActiveStructureElement):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.ACTIVE_STRUCTURE
-
-    @property
-    def _type_name(self) -> str:
-        return "Stub"
 
 
 # ---------------------------------------------------------------------------
@@ -337,23 +282,23 @@ class TestInfluenceSignEnum:
 
 class TestInfluence:
     @pytest.fixture()
-    def pair(self) -> tuple[_ConcreteElement_4, _ConcreteElement_4]:
-        return _ConcreteElement_4(name="a"), _ConcreteElement_4(name="b")
+    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
+        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
 
-    def test_instantiation(self, pair: tuple[_ConcreteElement_4, _ConcreteElement_4]) -> None:
+    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
         a, b = pair
         r = Influence(name="inf", source=a, target=b)
         assert r._type_name == "Influence"
 
     def test_sign_defaults_to_none(
-        self, pair: tuple[_ConcreteElement_4, _ConcreteElement_4]
+        self, pair: tuple[StubActiveStructure, StubActiveStructure]
     ) -> None:
         a, b = pair
         r = Influence(name="inf", source=a, target=b)
         assert r.sign is None
 
     def test_strength_defaults_to_none(
-        self, pair: tuple[_ConcreteElement_4, _ConcreteElement_4]
+        self, pair: tuple[StubActiveStructure, StubActiveStructure]
     ) -> None:
         a, b = pair
         r = Influence(name="inf", source=a, target=b)
@@ -362,7 +307,7 @@ class TestInfluence:
     @pytest.mark.parametrize("sign", list(InfluenceSign))
     def test_accepts_all_signs(
         self,
-        pair: tuple[_ConcreteElement_4, _ConcreteElement_4],
+        pair: tuple[StubActiveStructure, StubActiveStructure],
         sign: InfluenceSign,
     ) -> None:
         a, b = pair
@@ -370,7 +315,7 @@ class TestInfluence:
         assert r.sign is sign
 
     def test_accepts_strength_string(
-        self, pair: tuple[_ConcreteElement_4, _ConcreteElement_4]
+        self, pair: tuple[StubActiveStructure, StubActiveStructure]
     ) -> None:
         a, b = pair
         r = Influence(name="inf", source=a, target=b, strength="high")
@@ -382,28 +327,6 @@ class TestInfluence:
     def test_category_inherited(self) -> None:
         assert Influence.category is RelationshipCategory.DEPENDENCY
 
-
-# ---------------------------------------------------------------------------
-# Test-local concrete element stubs
-# ---------------------------------------------------------------------------
-
-
-class _ConcreteActive_1(ActiveStructureElement):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.ACTIVE_STRUCTURE
-
-    @property
-    def _type_name(self) -> str:
-        return "StubActive"
-
-
-class _ConcreteBehavior_1(BehaviorElement):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.BEHAVIOR
-
-    @property
-    def _type_name(self) -> str:
-        return "StubBehavior"
 
 
 # ---------------------------------------------------------------------------
@@ -429,22 +352,24 @@ class TestAssociationDirectionEnum:
 
 class TestAssociation:
     @pytest.fixture()
-    def pair(self) -> tuple[_ConcreteActive_1, _ConcreteActive_1]:
-        return _ConcreteActive_1(name="a"), _ConcreteActive_1(name="b")
+    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
+        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
 
-    def test_instantiation(self, pair: tuple[_ConcreteActive_1, _ConcreteActive_1]) -> None:
+    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
         a, b = pair
         r = Association(name="assoc", source=a, target=b)
         assert r._type_name == "Association"
 
     def test_direction_defaults_to_undirected(
-        self, pair: tuple[_ConcreteActive_1, _ConcreteActive_1]
+        self, pair: tuple[StubActiveStructure, StubActiveStructure]
     ) -> None:
         a, b = pair
         r = Association(name="assoc", source=a, target=b)
         assert r.direction is AssociationDirection.UNDIRECTED
 
-    def test_directed_association(self, pair: tuple[_ConcreteActive_1, _ConcreteActive_1]) -> None:
+    def test_directed_association(
+        self, pair: tuple[StubActiveStructure, StubActiveStructure]
+    ) -> None:
         a, b = pair
         r = Association(name="assoc", source=a, target=b, direction=AssociationDirection.DIRECTED)
         assert r.direction is AssociationDirection.DIRECTED
@@ -457,8 +382,8 @@ class TestAssociation:
 
     def test_accepts_cross_type_source_target(self) -> None:
         """Association is universally permitted -- construction accepts any concepts."""
-        a = _ConcreteActive_1(name="a")
-        b = _ConcreteBehavior_1(name="b")
+        a = StubActiveStructure(name="a")
+        b = StubBehavior(name="b")
         r = Association(name="assoc", source=a, target=b)
         assert r.source is a
         assert r.target is b
@@ -473,25 +398,12 @@ class TestAssociation:
             def _type_name(self) -> str:
                 return "StubRel"
 
-        a = _ConcreteActive_1(name="a")
-        b = _ConcreteActive_1(name="b")
+        a = StubActiveStructure(name="a")
+        b = StubActiveStructure(name="b")
         rel = _StubRel(name="r", source=a, target=b)
         assoc = Association(name="assoc", source=a, target=rel)
         assert assoc.target is rel
 
-
-# ---------------------------------------------------------------------------
-# Test-local concrete element stub
-# ---------------------------------------------------------------------------
-
-
-class _ConcreteElement_5(ActiveStructureElement):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.ACTIVE_STRUCTURE
-
-    @property
-    def _type_name(self) -> str:
-        return "Stub"
 
 
 # ---------------------------------------------------------------------------
@@ -501,7 +413,7 @@ class _ConcreteElement_5(ActiveStructureElement):
 
 class TestDynamicRelationshipABC:
     def test_cannot_instantiate(self) -> None:
-        e = _ConcreteElement_5(name="e")
+        e = StubActiveStructure(name="e")
         with pytest.raises(TypeError):
             DynamicRelationship(name="r", source=e, target=e)
 
@@ -522,10 +434,10 @@ class TestDynamicRelationshipABC:
 
 class TestTriggering:
     @pytest.fixture()
-    def pair(self) -> tuple[_ConcreteElement_5, _ConcreteElement_5]:
-        return _ConcreteElement_5(name="a"), _ConcreteElement_5(name="b")
+    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
+        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
 
-    def test_instantiation(self, pair: tuple[_ConcreteElement_5, _ConcreteElement_5]) -> None:
+    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
         a, b = pair
         r = Triggering(name="t", source=a, target=b)
         assert r._type_name == "Triggering"
@@ -544,23 +456,23 @@ class TestTriggering:
 
 class TestFlow:
     @pytest.fixture()
-    def pair(self) -> tuple[_ConcreteElement_5, _ConcreteElement_5]:
-        return _ConcreteElement_5(name="a"), _ConcreteElement_5(name="b")
+    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
+        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
 
-    def test_instantiation(self, pair: tuple[_ConcreteElement_5, _ConcreteElement_5]) -> None:
+    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
         a, b = pair
         r = Flow(name="f", source=a, target=b)
         assert r._type_name == "Flow"
 
     def test_flow_type_defaults_to_none(
-        self, pair: tuple[_ConcreteElement_5, _ConcreteElement_5]
+        self, pair: tuple[StubActiveStructure, StubActiveStructure]
     ) -> None:
         a, b = pair
         r = Flow(name="f", source=a, target=b)
         assert r.flow_type is None
 
     def test_flow_type_accepts_string(
-        self, pair: tuple[_ConcreteElement_5, _ConcreteElement_5]
+        self, pair: tuple[StubActiveStructure, StubActiveStructure]
     ) -> None:
         a, b = pair
         r = Flow(name="f", source=a, target=b, flow_type="data")
@@ -577,37 +489,15 @@ class TestFlow:
 
 class TestIsNestedRejection:
     def test_triggering_rejects_is_nested(self) -> None:
-        a, b = _ConcreteElement_5(name="a"), _ConcreteElement_5(name="b")
+        a, b = StubActiveStructure(name="a"), StubActiveStructure(name="b")
         with pytest.raises(Exception):  # noqa: B017
             Triggering(name="t", source=a, target=b, is_nested=True)  # type: ignore[call-arg]
 
     def test_flow_rejects_is_nested(self) -> None:
-        a, b = _ConcreteElement_5(name="a"), _ConcreteElement_5(name="b")
+        a, b = StubActiveStructure(name="a"), StubActiveStructure(name="b")
         with pytest.raises(Exception):  # noqa: B017
             Flow(name="f", source=a, target=b, is_nested=True)  # type: ignore[call-arg]
 
-
-# ---------------------------------------------------------------------------
-# Test-local concrete element stubs
-# ---------------------------------------------------------------------------
-
-
-class _ConcreteActive_2(ActiveStructureElement):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.ACTIVE_STRUCTURE
-
-    @property
-    def _type_name(self) -> str:
-        return "StubActive"
-
-
-class _ConcreteBehavior_2(BehaviorElement):
-    layer: ClassVar[Layer] = Layer.BUSINESS
-    aspect: ClassVar[Aspect] = Aspect.BEHAVIOR
-
-    @property
-    def _type_name(self) -> str:
-        return "StubBehavior"
 
 
 # ---------------------------------------------------------------------------
@@ -617,7 +507,7 @@ class _ConcreteBehavior_2(BehaviorElement):
 
 class TestOtherRelationshipABC:
     def test_cannot_instantiate(self) -> None:
-        e = _ConcreteActive_2(name="e")
+        e = StubActiveStructure(name="e")
         with pytest.raises(TypeError):
             OtherRelationship(name="r", source=e, target=e)
 
@@ -641,10 +531,10 @@ class TestOtherRelationshipABC:
 
 class TestSpecialization:
     @pytest.fixture()
-    def pair(self) -> tuple[_ConcreteActive_2, _ConcreteActive_2]:
-        return _ConcreteActive_2(name="a"), _ConcreteActive_2(name="b")
+    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
+        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
 
-    def test_instantiation(self, pair: tuple[_ConcreteActive_2, _ConcreteActive_2]) -> None:
+    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
         a, b = pair
         r = Specialization(name="spec", source=a, target=b)
         assert r._type_name == "Specialization"
@@ -659,8 +549,8 @@ class TestSpecialization:
         assert issubclass(Specialization, Concept)
 
     def test_same_type_construction_succeeds(self) -> None:
-        a = _ConcreteActive_2(name="a")
-        b = _ConcreteActive_2(name="b")
+        a = StubActiveStructure(name="a")
+        b = StubActiveStructure(name="b")
         r = Specialization(name="spec", source=a, target=b)
         assert r.source is a
         assert r.target is b

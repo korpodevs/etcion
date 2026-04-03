@@ -201,6 +201,10 @@ class TestSerializeRelationshipExtraAttrs:
 
 @pytest.fixture
 def sample_model() -> Model:
+    """Two-element model: BusinessActor + BusinessProcess + Serving relationship."""
+    from etcion.metamodel.business import BusinessActor, BusinessProcess
+    from etcion.metamodel.relationships import Serving
+
     actor = BusinessActor(name="Alice")
     proc = BusinessProcess(name="Order Handling")
     rel = Serving(name="serves", source=actor, target=proc)
@@ -1027,7 +1031,7 @@ class TestViewXmlRoundTrip:
         view = restored.views[0]
         assert view.governing_viewpoint.name == "Organization"
 
-    def test_no_views_backward_compatible(self, sample_model: Model) -> None:
+    def test_no_views_backward_compatible(self, simple_model: Model) -> None:
         """Models without views round-trip without error and produce no views."""
-        restored = self._round_trip(sample_model)
+        restored = self._round_trip(simple_model)
         assert len(restored.views) == 0
