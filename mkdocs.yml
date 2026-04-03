@@ -37,6 +37,7 @@ nav:
     - Patterns: user-guide/patterns.md
     - Diffing: user-guide/diffing.md
     - Impact Analysis: user-guide/impact-analysis.md
+    - Merging: user-guide/merging.md
     - Extending: user-guide/extending.md
   - Architecture:
     - Overview: architecture/overview.md
