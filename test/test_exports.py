@@ -6,7 +6,7 @@ import pytest
 
 import etcion
 
-_PHASE2_TYPES: list[str] = [
+ALL_PUBLIC_TYPES: list[str] = [
     # Strategy layer (EPIC-006)
     "StrategyStructureElement",
     "StrategyBehaviorElement",
@@ -83,28 +83,7 @@ _PHASE2_TYPES: list[str] = [
     "ImplementationEvent",
     "Plateau",
     "Gap",
-]
-
-
-class TestPhase2Exports:
-    @pytest.mark.parametrize("name", _PHASE2_TYPES)
-    def test_public_api_export(self, name: str) -> None:
-        import etcion
-
-        attr = getattr(etcion, name, None)
-        assert attr is not None, f"{name} not exported from etcion"
-
-    @pytest.mark.parametrize("name", _PHASE2_TYPES)
-    def test_in_all(self, name: str) -> None:
-        import etcion
-
-        assert name in etcion.__all__, f"{name} missing from etcion.__all__"
-
-    def test_phase2_count(self) -> None:
-        assert len(_PHASE2_TYPES) == 69
-
-
-PHASE_3_EXPORTS = [
+    # Views layer (EPIC-phase3)
     "Viewpoint",
     "View",
     "Concern",
@@ -114,23 +93,20 @@ PHASE_3_EXPORTS = [
 ]
 
 
-class TestPhase3Exports:
-    @pytest.mark.parametrize("name", PHASE_3_EXPORTS)
-    def test_symbol_importable_from_etcion(self, name: str) -> None:
-        assert hasattr(etcion, name), f"{name} not found in etcion namespace"
+@pytest.mark.parametrize("name", ALL_PUBLIC_TYPES)
+def test_public_export(name: str) -> None:
+    assert hasattr(etcion, name), f"{name} not importable from etcion"
+    assert name in etcion.__all__, f"{name} not in etcion.__all__"
 
-    @pytest.mark.parametrize("name", PHASE_3_EXPORTS)
-    def test_symbol_in_all(self, name: str) -> None:
-        assert name in etcion.__all__, f"{name} not in etcion.__all__"
 
-    def test_no_serialization_functions_in_all(self) -> None:
-        forbidden = {
-            "serialize_model",
-            "deserialize_model",
-            "write_model",
-            "read_model",
-            "model_to_dict",
-            "model_from_dict",
-        }
-        leaked = forbidden & set(etcion.__all__)
-        assert leaked == set(), f"Serialization functions leaked into __all__: {leaked}"
+def test_no_serialization_functions_in_all() -> None:
+    forbidden = {
+        "serialize_model",
+        "deserialize_model",
+        "write_model",
+        "read_model",
+        "model_to_dict",
+        "model_from_dict",
+    }
+    leaked = forbidden & set(etcion.__all__)
+    assert leaked == set(), f"Serialization functions leaked into __all__: {leaked}"
