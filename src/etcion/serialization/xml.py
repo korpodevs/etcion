@@ -5,6 +5,7 @@ Reference: ADR-031.
 
 from __future__ import annotations
 
+import uuid
 import warnings
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,7 @@ except ImportError as exc:
 from etcion.metamodel.concepts import Concept, Element, Relationship
 from etcion.metamodel.model import Model
 from etcion.metamodel.profiles import Profile
+from etcion.metamodel.viewpoints import View, Viewpoint
 from etcion.serialization.registry import (
     ARCHIMATE_NS,
     ARCHIMATE_SCHEMA_LOCATION,
@@ -116,6 +118,71 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
     return el
 
 
+def _serialize_view(view: View, parent: etree._Element) -> None:
+    """Serialize a single View as a ``<view>`` element appended to *parent*.
+
+    Emits ``<node>`` children for every :class:`~etcion.metamodel.concepts.Element`
+    in the view and ``<connection>`` children for every
+    :class:`~etcion.metamodel.concepts.Relationship`.  Nodes are laid out on an
+    auto-grid (5 columns, 200 px horizontal / 100 px vertical spacing).
+    Connections whose source or target element is absent from the view are
+    silently skipped.
+    """
+    view_id = f"id-view-{uuid.uuid4()}"
+    view_el = etree.SubElement(parent, f"{{{ARCHIMATE_NS}}}view")
+    view_el.set("identifier", view_id)
+    view_el.set(f"{{{XSI_NS}}}type", "Diagram")
+
+    name_el = etree.SubElement(view_el, f"{{{ARCHIMATE_NS}}}name")
+    name_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
+    name_el.text = view.governing_viewpoint.name
+
+    # Separate elements from relationships within the view's concept list.
+    view_elements = [c for c in view.concepts if isinstance(c, Element)]
+    view_relationships = [c for c in view.concepts if isinstance(c, Relationship)]
+
+    # Map element exchange-id -> node identifier for connection source/target.
+    elem_exchange_id_to_node_id: dict[str, str] = {}
+
+    _columns = 5
+    _x_spacing = 200
+    _y_spacing = 100
+    _node_w = 120
+    _node_h = 55
+
+    for index, elem in enumerate(view_elements):
+        col = index % _columns
+        row = index // _columns
+        node_id = f"id-node-{uuid.uuid4()}"
+        exchange_id = _to_exchange_id(elem.id)
+        elem_exchange_id_to_node_id[exchange_id] = node_id
+
+        node_el = etree.SubElement(view_el, f"{{{ARCHIMATE_NS}}}node")
+        node_el.set("identifier", node_id)
+        node_el.set("elementRef", exchange_id)
+        node_el.set(f"{{{XSI_NS}}}type", "Element")
+        node_el.set("x", str(col * _x_spacing))
+        node_el.set("y", str(row * _y_spacing))
+        node_el.set("w", str(_node_w))
+        node_el.set("h", str(_node_h))
+
+    for rel in view_relationships:
+        src_exchange_id = _to_exchange_id(rel.source.id)
+        tgt_exchange_id = _to_exchange_id(rel.target.id)
+        src_node_id = elem_exchange_id_to_node_id.get(src_exchange_id)
+        tgt_node_id = elem_exchange_id_to_node_id.get(tgt_exchange_id)
+        # Skip connections whose endpoints have no node in this view.
+        if src_node_id is None or tgt_node_id is None:
+            continue
+
+        conn_el = etree.SubElement(view_el, f"{{{ARCHIMATE_NS}}}connection")
+        conn_el.set("identifier", f"id-conn-{uuid.uuid4()}")
+        conn_el.set("relationshipRef", _to_exchange_id(rel.id))
+        conn_el.set(f"{{{XSI_NS}}}type", "Relationship")
+        conn_el.set("source", src_node_id)
+        conn_el.set("target", tgt_node_id)
+
+
 def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etree._ElementTree:
     """Serialize a Model to a complete Exchange Format ElementTree."""
     root = etree.Element(f"{{{ARCHIMATE_NS}}}model", nsmap=NSMAP)
@@ -191,6 +258,13 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
             pd_name = etree.SubElement(pd, f"{{{ARCHIMATE_NS}}}name")
             pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
             pd_name.text = attr_name
+
+    # XSD requires <views> to come after <propertyDefinitions>.
+    if model.views:
+        views_el = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}views")
+        diagrams_el = etree.SubElement(views_el, f"{{{ARCHIMATE_NS}}}diagrams")
+        for view in model.views:
+            _serialize_view(view, diagrams_el)
 
     return etree.ElementTree(root)
 
@@ -372,12 +446,67 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
             rel = _deserialize_relationship(rel_node, id_map)
             if rel is not None:
                 model.add(rel)
+                # Keep id_map up to date so views can reference relationships.
+                id_map[rel_node.get("identifier", "")] = rel
 
-    # Capture opaque children (e.g. <views>) for lossless round-trip.
+    # Phase 6: reconstruct View objects from <views>/<diagrams>/<view> nodes.
+    from etcion.enums import ContentCategory, PurposeCategory
+
+    views_node = root.find(f"{{{ARCHIMATE_NS}}}views")
+    if views_node is not None:
+        diagrams_node = views_node.find(f"{{{ARCHIMATE_NS}}}diagrams")
+        if diagrams_node is not None:
+            for view_node in diagrams_node.findall(f"{{{ARCHIMATE_NS}}}view"):
+                # Resolve element concepts via <node elementRef="..."> entries.
+                elem_concepts: list[Concept] = []
+                for node_el in view_node.findall(f"{{{ARCHIMATE_NS}}}node"):
+                    elem_ref = node_el.get("elementRef", "")
+                    elem_concept: Concept | None = id_map.get(elem_ref)
+                    if elem_concept is not None:
+                        elem_concepts.append(elem_concept)
+
+                # Resolve relationship concepts via <connection relationshipRef="..."> entries.
+                rel_concepts: list[Concept] = []
+                for conn_el in view_node.findall(f"{{{ARCHIMATE_NS}}}connection"):
+                    rel_ref = conn_el.get("relationshipRef", "")
+                    rel_concept: Concept | None = id_map.get(rel_ref)
+                    if rel_concept is not None:
+                        rel_concepts.append(rel_concept)
+
+                resolved_concepts: list[Concept] = elem_concepts + rel_concepts
+
+                # Extract the view name from the <name> child element.
+                name_node = view_node.find(f"{{{ARCHIMATE_NS}}}name")
+                view_name: str = name_node.text or "" if name_node is not None else "Imported View"
+
+                permitted_types: frozenset[type[Concept]] = frozenset(
+                    {type(c) for c in resolved_concepts}
+                )
+
+                vp = Viewpoint(
+                    name=view_name,
+                    purpose=PurposeCategory.DESIGNING,
+                    content=ContentCategory.DETAILS,
+                    permitted_concept_types=permitted_types,
+                )
+                view = View(governing_viewpoint=vp, underlying_model=model)
+                for c in resolved_concepts:
+                    view.add(c)
+                model.add_view(view)
+
+    # Capture opaque children for lossless round-trip.
+    # <views> is now parsed explicitly above and must not be captured as opaque.
     opaque: list[etree._Element] = []
     for child in root:
         tag_local = etree.QName(child.tag).localname
-        _opaque_skip = ("elements", "relationships", "name", "documentation", "propertyDefinitions")
+        _opaque_skip = (
+            "elements",
+            "relationships",
+            "name",
+            "documentation",
+            "propertyDefinitions",
+            "views",
+        )
         if tag_local not in _opaque_skip:
             opaque.append(child)
     model._opaque_xml = opaque  # type: ignore[attr-defined]

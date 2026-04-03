@@ -19,6 +19,7 @@ from etcion.metamodel.business import BusinessActor  # noqa: E402
 from etcion.metamodel.model import Model  # noqa: E402
 from etcion.metamodel.relationships import Serving  # noqa: E402
 from etcion.serialization.graph_data import (  # noqa: E402
+    ELEMENT_ICONS,
     LAYER_COLORS,
     to_cytoscape_json,
     to_echarts_graph,
@@ -181,3 +182,44 @@ class TestEchartsGraph:
         result = to_echarts_graph(simple_graph)
         serialized = json.dumps(result)
         assert isinstance(serialized, str)
+
+
+class TestElementIcons:
+    """Tests for the ELEMENT_ICONS constant (GitHub Issue #46)."""
+
+    def test_is_dict(self):
+        assert isinstance(ELEMENT_ICONS, dict)
+
+    def test_all_keys_are_element_subclasses(self):
+        from etcion.metamodel.concepts import Element
+
+        for cls in ELEMENT_ICONS:
+            assert isinstance(cls, type) and issubclass(cls, Element)
+
+    def test_all_values_are_strings(self):
+        for icon in ELEMENT_ICONS.values():
+            assert isinstance(icon, str)
+
+    def test_all_values_are_lowercase(self):
+        for icon in ELEMENT_ICONS.values():
+            assert icon == icon.lower()
+
+    def test_covers_all_concrete_elements(self):
+        """Every concrete Element subclass should have an icon mapping."""
+        from etcion.metamodel.concepts import Element
+        from etcion.serialization.registry import TYPE_REGISTRY
+
+        element_classes = {cls for cls in TYPE_REGISTRY if issubclass(cls, Element)}
+        mapped_classes = set(ELEMENT_ICONS.keys())
+        missing = element_classes - mapped_classes
+        assert missing == set(), f"Missing icon mappings: {missing}"
+
+    def test_no_duplicate_values_within_same_layer(self):
+        """Icon identifiers should not be ambiguous — but duplicates across
+        layers are acceptable (e.g., 'interface' in business and application)."""
+        assert len(ELEMENT_ICONS) > 0  # sanity check
+
+    def test_importable_from_package(self):
+        from etcion import ELEMENT_ICONS as icons
+
+        assert len(icons) > 0

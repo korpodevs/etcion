@@ -36,6 +36,7 @@ from etcion import (
     Realization,
     Serving,
     SystemSoftware,
+    View,
     Viewpoint,
 )
 from etcion.serialization.xml import write_model
@@ -481,6 +482,21 @@ def _build_data_flows(
 
 
 # ---------------------------------------------------------------------------
+# Views (one per viewpoint, scoped to matching concepts)
+# ---------------------------------------------------------------------------
+
+
+def _build_views(model: Model, viewpoints: dict[str, Viewpoint]) -> None:
+    """Create one View per viewpoint containing all matching concepts."""
+    for vp in viewpoints.values():
+        view = View(governing_viewpoint=vp, underlying_model=model)
+        for concept in model.concepts:
+            if any(issubclass(type(concept), t) for t in vp.permitted_concept_types):
+                view.add(concept)
+        model.add_view(view)
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
@@ -511,6 +527,8 @@ def load_pawsplus_model(
     data_entities = _build_data_entities(model, data.get("data_entities", []), apps)
     _build_data_flows(model, data.get("data_flows", []), apps, data_entities)
 
+    _build_views(model, ALL_VIEWPOINTS)
+
     return model, ALL_VIEWPOINTS
 
 
@@ -522,6 +540,7 @@ if __name__ == "__main__":
     print(f"  Relationships: {len(model.relationships)}")
     print(f"  Profiles:      {len(model.profiles)}")
     print(f"  Viewpoints:    {len(viewpoints)}")
+    print(f"  Views:         {len(model.views)}")
     print()
 
     # Element breakdown

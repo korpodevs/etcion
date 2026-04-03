@@ -17,8 +17,83 @@ from __future__ import annotations
 from typing import Any
 
 from etcion.enums import Layer
+from etcion.metamodel.application import (
+    ApplicationCollaboration,
+    ApplicationComponent,
+    ApplicationEvent,
+    ApplicationFunction,
+    ApplicationInteraction,
+    ApplicationInterface,
+    ApplicationProcess,
+    ApplicationService,
+    DataObject,
+)
+from etcion.metamodel.business import (
+    BusinessActor,
+    BusinessCollaboration,
+    BusinessEvent,
+    BusinessFunction,
+    BusinessInteraction,
+    BusinessInterface,
+    BusinessObject,
+    BusinessProcess,
+    BusinessRole,
+    BusinessService,
+    Contract,
+    Product,
+    Representation,
+)
+from etcion.metamodel.concepts import Element
+from etcion.metamodel.elements import Grouping, Location
+from etcion.metamodel.implementation_migration import (
+    Deliverable,
+    Gap,
+    ImplementationEvent,
+    Plateau,
+    WorkPackage,
+)
+from etcion.metamodel.motivation import (
+    Assessment,
+    Constraint,
+    Driver,
+    Goal,
+    Meaning,
+    Outcome,
+    Principle,
+    Requirement,
+    Stakeholder,
+    Value,
+)
+from etcion.metamodel.physical import (
+    DistributionNetwork,
+    Equipment,
+    Facility,
+    Material,
+)
+from etcion.metamodel.strategy import (
+    Capability,
+    CourseOfAction,
+    Resource,
+    ValueStream,
+)
+from etcion.metamodel.technology import (
+    Artifact,
+    CommunicationNetwork,
+    Device,
+    Node,
+    Path,
+    SystemSoftware,
+    TechnologyCollaboration,
+    TechnologyEvent,
+    TechnologyFunction,
+    TechnologyInteraction,
+    TechnologyInterface,
+    TechnologyProcess,
+    TechnologyService,
+)
 
 __all__ = [
+    "ELEMENT_ICONS",
     "LAYER_COLORS",
     "to_cytoscape_json",
     "to_echarts_graph",
@@ -50,6 +125,91 @@ _LAYER_COLORS_BY_VALUE: dict[str, str] = {
 }
 
 _DEFAULT_COLOR = "#CCCCCC"
+
+
+# ---------------------------------------------------------------------------
+# Element icon identifiers (GitHub Issue #46)
+# ---------------------------------------------------------------------------
+
+ELEMENT_ICONS: dict[type[Element], str] = {
+    # Strategy
+    Resource: "resource",
+    Capability: "capability",
+    ValueStream: "value-stream",
+    CourseOfAction: "course-of-action",
+    # Business
+    BusinessActor: "actor",
+    BusinessRole: "role",
+    BusinessCollaboration: "collaboration",
+    BusinessInterface: "interface",
+    BusinessProcess: "process",
+    BusinessFunction: "function",
+    BusinessInteraction: "interaction",
+    BusinessEvent: "event",
+    BusinessService: "service",
+    BusinessObject: "object",
+    Contract: "contract",
+    Representation: "representation",
+    Product: "product",
+    # Application
+    ApplicationComponent: "component",
+    ApplicationCollaboration: "collaboration",
+    ApplicationInterface: "interface",
+    ApplicationFunction: "function",
+    ApplicationInteraction: "interaction",
+    ApplicationProcess: "process",
+    ApplicationEvent: "event",
+    ApplicationService: "service",
+    DataObject: "data-object",
+    # Technology
+    Node: "node",
+    Device: "device",
+    SystemSoftware: "system-software",
+    TechnologyCollaboration: "collaboration",
+    TechnologyInterface: "interface",
+    Path: "path",
+    CommunicationNetwork: "network",
+    TechnologyFunction: "function",
+    TechnologyProcess: "process",
+    TechnologyInteraction: "interaction",
+    TechnologyEvent: "event",
+    TechnologyService: "service",
+    Artifact: "artifact",
+    # Physical
+    Equipment: "equipment",
+    Facility: "facility",
+    DistributionNetwork: "distribution-network",
+    Material: "material",
+    # Motivation
+    Stakeholder: "stakeholder",
+    Driver: "driver",
+    Assessment: "assessment",
+    Goal: "goal",
+    Outcome: "outcome",
+    Principle: "principle",
+    Requirement: "requirement",
+    Constraint: "constraint",
+    Meaning: "meaning",
+    Value: "value",
+    # Implementation & Migration
+    WorkPackage: "work-package",
+    Deliverable: "deliverable",
+    ImplementationEvent: "implementation-event",
+    Plateau: "plateau",
+    Gap: "gap",
+    # Generic
+    Grouping: "grouping",
+    Location: "location",
+}
+"""Canonical icon identifier strings for all 60 concrete ArchiMate 3.2 element types.
+
+Maps each concrete :class:`~etcion.metamodel.concepts.Element` subclass to a
+short, stable, lowercase string identifier. These identifiers are layer-agnostic
+by design: duplicate values across layers (e.g. ``"interface"`` appears in the
+Business, Application, and Technology layers) are intentional and reflect
+ArchiMate's consistent visual notation. Companion projects may map these strings
+to SVG glyphs, Unicode symbols, or CSS classes.
+"""
 
 
 # ---------------------------------------------------------------------------
