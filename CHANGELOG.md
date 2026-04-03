@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 02 Apr 2026
+
+### Added
+
+- **User guide: Pattern matching & gap analysis** -- comprehensive guide covering
+  pattern construction, matching, gap analysis, cardinality, attribute predicates,
+  `where_attr()`, composition, serialization, and validation rules. Closes #81.
+- **User guide: Impact analysis & what-if modeling** -- covers `analyze_impact()`,
+  5 scenario types, `ImpactResult`, grouping methods, `chain_impacts()`,
+  `follow_types`, and violation detection. Closes #82.
+- **User guide: ModelBuilder fluent API** -- covers context manager, factory
+  methods, `from_dicts()`, `from_dataframe()`, and comparison with `Model.add()`.
+  Closes #83.
+- **User guide: Model merge operations** -- covers `merge_models()`, 4 conflict
+  strategies, `MergeResult`, `apply_diff()`, and conflict workflows. Closes #84.
+- **User guide: Provenance metadata** -- covers `INGESTION_PROFILE`, 4 standard
+  attributes, and query helpers. Closes #85.
+- **User guide: Conformance profiles** -- covers `ConformanceProfile`, `CONFORMANCE`
+  singleton, feature flags, and validation. Closes #86.
+- **API reference pages** -- patterns, impact, builder, merge, provenance,
+  conformance, graph_data modules. Closes #87, #88.
+- **Example scripts** -- pattern matching, impact analysis, model builder, merge,
+  advanced serialization, and graph export. Closes #93, #94.
+
+### Changed
+
+- **Querying guide** -- added `elements_where()` section. Closes #89.
+- **Profiles guide** -- added declarative constraints section. Closes #90.
+- **Serialization guide** -- added CSV, DataFrame, Parquet, DuckDB, and graph
+  export sections. Closes #91.
+- **API reference index** -- all 18 modules listed, stale TODO removed. Closes #92.
+- **Housekeeping** -- classifier updated to Beta, ADR-042/043/044/045 accepted,
+  `__init__.py` docstring expanded, README updated. Closes #95.
+
 ## [0.10.0] - 02 Apr 2026
 
 ### Changed
