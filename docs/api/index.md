@@ -11,6 +11,10 @@ Complete API reference for the etcion library, auto-generated from source docstr
 - [Profiles](profiles.md) — language customization profiles
 - [Querying](querying.md) — `QueryBuilder` API
 - [Comparison](comparison.md) — model diff utilities
+- [Patterns](patterns.md) — sub-graph pattern matching and validation rules
+- [Impact Analysis](impact.md) — what-if impact modeling
+- [ModelBuilder](builder.md) — fluent programmatic model construction
+- [Merge](merge.md) — model merge and diff-application operations
 - [Enums](enums.md) — enumeration types
 - [Exceptions](exceptions.md) — exception hierarchy
 

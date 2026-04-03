@@ -56,6 +56,10 @@ nav:
     - Profiles: api/profiles.md
     - Querying: api/querying.md
     - Comparison: api/comparison.md
+    - Patterns: api/patterns.md
+    - Impact Analysis: api/impact.md
+    - ModelBuilder: api/builder.md
+    - Merge: api/merge.md
     - Enums: api/enums.md
     - Exceptions: api/exceptions.md
   - Examples: examples/index.md
