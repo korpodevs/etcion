@@ -123,321 +123,748 @@ VIEWPOINT_EXPECTED: dict[str, tuple[PurposeCategory, ContentCategory, frozenset[
     "Organization": (
         PurposeCategory.DESIGNING,
         ContentCategory.COHERENCE,
-        frozenset({
-            BusinessActor, BusinessRole, BusinessCollaboration, BusinessInterface,
-            Location,
-            Composition, Aggregation, Assignment, Serving, Realization, Association,
-            Specialization,
-        }),
+        frozenset(
+            {
+                BusinessActor,
+                BusinessRole,
+                BusinessCollaboration,
+                BusinessInterface,
+                Location,
+                Composition,
+                Aggregation,
+                Assignment,
+                Serving,
+                Realization,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Application Platform": (
         PurposeCategory.DESIGNING,
         ContentCategory.DETAILS,
-        frozenset({
-            ApplicationComponent, ApplicationInterface,
-            Node, Device, SystemSoftware, TechnologyInterface, TechnologyService,
-            CommunicationNetwork, Path, Artifact,
-            Composition, Aggregation, Assignment, Realization, Serving, Association,
-            Specialization,
-        }),
+        frozenset(
+            {
+                ApplicationComponent,
+                ApplicationInterface,
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyInterface,
+                TechnologyService,
+                CommunicationNetwork,
+                Path,
+                Artifact,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Application Structure": (
         PurposeCategory.DESIGNING,
         ContentCategory.DETAILS,
-        frozenset({
-            ApplicationComponent, ApplicationCollaboration, ApplicationInterface,
-            ApplicationFunction, ApplicationInteraction, ApplicationProcess,
-            ApplicationEvent, ApplicationService, DataObject,
-            Composition, Aggregation, Assignment, Realization, Access, Association,
-            Specialization,
-        }),
+        frozenset(
+            {
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                ApplicationService,
+                DataObject,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Access,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Information Structure": (
         PurposeCategory.DESIGNING,
         ContentCategory.DETAILS,
-        frozenset({
-            BusinessObject, Contract, Representation,
-            DataObject,
-            Access, Association, Realization, Composition, Aggregation, Specialization,
-        }),
+        frozenset(
+            {
+                BusinessObject,
+                Contract,
+                Representation,
+                DataObject,
+                Access,
+                Association,
+                Realization,
+                Composition,
+                Aggregation,
+                Specialization,
+            }
+        ),
     ),
     "Technology": (
         PurposeCategory.DESIGNING,
         ContentCategory.DETAILS,
-        frozenset({
-            Node, Device, SystemSoftware, TechnologyCollaboration, TechnologyInterface,
-            Path, CommunicationNetwork, TechnologyFunction, TechnologyProcess,
-            TechnologyInteraction, TechnologyEvent, TechnologyService, Artifact,
-            Composition, Aggregation, Assignment, Realization, Serving, Access,
-            Flow, Triggering, Association, Specialization,
-        }),
+        frozenset(
+            {
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyCollaboration,
+                TechnologyInterface,
+                Path,
+                CommunicationNetwork,
+                TechnologyFunction,
+                TechnologyProcess,
+                TechnologyInteraction,
+                TechnologyEvent,
+                TechnologyService,
+                Artifact,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Access,
+                Flow,
+                Triggering,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Layered": (
         PurposeCategory.DESIGNING,
         ContentCategory.OVERVIEW,
-        frozenset({
-            # Strategy
-            Resource, Capability, ValueStream, CourseOfAction,
-            # Business
-            BusinessActor, BusinessRole, BusinessCollaboration, BusinessInterface,
-            BusinessProcess, BusinessFunction, BusinessInteraction, BusinessEvent,
-            BusinessService, BusinessObject, Contract, Representation, Product,
-            # Application
-            ApplicationComponent, ApplicationCollaboration, ApplicationInterface,
-            ApplicationFunction, ApplicationInteraction, ApplicationProcess,
-            ApplicationEvent, ApplicationService, DataObject,
-            # Technology
-            Node, Device, SystemSoftware, TechnologyCollaboration, TechnologyInterface,
-            Path, CommunicationNetwork, TechnologyFunction, TechnologyProcess,
-            TechnologyInteraction, TechnologyEvent, TechnologyService, Artifact,
-            # Physical
-            Equipment, Facility, DistributionNetwork, Material,
-            # Motivation
-            Stakeholder, Driver, Assessment, Goal, Outcome, Principle, Requirement,
-            Constraint, Meaning, Value,
-            # Implementation & Migration
-            WorkPackage, Deliverable, ImplementationEvent, Plateau, Gap,
-            # Composite
-            Grouping, Location,
-            # Relationships
-            Composition, Aggregation, Assignment, Realization, Serving, Access,
-            Influence, Association, Triggering, Flow, Specialization,
-        }),
+        frozenset(
+            {
+                # Strategy
+                Resource,
+                Capability,
+                ValueStream,
+                CourseOfAction,
+                # Business
+                BusinessActor,
+                BusinessRole,
+                BusinessCollaboration,
+                BusinessInterface,
+                BusinessProcess,
+                BusinessFunction,
+                BusinessInteraction,
+                BusinessEvent,
+                BusinessService,
+                BusinessObject,
+                Contract,
+                Representation,
+                Product,
+                # Application
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                ApplicationService,
+                DataObject,
+                # Technology
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyCollaboration,
+                TechnologyInterface,
+                Path,
+                CommunicationNetwork,
+                TechnologyFunction,
+                TechnologyProcess,
+                TechnologyInteraction,
+                TechnologyEvent,
+                TechnologyService,
+                Artifact,
+                # Physical
+                Equipment,
+                Facility,
+                DistributionNetwork,
+                Material,
+                # Motivation
+                Stakeholder,
+                Driver,
+                Assessment,
+                Goal,
+                Outcome,
+                Principle,
+                Requirement,
+                Constraint,
+                Meaning,
+                Value,
+                # Implementation & Migration
+                WorkPackage,
+                Deliverable,
+                ImplementationEvent,
+                Plateau,
+                Gap,
+                # Composite
+                Grouping,
+                Location,
+                # Relationships
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Access,
+                Influence,
+                Association,
+                Triggering,
+                Flow,
+                Specialization,
+            }
+        ),
     ),
     "Physical": (
         PurposeCategory.DESIGNING,
         ContentCategory.DETAILS,
-        frozenset({
-            Equipment, Facility, DistributionNetwork, Material,
-            Node, Device, SystemSoftware, TechnologyInterface, TechnologyService,
-            Artifact, Location,
-            Composition, Aggregation, Assignment, Realization, Serving, Flow,
-            Association, Specialization,
-        }),
+        frozenset(
+            {
+                Equipment,
+                Facility,
+                DistributionNetwork,
+                Material,
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyInterface,
+                TechnologyService,
+                Artifact,
+                Location,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Flow,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Product": (
         PurposeCategory.DESIGNING,
         ContentCategory.COHERENCE,
-        frozenset({
-            Product, BusinessService, BusinessInterface, BusinessEvent, BusinessRole,
-            BusinessActor, BusinessObject, Contract,
-            ApplicationService, ApplicationComponent,
-            Serving, Composition, Aggregation, Association, Realization, Specialization,
-        }),
+        frozenset(
+            {
+                Product,
+                BusinessService,
+                BusinessInterface,
+                BusinessEvent,
+                BusinessRole,
+                BusinessActor,
+                BusinessObject,
+                Contract,
+                ApplicationService,
+                ApplicationComponent,
+                Serving,
+                Composition,
+                Aggregation,
+                Association,
+                Realization,
+                Specialization,
+            }
+        ),
     ),
     "Application Usage": (
         PurposeCategory.DESIGNING,
         ContentCategory.COHERENCE,
-        frozenset({
-            BusinessProcess, BusinessFunction, BusinessInteraction, BusinessEvent,
-            BusinessService, BusinessRole, BusinessActor, BusinessCollaboration,
-            BusinessInterface,
-            ApplicationComponent, ApplicationCollaboration, ApplicationInterface,
-            ApplicationFunction, ApplicationInteraction, ApplicationProcess,
-            ApplicationEvent, ApplicationService, DataObject,
-            Serving, Realization, Access, Composition, Aggregation, Assignment,
-            Association, Specialization, Triggering, Flow,
-        }),
+        frozenset(
+            {
+                BusinessProcess,
+                BusinessFunction,
+                BusinessInteraction,
+                BusinessEvent,
+                BusinessService,
+                BusinessRole,
+                BusinessActor,
+                BusinessCollaboration,
+                BusinessInterface,
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                ApplicationService,
+                DataObject,
+                Serving,
+                Realization,
+                Access,
+                Composition,
+                Aggregation,
+                Assignment,
+                Association,
+                Specialization,
+                Triggering,
+                Flow,
+            }
+        ),
     ),
     "Technology Usage": (
         PurposeCategory.DESIGNING,
         ContentCategory.COHERENCE,
-        frozenset({
-            ApplicationComponent, ApplicationCollaboration, ApplicationInterface,
-            ApplicationFunction, ApplicationInteraction, ApplicationProcess,
-            ApplicationEvent, ApplicationService, DataObject,
-            Artifact,
-            Node, Device, SystemSoftware, TechnologyCollaboration, TechnologyInterface,
-            Path, CommunicationNetwork, TechnologyFunction, TechnologyProcess,
-            TechnologyInteraction, TechnologyEvent, TechnologyService,
-            Serving, Realization, Assignment, Composition, Aggregation, Access,
-            Association, Specialization,
-        }),
+        frozenset(
+            {
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                ApplicationService,
+                DataObject,
+                Artifact,
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyCollaboration,
+                TechnologyInterface,
+                Path,
+                CommunicationNetwork,
+                TechnologyFunction,
+                TechnologyProcess,
+                TechnologyInteraction,
+                TechnologyEvent,
+                TechnologyService,
+                Serving,
+                Realization,
+                Assignment,
+                Composition,
+                Aggregation,
+                Access,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Business Process Cooperation": (
         PurposeCategory.DESIGNING,
         ContentCategory.COHERENCE,
-        frozenset({
-            BusinessProcess, BusinessFunction, BusinessInteraction, BusinessEvent,
-            BusinessService,
-            BusinessActor, BusinessRole, BusinessCollaboration, BusinessInterface,
-            BusinessObject, Representation,
-            Location,
-            Flow, Triggering, Serving, Composition, Aggregation, Assignment,
-            Association, Specialization, Realization,
-        }),
+        frozenset(
+            {
+                BusinessProcess,
+                BusinessFunction,
+                BusinessInteraction,
+                BusinessEvent,
+                BusinessService,
+                BusinessActor,
+                BusinessRole,
+                BusinessCollaboration,
+                BusinessInterface,
+                BusinessObject,
+                Representation,
+                Location,
+                Flow,
+                Triggering,
+                Serving,
+                Composition,
+                Aggregation,
+                Assignment,
+                Association,
+                Specialization,
+                Realization,
+            }
+        ),
     ),
     "Application Cooperation": (
         PurposeCategory.DESIGNING,
         ContentCategory.COHERENCE,
-        frozenset({
-            ApplicationComponent, ApplicationCollaboration, ApplicationInterface,
-            ApplicationFunction, ApplicationInteraction, ApplicationProcess,
-            ApplicationEvent, ApplicationService, DataObject, Location,
-            Serving, Flow, Triggering, Realization, Access,
-            Composition, Aggregation, Assignment, Association, Specialization,
-        }),
+        frozenset(
+            {
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                ApplicationService,
+                DataObject,
+                Location,
+                Serving,
+                Flow,
+                Triggering,
+                Realization,
+                Access,
+                Composition,
+                Aggregation,
+                Assignment,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Service Realization": (
         PurposeCategory.DESIGNING,
         ContentCategory.COHERENCE,
-        frozenset({
-            BusinessService, BusinessProcess, BusinessFunction, BusinessInteraction,
-            BusinessEvent, BusinessActor, BusinessRole, BusinessCollaboration,
-            ApplicationService, ApplicationComponent, ApplicationFunction,
-            ApplicationInteraction, ApplicationProcess, ApplicationEvent,
-            TechnologyService, TechnologyFunction, TechnologyProcess,
-            TechnologyInteraction,
-            Realization, Serving, Assignment, Composition, Aggregation,
-            Triggering, Flow, Association, Specialization,
-        }),
+        frozenset(
+            {
+                BusinessService,
+                BusinessProcess,
+                BusinessFunction,
+                BusinessInteraction,
+                BusinessEvent,
+                BusinessActor,
+                BusinessRole,
+                BusinessCollaboration,
+                ApplicationService,
+                ApplicationComponent,
+                ApplicationFunction,
+                ApplicationInteraction,
+                ApplicationProcess,
+                ApplicationEvent,
+                TechnologyService,
+                TechnologyFunction,
+                TechnologyProcess,
+                TechnologyInteraction,
+                Realization,
+                Serving,
+                Assignment,
+                Composition,
+                Aggregation,
+                Triggering,
+                Flow,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Implementation and Deployment": (
         PurposeCategory.DESIGNING,
         ContentCategory.COHERENCE,
-        frozenset({
-            ApplicationComponent, ApplicationCollaboration, ApplicationInterface,
-            ApplicationService, DataObject, Artifact,
-            Node, Device, SystemSoftware, TechnologyCollaboration, TechnologyInterface,
-            Path, CommunicationNetwork, TechnologyService,
-            Assignment, Realization, Composition, Aggregation, Association, Serving,
-            Specialization,
-        }),
+        frozenset(
+            {
+                ApplicationComponent,
+                ApplicationCollaboration,
+                ApplicationInterface,
+                ApplicationService,
+                DataObject,
+                Artifact,
+                Node,
+                Device,
+                SystemSoftware,
+                TechnologyCollaboration,
+                TechnologyInterface,
+                Path,
+                CommunicationNetwork,
+                TechnologyService,
+                Assignment,
+                Realization,
+                Composition,
+                Aggregation,
+                Association,
+                Serving,
+                Specialization,
+            }
+        ),
     ),
     "Goal Realization": (
         PurposeCategory.DECIDING,
         ContentCategory.COHERENCE,
-        frozenset({
-            Goal, Outcome, Requirement, Constraint, Principle, Driver, Assessment,
-            Stakeholder,
-            Realization, Influence, Association, Composition, Aggregation,
-            Specialization,
-        }),
+        frozenset(
+            {
+                Goal,
+                Outcome,
+                Requirement,
+                Constraint,
+                Principle,
+                Driver,
+                Assessment,
+                Stakeholder,
+                Realization,
+                Influence,
+                Association,
+                Composition,
+                Aggregation,
+                Specialization,
+            }
+        ),
     ),
     "Goal Contribution": (
         PurposeCategory.DECIDING,
         ContentCategory.DETAILS,
-        frozenset({
-            Goal, Outcome, Requirement, Constraint, Principle,
-            Influence, Association, Composition, Aggregation, Specialization,
-        }),
+        frozenset(
+            {
+                Goal,
+                Outcome,
+                Requirement,
+                Constraint,
+                Principle,
+                Influence,
+                Association,
+                Composition,
+                Aggregation,
+                Specialization,
+            }
+        ),
     ),
     "Principles": (
         PurposeCategory.DECIDING,
         ContentCategory.DETAILS,
-        frozenset({
-            Principle, Requirement, Constraint, Goal, Outcome, Driver, Assessment,
-            Stakeholder,
-            Realization, Influence, Association, Composition, Aggregation,
-            Specialization,
-        }),
+        frozenset(
+            {
+                Principle,
+                Requirement,
+                Constraint,
+                Goal,
+                Outcome,
+                Driver,
+                Assessment,
+                Stakeholder,
+                Realization,
+                Influence,
+                Association,
+                Composition,
+                Aggregation,
+                Specialization,
+            }
+        ),
     ),
     "Requirements Realization": (
         PurposeCategory.DECIDING,
         ContentCategory.COHERENCE,
-        frozenset({
-            Requirement, Constraint, Goal, Outcome, Principle,
-            BusinessProcess, BusinessFunction, BusinessService, BusinessActor,
-            BusinessRole,
-            ApplicationComponent, ApplicationService,
-            Node, TechnologyService,
-            WorkPackage, Deliverable,
-            Realization, Association, Composition, Aggregation, Influence,
-            Specialization,
-        }),
+        frozenset(
+            {
+                Requirement,
+                Constraint,
+                Goal,
+                Outcome,
+                Principle,
+                BusinessProcess,
+                BusinessFunction,
+                BusinessService,
+                BusinessActor,
+                BusinessRole,
+                ApplicationComponent,
+                ApplicationService,
+                Node,
+                TechnologyService,
+                WorkPackage,
+                Deliverable,
+                Realization,
+                Association,
+                Composition,
+                Aggregation,
+                Influence,
+                Specialization,
+            }
+        ),
     ),
     "Motivation": (
         PurposeCategory.DECIDING,
         ContentCategory.OVERVIEW,
-        frozenset({
-            Stakeholder, Driver, Assessment, Goal, Outcome, Principle, Requirement,
-            Constraint, Meaning, Value,
-            Composition, Aggregation, Influence, Realization, Association,
-            Specialization,
-        }),
+        frozenset(
+            {
+                Stakeholder,
+                Driver,
+                Assessment,
+                Goal,
+                Outcome,
+                Principle,
+                Requirement,
+                Constraint,
+                Meaning,
+                Value,
+                Composition,
+                Aggregation,
+                Influence,
+                Realization,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Strategy": (
         PurposeCategory.DESIGNING,
         ContentCategory.OVERVIEW,
-        frozenset({
-            Resource, Capability, ValueStream, CourseOfAction,
-            Composition, Aggregation, Assignment, Realization, Serving, Flow,
-            Triggering, Access, Influence, Association, Specialization,
-        }),
+        frozenset(
+            {
+                Resource,
+                Capability,
+                ValueStream,
+                CourseOfAction,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Flow,
+                Triggering,
+                Access,
+                Influence,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Capability Map": (
         PurposeCategory.DESIGNING,
         ContentCategory.OVERVIEW,
-        frozenset({
-            Capability, Resource,
-            Assignment, Serving, Composition, Aggregation, Specialization, Association,
-            Realization,
-        }),
+        frozenset(
+            {
+                Capability,
+                Resource,
+                Assignment,
+                Serving,
+                Composition,
+                Aggregation,
+                Specialization,
+                Association,
+                Realization,
+            }
+        ),
     ),
     "Outcome Realization": (
         PurposeCategory.DECIDING,
         ContentCategory.COHERENCE,
-        frozenset({
-            Capability, CourseOfAction, Resource, ValueStream,
-            Outcome, Goal,
-            Realization, Influence, Composition, Aggregation, Association,
-            Specialization,
-        }),
+        frozenset(
+            {
+                Capability,
+                CourseOfAction,
+                Resource,
+                ValueStream,
+                Outcome,
+                Goal,
+                Realization,
+                Influence,
+                Composition,
+                Aggregation,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Resource Map": (
         PurposeCategory.DESIGNING,
         ContentCategory.OVERVIEW,
-        frozenset({
-            Resource, Capability,
-            Assignment, Composition, Aggregation, Specialization, Association, Serving,
-        }),
+        frozenset(
+            {
+                Resource,
+                Capability,
+                Assignment,
+                Composition,
+                Aggregation,
+                Specialization,
+                Association,
+                Serving,
+            }
+        ),
     ),
     "Value Stream": (
         PurposeCategory.DESIGNING,
         ContentCategory.DETAILS,
-        frozenset({
-            ValueStream, Capability, Resource, CourseOfAction,
-            Flow, Triggering, Serving, Composition, Aggregation, Association,
-            Specialization,
-        }),
+        frozenset(
+            {
+                ValueStream,
+                Capability,
+                Resource,
+                CourseOfAction,
+                Flow,
+                Triggering,
+                Serving,
+                Composition,
+                Aggregation,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Project": (
         PurposeCategory.DESIGNING,
         ContentCategory.DETAILS,
-        frozenset({
-            WorkPackage, Deliverable, ImplementationEvent,
-            BusinessActor, BusinessRole,
-            Location,
-            Assignment, Realization, Triggering, Flow, Composition, Aggregation,
-            Association, Specialization,
-        }),
+        frozenset(
+            {
+                WorkPackage,
+                Deliverable,
+                ImplementationEvent,
+                BusinessActor,
+                BusinessRole,
+                Location,
+                Assignment,
+                Realization,
+                Triggering,
+                Flow,
+                Composition,
+                Aggregation,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Migration": (
         PurposeCategory.DESIGNING,
         ContentCategory.COHERENCE,
-        frozenset({
-            Plateau, Gap, WorkPackage,
-            Composition, Aggregation, Triggering, Association, Realization,
-            Specialization,
-        }),
+        frozenset(
+            {
+                Plateau,
+                Gap,
+                WorkPackage,
+                Composition,
+                Aggregation,
+                Triggering,
+                Association,
+                Realization,
+                Specialization,
+            }
+        ),
     ),
     "Implementation and Migration": (
         PurposeCategory.DESIGNING,
         ContentCategory.OVERVIEW,
-        frozenset({
-            WorkPackage, Deliverable, ImplementationEvent, Plateau, Gap, Location,
-            Composition, Aggregation, Assignment, Realization, Serving, Triggering,
-            Flow, Association, Specialization,
-        }),
+        frozenset(
+            {
+                WorkPackage,
+                Deliverable,
+                ImplementationEvent,
+                Plateau,
+                Gap,
+                Location,
+                Composition,
+                Aggregation,
+                Assignment,
+                Realization,
+                Serving,
+                Triggering,
+                Flow,
+                Association,
+                Specialization,
+            }
+        ),
     ),
     "Stakeholder": (
         PurposeCategory.INFORMING,
         ContentCategory.OVERVIEW,
-        frozenset({
-            Stakeholder, Driver, Assessment, Goal, Outcome, Principle, Requirement,
-            Constraint,
-            Influence, Association, Composition, Aggregation, Specialization,
-        }),
+        frozenset(
+            {
+                Stakeholder,
+                Driver,
+                Assessment,
+                Goal,
+                Outcome,
+                Principle,
+                Requirement,
+                Constraint,
+                Influence,
+                Association,
+                Composition,
+                Aggregation,
+                Specialization,
+            }
+        ),
     ),
 }
 
@@ -543,9 +970,9 @@ class TestViewpointCatalogueSingleton:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("vp_name,expected", [
-    (name, data[2]) for name, data in VIEWPOINT_EXPECTED.items()
-])
+@pytest.mark.parametrize(
+    "vp_name,expected", [(name, data[2]) for name, data in VIEWPOINT_EXPECTED.items()]
+)
 def test_viewpoint_permitted_types(vp_name: str, expected: frozenset) -> None:
     """Assert exact permitted_concept_types set for each viewpoint."""
     vp = VIEWPOINT_CATALOGUE[vp_name]
@@ -567,17 +994,17 @@ def test_viewpoint_name(vp_name: str) -> None:
     assert vp.name == vp_name
 
 
-@pytest.mark.parametrize("vp_name,expected", [
-    (name, data[0]) for name, data in VIEWPOINT_EXPECTED.items()
-])
+@pytest.mark.parametrize(
+    "vp_name,expected", [(name, data[0]) for name, data in VIEWPOINT_EXPECTED.items()]
+)
 def test_viewpoint_purpose(vp_name: str, expected: PurposeCategory) -> None:
     vp = VIEWPOINT_CATALOGUE[vp_name]
     assert vp.purpose is expected
 
 
-@pytest.mark.parametrize("vp_name,expected", [
-    (name, data[1]) for name, data in VIEWPOINT_EXPECTED.items()
-])
+@pytest.mark.parametrize(
+    "vp_name,expected", [(name, data[1]) for name, data in VIEWPOINT_EXPECTED.items()]
+)
 def test_viewpoint_content(vp_name: str, expected: ContentCategory) -> None:
     vp = VIEWPOINT_CATALOGUE[vp_name]
     assert vp.content is expected
