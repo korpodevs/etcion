@@ -19,7 +19,7 @@ class TestVersionExposed:
     """etcion.__version__ is publicly accessible and correct."""
 
     def test_version_exposed(self) -> None:
-        assert etcion.__version__ == "0.8.0"
+        assert etcion.__version__ == "0.9.0"
 
     def test_version_is_string(self) -> None:
         assert isinstance(etcion.__version__, str)
@@ -122,8 +122,8 @@ def release_text() -> str:
 
 
 def test_ci_has_required_jobs(ci_text: str) -> None:
-    """ci.yml must declare lint, format, typecheck, and test jobs."""
-    for job in ("lint:", "format:", "typecheck:", "test:"):
+    """ci.yml must declare lint, format, typecheck, test-fast, and test-full jobs."""
+    for job in ("lint:", "format:", "typecheck:", "test-fast:", "test-full:"):
         assert job in ci_text, f"Expected job '{job}' to be present in ci.yml"
 
 

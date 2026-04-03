@@ -5,6 +5,9 @@ on:
     branches: ["**"]
   pull_request:
     branches: ["**"]
+  schedule:
+    # Nightly at 02:00 UTC on the develop branch.
+    - cron: "0 2 * * *"
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -41,7 +44,30 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: mypy src/
 
-  test:
+  # Fast path: runs on every push and pull request.
+  # Excludes integration tests to stay well under the 30 s target.
+  test-fast:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]"
+      - run: pytest -m "not integration" --cov=etcion --cov-report=term-missing --cov-fail-under=90
+
+  # Full path: runs on push to develop, main, and release branches.
+  # Includes integration tests and performance regression gates.
+  test-full:
+    if: >
+      github.event_name == 'push' && (
+        github.ref == 'refs/heads/develop' ||
+        github.ref == 'refs/heads/main' ||
+        startsWith(github.ref, 'refs/heads/release/')
+      )
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -53,3 +79,18 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
       - run: pytest --cov=etcion --cov-report=term-missing --cov-fail-under=90
+
+  # Nightly: full suite including slow benchmarks.
+  # Scheduled separately from the merge gate so benchmark noise does not
+  # block development.  Runs on develop at 02:00 UTC.
+  test-nightly:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest --cov=etcion --cov-report=term-missing --cov-fail-under=90
+
