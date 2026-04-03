@@ -35,6 +35,7 @@ nav:
     - Querying: user-guide/querying.md
     - Patterns: user-guide/patterns.md
     - Diffing: user-guide/diffing.md
+    - Impact Analysis: user-guide/impact-analysis.md
     - Extending: user-guide/extending.md
   - Architecture:
     - Overview: architecture/overview.md
