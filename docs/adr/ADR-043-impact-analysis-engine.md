@@ -1,6 +1,6 @@
 # ADR-043: Impact Analysis Engine
 
-**Status:** PROPOSED
+**Status:** ACCEPTED
 **Date:** 2026-03-29
 **Scope:** How `analyze_impact()` computes removal impact, produces immutable result models, and traverses the networkx graph with depth metadata.
 

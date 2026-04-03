@@ -1,6 +1,6 @@
 # ADR-042: Pattern Gap Analysis Design
 
-**Status:** PROPOSED
+**Status:** ACCEPTED
 **Date:** 2026-03-27
 **Scope:** How `Pattern.gaps()` identifies elements that partially match a pattern but are missing required connections.
 

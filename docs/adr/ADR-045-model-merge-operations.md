@@ -1,6 +1,6 @@
 # ADR-045: Model Merge Operations
 
-**Status:** PROPOSED
+**Status:** ACCEPTED
 **Date:** 2026-03-29
 **Scope:** Design of `merge_models()` -- a function that applies a model fragment (delta) to a canonical model with conflict detection, resolution strategies, and violation reporting.
 
