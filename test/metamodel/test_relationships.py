@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import ClassVar
 
 import pytest
@@ -45,7 +46,60 @@ from etcion.validation.permissions import is_permitted
 from test.metamodel.conftest import StubActiveStructure, StubBehavior
 
 # ---------------------------------------------------------------------------
-# ABC
+# Data-driven spec for common relationship properties
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class RelSpec:
+    cls: type
+    type_name: str
+    category: RelationshipCategory
+
+
+RELATIONSHIP_SPECS: list[RelSpec] = [
+    RelSpec(Composition, "Composition", RelationshipCategory.STRUCTURAL),
+    RelSpec(Aggregation, "Aggregation", RelationshipCategory.STRUCTURAL),
+    RelSpec(Assignment, "Assignment", RelationshipCategory.STRUCTURAL),
+    RelSpec(Realization, "Realization", RelationshipCategory.STRUCTURAL),
+    RelSpec(Serving, "Serving", RelationshipCategory.DEPENDENCY),
+    RelSpec(Triggering, "Triggering", RelationshipCategory.DYNAMIC),
+    RelSpec(Specialization, "Specialization", RelationshipCategory.OTHER),
+]
+
+
+@pytest.mark.parametrize("spec", RELATIONSHIP_SPECS, ids=lambda s: s.cls.__name__)
+class TestRelationshipCommon:
+    """Common properties shared by all non-specialised relationship types."""
+
+    def test_instantiation(self, spec: RelSpec) -> None:
+        a, b = StubActiveStructure(name="a"), StubActiveStructure(name="b")
+        r = spec.cls(name="r", source=a, target=b)
+        assert r is not None
+
+    def test_type_name(self, spec: RelSpec) -> None:
+        a, b = StubActiveStructure(name="a"), StubActiveStructure(name="b")
+        r = spec.cls(name="r", source=a, target=b)
+        assert r._type_name == spec.type_name
+
+    def test_source_and_target(self, spec: RelSpec) -> None:
+        a, b = StubActiveStructure(name="a"), StubActiveStructure(name="b")
+        r = spec.cls(name="r", source=a, target=b)
+        assert r.source is a
+        assert r.target is b
+
+    def test_category(self, spec: RelSpec) -> None:
+        assert spec.cls.category is spec.category
+
+    def test_is_concept(self, spec: RelSpec) -> None:
+        assert issubclass(spec.cls, Concept)
+
+    def test_is_relationship(self, spec: RelSpec) -> None:
+        assert issubclass(spec.cls, Relationship)
+
+
+# ---------------------------------------------------------------------------
+# ABC: StructuralRelationship
 # ---------------------------------------------------------------------------
 
 
@@ -60,48 +114,6 @@ class TestStructuralRelationshipABC:
 
     def test_is_subclass_of_relationship(self) -> None:
         assert issubclass(StructuralRelationship, Relationship)
-
-
-# ---------------------------------------------------------------------------
-# Concrete types
-# ---------------------------------------------------------------------------
-
-
-class TestConcreteStructuralTypes:
-    @pytest.fixture()
-    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
-        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
-
-    @pytest.mark.parametrize(
-        ("cls", "expected_name"),
-        [
-            (Composition, "Composition"),
-            (Aggregation, "Aggregation"),
-            (Assignment, "Assignment"),
-            (Realization, "Realization"),
-        ],
-    )
-    def test_instantiation_and_type_name(
-        self,
-        pair: tuple[StubActiveStructure, StubActiveStructure],
-        cls: type,
-        expected_name: str,
-    ) -> None:
-        a, b = pair
-        r = cls(name="r", source=a, target=b)
-        assert r._type_name == expected_name
-
-    @pytest.mark.parametrize("cls", [Composition, Aggregation, Assignment, Realization])
-    def test_is_structural_relationship(self, cls: type) -> None:
-        assert issubclass(cls, StructuralRelationship)
-
-    @pytest.mark.parametrize("cls", [Composition, Aggregation, Assignment, Realization])
-    def test_category_inherited(self, cls: type) -> None:
-        assert cls.category is RelationshipCategory.STRUCTURAL
-
-    @pytest.mark.parametrize("cls", [Composition, Aggregation, Assignment, Realization])
-    def test_is_concept(self, cls: type) -> None:
-        assert issubclass(cls, Concept)
 
 
 # ---------------------------------------------------------------------------
@@ -121,9 +133,8 @@ class TestIsNested:
         assert c.is_nested is True
 
 
-
 # ---------------------------------------------------------------------------
-# ABC
+# ABC: DependencyRelationship
 # ---------------------------------------------------------------------------
 
 
@@ -144,7 +155,7 @@ class TestDependencyRelationshipABC:
 
 
 # ---------------------------------------------------------------------------
-# Serving
+# Serving — unique: is_derived default, rejects is_nested
 # ---------------------------------------------------------------------------
 
 
@@ -152,20 +163,6 @@ class TestServing:
     @pytest.fixture()
     def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
         return StubActiveStructure(name="a"), StubActiveStructure(name="b")
-
-    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
-        a, b = pair
-        r = Serving(name="s", source=a, target=b)
-        assert r._type_name == "Serving"
-
-    def test_category_inherited(self) -> None:
-        assert Serving.category is RelationshipCategory.DEPENDENCY
-
-    def test_is_dependency_relationship(self) -> None:
-        assert issubclass(Serving, DependencyRelationship)
-
-    def test_is_concept(self) -> None:
-        assert issubclass(Serving, Concept)
 
     def test_is_derived_defaults_false(
         self, pair: tuple[StubActiveStructure, StubActiveStructure]
@@ -179,6 +176,8 @@ class TestServing:
         with pytest.raises(PydanticValidationError):
             Serving(name="s", source=a, target=b, is_nested=True)  # type: ignore[call-arg]
 
+    def test_is_dependency_relationship(self) -> None:
+        assert issubclass(Serving, DependencyRelationship)
 
 
 # ---------------------------------------------------------------------------
@@ -204,7 +203,7 @@ class TestAccessModeEnum:
 
 
 # ---------------------------------------------------------------------------
-# Access relationship
+# Access relationship — unique: access_mode attribute
 # ---------------------------------------------------------------------------
 
 
@@ -212,11 +211,6 @@ class TestAccess:
     @pytest.fixture()
     def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
         return StubActiveStructure(name="a"), StubActiveStructure(name="b")
-
-    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
-        a, b = pair
-        r = Access(name="acc", source=a, target=b)
-        assert r._type_name == "Access"
 
     def test_access_mode_defaults_to_unspecified(
         self, pair: tuple[StubActiveStructure, StubActiveStructure]
@@ -238,16 +232,12 @@ class TestAccess:
     def test_is_dependency_relationship(self) -> None:
         assert issubclass(Access, DependencyRelationship)
 
-    def test_category_inherited(self) -> None:
-        assert Access.category is RelationshipCategory.DEPENDENCY
-
     def test_invalid_access_mode_raises(
         self, pair: tuple[StubActiveStructure, StubActiveStructure]
     ) -> None:
         a, b = pair
         with pytest.raises(Exception):  # noqa: B017
             Access(name="acc", source=a, target=b, access_mode="invalid")  # type: ignore[call-arg]
-
 
 
 # ---------------------------------------------------------------------------
@@ -276,7 +266,7 @@ class TestInfluenceSignEnum:
 
 
 # ---------------------------------------------------------------------------
-# Influence relationship
+# Influence relationship — unique: sign, strength attributes
 # ---------------------------------------------------------------------------
 
 
@@ -284,11 +274,6 @@ class TestInfluence:
     @pytest.fixture()
     def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
         return StubActiveStructure(name="a"), StubActiveStructure(name="b")
-
-    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
-        a, b = pair
-        r = Influence(name="inf", source=a, target=b)
-        assert r._type_name == "Influence"
 
     def test_sign_defaults_to_none(
         self, pair: tuple[StubActiveStructure, StubActiveStructure]
@@ -324,10 +309,6 @@ class TestInfluence:
     def test_is_dependency_relationship(self) -> None:
         assert issubclass(Influence, DependencyRelationship)
 
-    def test_category_inherited(self) -> None:
-        assert Influence.category is RelationshipCategory.DEPENDENCY
-
-
 
 # ---------------------------------------------------------------------------
 # AssociationDirection enum ratification
@@ -346,7 +327,7 @@ class TestAssociationDirectionEnum:
 
 
 # ---------------------------------------------------------------------------
-# Association relationship
+# Association relationship — unique: direction, cross-type, rel-as-target
 # ---------------------------------------------------------------------------
 
 
@@ -354,11 +335,6 @@ class TestAssociation:
     @pytest.fixture()
     def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
         return StubActiveStructure(name="a"), StubActiveStructure(name="b")
-
-    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
-        a, b = pair
-        r = Association(name="assoc", source=a, target=b)
-        assert r._type_name == "Association"
 
     def test_direction_defaults_to_undirected(
         self, pair: tuple[StubActiveStructure, StubActiveStructure]
@@ -376,9 +352,6 @@ class TestAssociation:
 
     def test_is_dependency_relationship(self) -> None:
         assert issubclass(Association, DependencyRelationship)
-
-    def test_category_inherited(self) -> None:
-        assert Association.category is RelationshipCategory.DEPENDENCY
 
     def test_accepts_cross_type_source_target(self) -> None:
         """Association is universally permitted -- construction accepts any concepts."""
@@ -405,9 +378,8 @@ class TestAssociation:
         assert assoc.target is rel
 
 
-
 # ---------------------------------------------------------------------------
-# ABC
+# ABC: DynamicRelationship
 # ---------------------------------------------------------------------------
 
 
@@ -428,29 +400,7 @@ class TestDynamicRelationshipABC:
 
 
 # ---------------------------------------------------------------------------
-# Triggering
-# ---------------------------------------------------------------------------
-
-
-class TestTriggering:
-    @pytest.fixture()
-    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
-        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
-
-    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
-        a, b = pair
-        r = Triggering(name="t", source=a, target=b)
-        assert r._type_name == "Triggering"
-
-    def test_category_inherited(self) -> None:
-        assert Triggering.category is RelationshipCategory.DYNAMIC
-
-    def test_is_concept(self) -> None:
-        assert issubclass(Triggering, Concept)
-
-
-# ---------------------------------------------------------------------------
-# Flow
+# Flow — unique: flow_type attribute, rejects is_nested
 # ---------------------------------------------------------------------------
 
 
@@ -458,11 +408,6 @@ class TestFlow:
     @pytest.fixture()
     def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
         return StubActiveStructure(name="a"), StubActiveStructure(name="b")
-
-    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
-        a, b = pair
-        r = Flow(name="f", source=a, target=b)
-        assert r._type_name == "Flow"
 
     def test_flow_type_defaults_to_none(
         self, pair: tuple[StubActiveStructure, StubActiveStructure]
@@ -478,8 +423,8 @@ class TestFlow:
         r = Flow(name="f", source=a, target=b, flow_type="data")
         assert r.flow_type == "data"
 
-    def test_category_inherited(self) -> None:
-        assert Flow.category is RelationshipCategory.DYNAMIC
+    def test_is_dynamic_relationship(self) -> None:
+        assert issubclass(Flow, DynamicRelationship)
 
 
 # ---------------------------------------------------------------------------
@@ -499,9 +444,8 @@ class TestIsNestedRejection:
             Flow(name="f", source=a, target=b, is_nested=True)  # type: ignore[call-arg]
 
 
-
 # ---------------------------------------------------------------------------
-# ABC
+# ABC: OtherRelationship
 # ---------------------------------------------------------------------------
 
 
@@ -525,38 +469,6 @@ class TestOtherRelationshipABC:
 
 
 # ---------------------------------------------------------------------------
-# Specialization
-# ---------------------------------------------------------------------------
-
-
-class TestSpecialization:
-    @pytest.fixture()
-    def pair(self) -> tuple[StubActiveStructure, StubActiveStructure]:
-        return StubActiveStructure(name="a"), StubActiveStructure(name="b")
-
-    def test_instantiation(self, pair: tuple[StubActiveStructure, StubActiveStructure]) -> None:
-        a, b = pair
-        r = Specialization(name="spec", source=a, target=b)
-        assert r._type_name == "Specialization"
-
-    def test_category_inherited(self) -> None:
-        assert Specialization.category is RelationshipCategory.OTHER
-
-    def test_is_other_relationship(self) -> None:
-        assert issubclass(Specialization, OtherRelationship)
-
-    def test_is_concept(self) -> None:
-        assert issubclass(Specialization, Concept)
-
-    def test_same_type_construction_succeeds(self) -> None:
-        a = StubActiveStructure(name="a")
-        b = StubActiveStructure(name="b")
-        r = Specialization(name="spec", source=a, target=b)
-        assert r.source is a
-        assert r.target is b
-
-
-# ---------------------------------------------------------------------------
 # JunctionType enum ratification
 # ---------------------------------------------------------------------------
 
@@ -573,7 +485,7 @@ class TestJunctionTypeEnum:
 
 
 # ---------------------------------------------------------------------------
-# Junction instantiation
+# Junction — unique: junction_type, connector role, no name
 # ---------------------------------------------------------------------------
 
 
@@ -602,11 +514,6 @@ class TestJunctionInstantiation:
     def test_no_name_attribute(self) -> None:
         j = Junction(junction_type=JunctionType.AND)
         assert not hasattr(j, "name")
-
-
-# ---------------------------------------------------------------------------
-# Inheritance
-# ---------------------------------------------------------------------------
 
 
 class TestJunctionInheritance:
