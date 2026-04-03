@@ -19,7 +19,7 @@ class TestVersionExposed:
     """etcion.__version__ is publicly accessible and correct."""
 
     def test_version_exposed(self) -> None:
-        assert etcion.__version__ == "0.6.0"
+        assert etcion.__version__ == "0.7.0"
 
     def test_version_is_string(self) -> None:
         assert isinstance(etcion.__version__, str)
