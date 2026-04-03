@@ -20,5 +20,3 @@ Complete API reference for the etcion library, auto-generated from source docstr
 - [Provenance](provenance.md) — built-in ingestion provenance profile and query helpers
 - [Conformance](conformance.md) — ArchiMate 3.2 conformance declaration
 - [Graph Data](graph_data.md) — Cytoscape.js and Apache ECharts export helpers
-
-<!-- TODO: FEAT-26.2 — expand overview with usage guidance linking into the User Guide. -->
