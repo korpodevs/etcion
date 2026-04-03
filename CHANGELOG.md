@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 02 Apr 2026
+
+### Changed
+
+- **Infrastructure cleanup** -- consolidated shared stubs into
+  `test/metamodel/conftest.py` and shared model fixtures into
+  `test/serialization/conftest.py`. Removed duplicated definitions. Closes #74.
+- **Layer test consolidation** -- replaced ~615 repetitive per-type tests with
+  data-driven `ElementSpec` registry and 8 parametrized test methods covering
+  all 58 concrete element types. Net −912 LOC from layer files. Closes #75.
+- **Viewpoint catalogue consolidation** -- replaced per-concept-type tests with
+  full-set equality assertions via `VIEWPOINT_EXPECTED` dict. 345 → 219 tests.
+  Closes #76.
+- **Export test consolidation** -- merged `_PHASE2_TYPES` and `PHASE_3_EXPORTS`
+  into single `ALL_PUBLIC_TYPES` list. Removed brittle count assertion. 152 → 75
+  tests. Closes #77.
+- **Relationship test cleanup** -- data-driven `RelSpec` registry with
+  `TestRelationshipCommon` parametrized class. Dedicated classes retained for
+  Access, Influence, Association, Flow, Junction. Closes #78.
+- **Benchmark consolidation** -- merged 6 benchmark files into single
+  `test_benchmarks.py`. All 13 benchmarks preserved. Closes #79.
+
 ## [0.9.0] - 02 Apr 2026
 
 ### Added
