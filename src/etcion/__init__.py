@@ -1,4 +1,11 @@
-"""etcion -- Python implementation of the ArchiMate 3.2 metamodel."""
+"""etcion -- Python implementation of the ArchiMate 3.2 metamodel.
+
+Build, query, validate, and analyze enterprise architecture models as first-class
+Python data structures. Key capabilities: pattern matching and gap analysis,
+impact analysis, model diffing and merging, a fluent ModelBuilder API, provenance
+tracking, conformance validation, and serialization to XML, graph, DataFrame, and
+Parquet formats. Full documentation at https://korpodevs.github.io/etcion/.
+"""
 
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _meta_version

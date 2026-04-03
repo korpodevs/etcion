@@ -1,6 +1,6 @@
 # ADR-044: Model Builder API
 
-**Status:** PROPOSED
+**Status:** ACCEPTED
 **Date:** 2026-03-29
 **Scope:** Design of `ModelBuilder` -- a fluent construction API for programmatic model population, supporting context manager usage, factory methods, batch construction, and deferred validation.
 

@@ -28,12 +28,18 @@ nav:
   - Getting Started: getting-started.md
   - User Guide:
     - Building Models: user-guide/building-models.md
+    - ModelBuilder: user-guide/builder.md
     - Validation: user-guide/validation.md
     - Serialization: user-guide/serialization.md
     - Viewpoints: user-guide/viewpoints.md
     - Profiles: user-guide/profiles.md
+    - Conformance: user-guide/conformance.md
+    - Provenance: user-guide/provenance.md
     - Querying: user-guide/querying.md
+    - Patterns: user-guide/patterns.md
     - Diffing: user-guide/diffing.md
+    - Impact Analysis: user-guide/impact-analysis.md
+    - Merging: user-guide/merging.md
     - Extending: user-guide/extending.md
   - Architecture:
     - Overview: architecture/overview.md
@@ -50,8 +56,15 @@ nav:
     - Profiles: api/profiles.md
     - Querying: api/querying.md
     - Comparison: api/comparison.md
+    - Patterns: api/patterns.md
+    - Impact Analysis: api/impact.md
+    - ModelBuilder: api/builder.md
+    - Merge: api/merge.md
     - Enums: api/enums.md
     - Exceptions: api/exceptions.md
+    - Provenance: api/provenance.md
+    - Conformance: api/conformance.md
+    - Graph Data: api/graph_data.md
   - Examples: examples/index.md
   - Changelog: changelog.md
 markdown_extensions:

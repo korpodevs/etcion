@@ -132,6 +132,59 @@ diff = diff_models(baseline_model, proposed_model)
 print(diff.summary())  # "ModelDiff: 3 added, 1 removed, 2 modified"
 ```
 
+**Build models with the fluent ModelBuilder API**
+
+```python
+from etcion import ModelBuilder
+
+with ModelBuilder() as b:
+    crm = b.application_component("CRM System", documentation="Main CRM")
+    db = b.data_object("Customer Database")
+    b.access(crm, db)
+
+model = b.model
+```
+
+**Merge model fragments from multiple sources**
+
+```python
+from etcion import merge_models
+
+# Merge a CMDB fragment into the canonical model
+result = merge_models(canonical, cmdb_fragment, strategy="prefer_base")
+print(result.conflicts)      # ConceptChange tuples where IDs collided
+print(result.violations)     # Post-merge validation issues
+merged = result.merged_model
+```
+
+**Track provenance through ingestion pipelines**
+
+```python
+from etcion import INGESTION_PROFILE, unreviewed_elements, low_confidence_elements
+
+model.apply_profile(INGESTION_PROFILE)
+needs_review = unreviewed_elements(model)
+low_conf = low_confidence_elements(model, threshold=0.7)
+```
+
+**Validate conformance against the spec**
+
+```python
+from etcion import CONFORMANCE, ConformanceProfile
+
+# Check which conformance profile the model satisfies
+profile = CONFORMANCE.evaluate(model)   # ConformanceProfile.FULL | CORE | ...
+```
+
+**Export to graph, DataFrame, and visualization formats**
+
+```python
+from etcion.serialization.graph_data import to_cytoscape_json, to_echarts_graph
+
+cyto = to_cytoscape_json(model)    # Ready for Cytoscape.js
+echart = to_echarts_graph(model)   # Ready for Apache ECharts
+```
+
 ## Installation
 
 ```bash
