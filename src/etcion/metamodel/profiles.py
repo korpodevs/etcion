@@ -17,7 +17,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from etcion.metamodel.concepts import Element
+from etcion.metamodel.concepts import Concept, Element
 
 # ---------------------------------------------------------------------------
 # Recognized constraint keys (besides "type")
@@ -174,43 +174,54 @@ class Profile(BaseModel):
     def _validate_profile(self) -> "Profile":
         """Enforce key and field-name integrity rules at construction time.
 
-        Rule 1: every key in ``specializations`` and ``attribute_extensions``
-        must be a subclass of :class:`~etcion.metamodel.concepts.Element`.
+        Rule 1a: every key in ``specializations`` must be a subclass of
+        :class:`~etcion.metamodel.concepts.Element`.  Specialization is an
+        Element-layer feature in ArchiMate 3.2; relationships and connectors
+        are not specializable.
 
-        Rule 2: every attribute name declared in ``attribute_extensions`` must
-        not collide with an existing Pydantic field on the target element type.
+        Rule 1b (ADR-050): every key in ``attribute_extensions`` must be a
+        subclass of :class:`~etcion.metamodel.concepts.Concept`.  Profiles
+        may declare extended attributes for elements, relationships, and
+        connectors alike.
+
+        Rule 2: every attribute name declared in ``attribute_extensions``
+        must not collide with an existing Pydantic field on the target
+        concept type.
 
         Rule 3 (Issue #52): every value in ``attribute_extensions`` must be
-        either a bare ``type`` or a constraint dict with recognized keys; the
-        dict is validated by :func:`resolve_constraint`.
+        either a bare ``type`` or a constraint dict with recognized keys;
+        the dict is validated by :func:`resolve_constraint`.
         """
-        # Rule 1: all keys must be Element subclasses.
-        for mapping_name in ("specializations", "attribute_extensions"):
-            mapping: dict[Any, Any] = getattr(self, mapping_name)
-            for key in mapping:
-                if not (isinstance(key, type) and issubclass(key, Element)):
-                    raise ValueError(f"{mapping_name} key {key!r} is not a subclass of Element")
+        # Rule 1a: specializations keys must be Element subclasses.
+        for key in self.specializations:
+            if not (isinstance(key, type) and issubclass(key, Element)):
+                raise ValueError(f"specializations key {key!r} is not a subclass of Element")
+
+        # Rule 1b (ADR-050): attribute_extensions keys must be Concept subclasses.
+        for key in self.attribute_extensions:
+            if not (isinstance(key, type) and issubclass(key, Concept)):
+                raise ValueError(f"attribute_extensions key {key!r} is not a subclass of Concept")
 
         # Rule 2: no field name conflicts in attribute_extensions.
         # Rule 3: validate constraint dicts and normalize to AttributeConstraint.
         normalized: dict[Any, dict[str, AttributeConstraint]] = {}
-        for elem_type, attrs in self.attribute_extensions.items():
-            existing: set[str] = set(elem_type.model_fields)
+        for concept_type, attrs in self.attribute_extensions.items():
+            existing: set[str] = set(concept_type.model_fields)
             resolved_attrs: dict[str, AttributeConstraint] = {}
             for attr_name, raw_value in attrs.items():
                 if attr_name in existing:
                     raise ValueError(
                         f"attribute_extensions: '{attr_name}' conflicts with "
-                        f"existing field on {elem_type.__name__}"
+                        f"existing field on {concept_type.__name__}"
                     )
                 try:
                     constraint = resolve_constraint(raw_value)
                 except ValueError as exc:
                     raise ValueError(
-                        f"attribute_extensions[{elem_type.__name__}]['{attr_name}']: {exc}"
+                        f"attribute_extensions[{concept_type.__name__}]['{attr_name}']: {exc}"
                     ) from exc
                 resolved_attrs[attr_name] = constraint
-            normalized[elem_type] = resolved_attrs
+            normalized[concept_type] = resolved_attrs
 
         # Store normalized constraints as an instance attribute.
         # We bypass Pydantic's __setattr__ by using object.__setattr__ since the
@@ -219,21 +230,22 @@ class Profile(BaseModel):
 
         return self
 
-    def get_constraints(self, elem_type: type[Element]) -> dict[str, AttributeConstraint]:
-        """Return the normalized :class:`AttributeConstraint` map for *elem_type*.
+    def get_constraints(self, concept_type: type[Concept]) -> dict[str, AttributeConstraint]:
+        """Return the normalized :class:`AttributeConstraint` map for *concept_type*.
 
-        Returns all constraints declared for *elem_type* in this profile,
+        Returns all constraints declared for *concept_type* in this profile,
         including those inherited through ``isinstance`` matching (i.e., if
-        the profile declares constraints for a parent type and *elem_type*
+        the profile declares constraints for a parent type and *concept_type*
         is a subclass, this method returns those constraints).
 
-        :param elem_type: A concrete :class:`~etcion.metamodel.concepts.Element`
-            subclass to look up.
+        :param concept_type: A concrete :class:`~etcion.metamodel.concepts.Concept`
+            subclass to look up.  Per ADR-050, this may be an Element,
+            Relationship, or RelationshipConnector subclass.
         :returns: Dict mapping attribute name to :class:`AttributeConstraint`.
             An empty dict is returned if no declarations match.
         """
         result: dict[str, AttributeConstraint] = {}
         for declared_type, constraints in self._constraints.items():
-            if issubclass(elem_type, declared_type):
+            if issubclass(concept_type, declared_type):
                 result.update(constraints)
         return result

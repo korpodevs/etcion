@@ -68,6 +68,15 @@ class TestConcept:
         """Concept.model_config['arbitrary_types_allowed'] is True."""
         assert Concept.model_config.get("arbitrary_types_allowed") is True
 
+    def test_extended_attributes_on_concept_root(self) -> None:
+        """ADR-050: extended_attributes lives on Concept, not Element only."""
+        assert "extended_attributes" in Concept.model_fields
+
+    def test_extended_attributes_default_is_empty_dict(self) -> None:
+        """ADR-050: every Concept subclass has extended_attributes defaulting to {}."""
+        c = ConcreteConcept()
+        assert c.extended_attributes == {}
+
 
 class ConcreteElement_1(Element):
     @property
@@ -261,6 +270,18 @@ class TestRelationship:
         concept_pos = mro.index(Concept)
         assert mixin_pos < concept_pos
 
+    def test_extended_attributes_inherited_from_concept(self) -> None:
+        """ADR-050: a Relationship subclass exposes extended_attributes."""
+        src = ConcreteElement_2(name="src")
+        tgt = ConcreteElement_2(name="tgt")
+        rel = ConcreteRelationship(
+            name="R",
+            source=src,
+            target=tgt,
+            extended_attributes={"priority": "high"},
+        )
+        assert rel.extended_attributes == {"priority": "high"}
+
 
 class ConcreteConnector(RelationshipConnector):
     @property
@@ -315,3 +336,8 @@ class TestRelationshipConnector:
     def test_no_attribute_mixin_in_mro(self) -> None:
         """AttributeMixin is not in RelationshipConnector.__mro__."""
         assert AttributeMixin not in RelationshipConnector.__mro__
+
+    def test_extended_attributes_inherited_from_concept(self) -> None:
+        """ADR-050: a RelationshipConnector subclass exposes extended_attributes."""
+        c = ConcreteConnector(extended_attributes={"role": "junction"})
+        assert c.extended_attributes == {"role": "junction"}

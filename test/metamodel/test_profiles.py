@@ -191,16 +191,38 @@ class TestSpecializationKeyValidation:
 
 
 class TestAttributeExtensionKeyValidation:
-    """STORY-18.2.1: attribute_extensions keys must be Element subclasses."""
+    """STORY-18.2.1 / ADR-050: attribute_extensions keys must be Concept subclasses.
 
-    def test_non_element_key_rejected(self) -> None:
+    Per ADR-050, ``attribute_extensions`` keys broadened from ``Element`` to
+    ``Concept``: profiles may declare extended attributes for elements,
+    relationships, and connectors alike.  ``specializations`` keys remain
+    Element-only.
+    """
+
+    def test_non_concept_key_rejected(self) -> None:
         with pytest.raises(
-            PydanticValidationError, match="attribute_extensions.*not a subclass of Element"
+            PydanticValidationError, match="attribute_extensions.*not a subclass of Concept"
         ):
             Profile(
                 name="Bad",
                 attribute_extensions={int: {"x": str}},  # type: ignore[dict-item]
             )
+
+    def test_relationship_key_accepted(self) -> None:
+        """ADR-050: a Relationship subclass is now a valid attribute_extensions key."""
+        from etcion.metamodel.relationships import Serving
+
+        p = Profile(name="Ok", attribute_extensions={Serving: {"priority": int}})
+        assert Serving in p.attribute_extensions
+        assert "priority" in p.get_constraints(Serving)
+
+    def test_connector_key_accepted(self) -> None:
+        """ADR-050: a RelationshipConnector subclass is now a valid attribute_extensions key."""
+        from etcion.metamodel.relationships import Junction
+
+        p = Profile(name="Ok", attribute_extensions={Junction: {"role": str}})
+        assert Junction in p.attribute_extensions
+        assert "role" in p.get_constraints(Junction)
 
 
 # ===========================================================================

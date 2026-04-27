@@ -50,6 +50,20 @@ class Concept(abc.ABC, BaseModel):
     is accepted to support Archi-prefixed IDs (e.g. ``id-<uuid>``) and plain
     UUID strings from the Open Group Exchange Format."""
 
+    extended_attributes: dict[str, Any] = Field(default_factory=dict)
+    """Arbitrary extended attributes declared by a
+    :class:`~etcion.metamodel.profiles.Profile`.
+
+    Available on every :class:`Concept` subclass -- elements, relationships,
+    and connectors -- so that profile-declared attributes (including
+    provenance keys) can attach to any concept.  Keys are attribute names;
+    values are profile-declared data of any type.  Type checking against the
+    profile's ``attribute_extensions`` schema is performed by
+    :meth:`~etcion.metamodel.model.Model.validate`.
+
+    Reference: ADR-050.
+    """
+
     @property
     @abstractmethod
     def _type_name(self) -> str:
@@ -82,15 +96,6 @@ class Element(AttributeMixin, Concept):
     type, as declared by a :class:`~etcion.metamodel.profiles.Profile`.
     Validation against a registered profile is performed by
     ``Model.validate()``.
-    """
-
-    extended_attributes: dict[str, Any] = Field(default_factory=dict)
-    """Arbitrary extended attributes declared by a
-    :class:`~etcion.metamodel.profiles.Profile`.
-
-    Keys are attribute names; values are profile-declared data of any type.
-    Type checking against the profile's ``attribute_extensions`` schema is
-    performed by ``Model.validate()``.
     """
 
 
