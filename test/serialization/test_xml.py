@@ -806,6 +806,71 @@ class TestProfileXmlRoundTrip:
         assert len(restored.elements) == len(simple_model.elements)
 
 
+class TestRelationshipExtendedAttributesRoundTrip:
+    """ADR-050 / Issue #100 — extended_attributes on relationships round-trip cleanly."""
+
+    def _build(self) -> Model:
+        m = Model()
+        comp = ApplicationComponent(name="Order API")
+        svc = BusinessService(name="Order Fulfilment")
+        rel = Serving(
+            name="",
+            source=comp,
+            target=svc,
+            extended_attributes={
+                "_provenance_source": "etl-v2",
+                "_provenance_confidence": 0.87,
+                "_provenance_reviewed": False,
+            },
+        )
+        m.add(comp)
+        m.add(svc)
+        m.add(rel)
+        m.apply_profile(
+            Profile(
+                name="RelOps",
+                attribute_extensions={
+                    Serving: {
+                        "_provenance_source": str,
+                        "_provenance_confidence": float,
+                        "_provenance_reviewed": bool,
+                    },
+                },
+            )
+        )
+        return m
+
+    def test_round_trip_relationship_extended_attributes(self) -> None:
+        """Extended attributes on a Relationship survive serialize/deserialize."""
+        original = self._build()
+        tree = serialize_model(original)
+        restored = deserialize_model(tree)
+
+        rel = restored.relationships[0]
+        assert rel.extended_attributes == {
+            "_provenance_source": "etl-v2",
+            "_provenance_confidence": 0.87,
+            "_provenance_reviewed": False,
+        }
+
+    def test_serialized_xml_is_xsd_valid(self) -> None:
+        """<properties> on <relationship> must be XSD-valid against the bundled schema."""
+        tree = serialize_model(self._build(), model_name="ADR050 Round-trip")
+        errors = validate_exchange_format(tree)
+        assert errors == [], f"XSD validation errors: {errors}"
+
+    def test_relationship_propdefs_emitted(self) -> None:
+        """propdef-discovery walk includes Relationship subclasses (ADR-050)."""
+        tree = serialize_model(self._build())
+        root = tree.getroot()
+        propdefs = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        assert propdefs is not None
+        ids = [pd.get("identifier") for pd in propdefs]
+        assert "propdef-Serving-_provenance_source" in ids
+        assert "propdef-Serving-_provenance_confidence" in ids
+        assert "propdef-Serving-_provenance_reviewed" in ids
+
+
 class TestProfileXmlRoundTripIntegrity:
     """Issue #50 — comprehensive round-trip integrity for XML profile serialization."""
 

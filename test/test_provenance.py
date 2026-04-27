@@ -367,3 +367,134 @@ class TestLowConfidenceElements:
 
         assert hasattr(etcion, "low_confidence_elements")
         assert etcion.low_confidence_elements is low_confidence_elements
+
+
+# ===========================================================================
+# ADR-050 / Issue #100 — concept-wide provenance helpers
+# ===========================================================================
+
+
+class TestUnreviewedConcepts:
+    """unreviewed_concepts walks elements, relationships, and connectors."""
+
+    def _build(self) -> Model:
+        from etcion import unreviewed_concepts  # noqa: F401  (import-time check)
+        from etcion.metamodel.application import ApplicationComponent, ApplicationService
+        from etcion.metamodel.relationships import Serving
+
+        m = Model()
+        m.apply_profile(INGESTION_PROFILE)
+        m.apply_profile(
+            Profile(
+                name="RelProvenance",
+                attribute_extensions={
+                    Serving: {
+                        "_provenance_source": str,
+                        "_provenance_reviewed": bool,
+                    },
+                },
+            )
+        )
+        elem = ApplicationComponent(
+            name="reviewed-elem",
+            extended_attributes={"_provenance_source": "etl", "_provenance_reviewed": True},
+        )
+        unreviewed_elem = ApplicationService(
+            name="unreviewed-elem",
+            extended_attributes={"_provenance_source": "etl", "_provenance_reviewed": False},
+        )
+        unreviewed_rel = Serving(
+            name="",
+            source=elem,
+            target=unreviewed_elem,
+            extended_attributes={"_provenance_source": "rg", "_provenance_reviewed": False},
+        )
+        m.add(elem)
+        m.add(unreviewed_elem)
+        m.add(unreviewed_rel)
+        return m
+
+    def test_returns_unreviewed_relationship(self) -> None:
+        from etcion import unreviewed_concepts
+
+        result = unreviewed_concepts(self._build())
+        names_or_types = {getattr(c, "name", None) or type(c).__name__ for c in result}
+        assert "unreviewed-elem" in names_or_types
+        assert "Serving" in names_or_types  # the relationship was synthesized
+
+    def test_excludes_reviewed_concepts(self) -> None:
+        from etcion import unreviewed_concepts
+
+        result = unreviewed_concepts(self._build())
+        names = {getattr(c, "name", None) for c in result}
+        assert "reviewed-elem" not in names
+
+    def test_element_only_helper_unchanged(self) -> None:
+        """unreviewed_elements still returns list[Element] only (no relationships)."""
+        from etcion.provenance import unreviewed_elements
+
+        m = self._build()
+        result = unreviewed_elements(m)
+        from etcion.metamodel.concepts import Element
+
+        assert all(isinstance(c, Element) for c in result)
+
+    def test_exported_from_package(self) -> None:
+        from etcion import (
+            concepts_by_source,
+            low_confidence_concepts,
+            unreviewed_concepts,
+        )
+
+        assert callable(unreviewed_concepts)
+        assert callable(concepts_by_source)
+        assert callable(low_confidence_concepts)
+
+
+class TestConceptsBySource:
+    def test_includes_relationships(self) -> None:
+        from etcion import concepts_by_source
+        from etcion.metamodel.application import ApplicationComponent, ApplicationService
+        from etcion.metamodel.relationships import Serving
+
+        m = Model()
+        m.apply_profile(INGESTION_PROFILE)
+        m.apply_profile(
+            Profile(
+                name="RelProv",
+                attribute_extensions={Serving: {"_provenance_source": str}},
+            )
+        )
+        a = ApplicationComponent(name="a", extended_attributes={"_provenance_source": "rg"})
+        b = ApplicationService(name="b")
+        rel = Serving(source=a, target=b, extended_attributes={"_provenance_source": "rg"})
+        m.add(a)
+        m.add(b)
+        m.add(rel)
+        result = concepts_by_source(m, "rg")
+        # The element and the relationship both match.
+        assert len(result) == 2
+
+
+class TestLowConfidenceConcepts:
+    def test_includes_low_confidence_relationship(self) -> None:
+        from etcion import low_confidence_concepts
+        from etcion.metamodel.application import ApplicationComponent, ApplicationService
+        from etcion.metamodel.relationships import Serving
+
+        m = Model()
+        m.apply_profile(
+            Profile(
+                name="Conf",
+                attribute_extensions={Serving: {"_provenance_confidence": float}},
+            )
+        )
+        a = ApplicationComponent(name="a")
+        b = ApplicationService(name="b")
+        rel = Serving(source=a, target=b, extended_attributes={"_provenance_confidence": 0.3})
+        m.add(a)
+        m.add(b)
+        m.add(rel)
+        result = low_confidence_concepts(m, threshold=0.5)
+        assert len(result) == 1
+        assert isinstance(result[0], Serving)

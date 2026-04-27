@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Behavior changes
+
+- **`extended_attributes` lifted from `Element` to `Concept`** (closes #100).
+  Relationships and connectors (Junction) can now carry profile-declared
+  extended attributes -- including provenance keys -- in the same way
+  elements do. `Element.extended_attributes` callers continue to work
+  unchanged; the field is now inherited from one level up. `Profile`'s
+  `attribute_extensions` keys broadened from `Element` to `Concept`;
+  `specializations` keys remain `Element`-only. `Model.validate()` now
+  walks all concepts when checking extended-attribute conformance.
+  Relationship `<properties>` round-trip cleanly through XML. See
+  [ADR-050](docs/adr/ADR-050-extended-attributes-on-concept.md).
+
+  Note: relationship-level `<properties>` written by etcion >= 0.12 cannot
+  be deserialized by older versions; extended-attribute data on
+  relationships is silently dropped on re-export by older readers.
+
+### Added
+
+- Concept-wide provenance helpers: `unreviewed_concepts`,
+  `concepts_by_source`, `low_confidence_concepts`. The element-scoped
+  helpers (`unreviewed_elements`, etc.) preserve their `list[Element]`
+  return contract unchanged.
+
+### Fixed
+
+- XML round-trip of `bool` extended attributes was previously broken
+  because `bool("False")` is `True`. The deserializer now coerces
+  bool values via case-insensitive string comparison.
+
 ## [0.11.1] - 27 Apr 2026
 
 ### Behavior changes
