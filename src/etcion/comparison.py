@@ -24,6 +24,17 @@ class FieldChange:
     old: Any
     new: Any
 
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable representation of the value pair.
+
+        The returned shape is ``{"old": ..., "new": ...}`` -- intentionally
+        without a ``"field"`` key because :class:`FieldChange` instances are
+        the values of a field-keyed mapping in :attr:`ConceptChange.changes`,
+        and embedding the field name inside the value would duplicate it.
+        Callers reconstructing a flat row can use the outer dict key.
+        """
+        return {"old": self.old, "new": self.new}
+
 
 @dataclass(frozen=True)
 class ConceptChange:
@@ -32,6 +43,19 @@ class ConceptChange:
     concept_id: str
     concept_type: str
     changes: dict[str, FieldChange]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable representation of this change record.
+
+        Useful when persisting per-conflict rows (e.g. each
+        :attr:`~etcion.merge.MergeResult.conflicts` entry into an audit
+        table) without going through :meth:`ModelDiff.to_dict`.
+        """
+        return {
+            "concept_id": self.concept_id,
+            "concept_type": self.concept_type,
+            "changes": {k: fc.to_dict() for k, fc in self.changes.items()},
+        }
 
 
 @dataclass(frozen=True)
@@ -52,18 +76,11 @@ class ModelDiff:
                 "name": getattr(c, "name", None),
             }
 
-        def _change_entry(cc: ConceptChange) -> dict[str, Any]:
-            return {
-                "concept_id": cc.concept_id,
-                "concept_type": cc.concept_type,
-                "changes": {k: {"old": fc.old, "new": fc.new} for k, fc in cc.changes.items()},
-            }
-
         return {
             "_schema_version": "1.0",
             "added": [_concept_entry(c) for c in self.added],
             "removed": [_concept_entry(c) for c in self.removed],
-            "modified": [_change_entry(cc) for cc in self.modified],
+            "modified": [cc.to_dict() for cc in self.modified],
         }
 
     def summary(self) -> str:

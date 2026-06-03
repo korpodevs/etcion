@@ -30,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `concepts_by_source`, `low_confidence_concepts`. The element-scoped
   helpers (`unreviewed_elements`, etc.) preserve their `list[Element]`
   return contract unchanged.
+- `FieldChange.to_dict()` and `ConceptChange.to_dict()` (closes #105).
+  The per-row JSON-serializable helper that was previously inlined inside
+  `ModelDiff.to_dict()` is now public on each dataclass, so consumers
+  persisting individual diff rows (e.g. `MergeResult.conflicts` entries
+  into an audit table) no longer need to reimplement it.
+  `ModelDiff.to_dict()`'s output shape is byte-identical -- the
+  `_schema_version` stays at `"1.0"`.
 
 ### Fixed
 
