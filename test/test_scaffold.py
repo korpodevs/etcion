@@ -69,7 +69,7 @@ class TestProjectMetadata:
 
     def test_project_version(self) -> None:
         data = _load_toml()
-        assert data["project"]["version"] == "0.11.1"
+        assert data["project"]["version"] == "0.12.0"
 
     def test_requires_python(self) -> None:
         data = _load_toml()
