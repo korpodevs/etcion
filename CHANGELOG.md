@@ -43,6 +43,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - XML round-trip of `bool` extended attributes was previously broken
   because `bool("False")` is `True`. The deserializer now coerces
   bool values via case-insensitive string comparison.
+- `write_model` / `serialize_model` no longer raise `KeyError` when a
+  profile declares `attribute_extensions` against an abstract base
+  (`Element`, `Relationship`, or `Concept`). Abstract keys are now fanned
+  out to one property definition per concrete concept type present in the
+  model, matching `Profile.get_constraints`' subclass-aware semantics on
+  the validation side. The reconstructed profile after a round-trip is
+  keyed on those concrete types rather than the original abstract base.
+  Closes #110.
 
 ## [0.11.1] - 27 Apr 2026
 
