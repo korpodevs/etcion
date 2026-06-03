@@ -345,43 +345,54 @@ class Model:
                             raise err
                         errors.append(err)
 
-        # FEAT-18.3: Profile validation.
-        for elem in self.elements:
-            # Check specialization string
-            if elem.specialization is not None:
-                if elem.specialization not in self._specialization_registry:
+        # FEAT-18.3 / ADR-050: Profile validation.
+        # Specialization is Element-only; extended_attributes apply to every Concept.
+        from etcion.metamodel.profiles import AttributeConstraint
+
+        for concept in self._concepts.values():
+            # Build a typed label for error messages: "Element", "Relationship",
+            # or the connector class name (e.g. "Junction").
+            if isinstance(concept, Element):
+                label = "Element"
+            elif isinstance(concept, Relationship):
+                label = "Relationship"
+            else:
+                label = type(concept).__name__
+
+            # Specialization is Element-only -- relationships and connectors
+            # do not specialize per ArchiMate 3.2.
+            if isinstance(concept, Element) and concept.specialization is not None:
+                if concept.specialization not in self._specialization_registry:
                     err = ValidationError(
-                        f"Element '{elem.id}': specialization "
-                        f"'{elem.specialization}' is not declared in any profile"
+                        f"Element '{concept.id}': specialization "
+                        f"'{concept.specialization}' is not declared in any profile"
                     )
                     if strict:
                         raise err
                     errors.append(err)
                 else:
-                    expected_base = self._specialization_registry[elem.specialization]
-                    if not isinstance(elem, expected_base):
+                    expected_base = self._specialization_registry[concept.specialization]
+                    if not isinstance(concept, expected_base):
                         err = ValidationError(
-                            f"Element '{elem.id}': specialization "
-                            f"'{elem.specialization}' requires base type "
-                            f"{expected_base.__name__}, got {type(elem).__name__}"
+                            f"Element '{concept.id}': specialization "
+                            f"'{concept.specialization}' requires base type "
+                            f"{expected_base.__name__}, got {type(concept).__name__}"
                         )
                         if strict:
                             raise err
                         errors.append(err)
 
-            # Check extended_attributes against profile declarations
-            # Build the constraint map for this element type from all profiles.
-            from etcion.metamodel.profiles import AttributeConstraint
-
+            # Check extended_attributes against profile declarations.
+            # Per ADR-050, this loop runs for elements, relationships, and connectors.
             declared_constraints: dict[str, AttributeConstraint] = {}
             for prof in self._profiles:
-                declared_constraints.update(prof.get_constraints(type(elem)))
+                declared_constraints.update(prof.get_constraints(type(concept)))
 
-            # Check undeclared attributes (present on element but not in any profile).
-            for attr_name in elem.extended_attributes:
+            # Check undeclared attributes (present on concept but not in any profile).
+            for attr_name in concept.extended_attributes:
                 if attr_name not in declared_constraints:
                     err = ValidationError(
-                        f"Element '{elem.id}': extended attribute "
+                        f"{label} '{concept.id}': extended attribute "
                         f"'{attr_name}' is not declared in any profile"
                     )
                     if strict:
@@ -390,12 +401,12 @@ class Model:
 
             # Check declared constraints against actual attribute values.
             for attr_name, constraint in declared_constraints.items():
-                attr_value = elem.extended_attributes.get(attr_name)
+                attr_value = concept.extended_attributes.get(attr_name)
 
                 # required: attribute must be present and non-None.
                 if constraint.required and attr_value is None:
                     err = ValidationError(
-                        f"Element '{elem.id}': extended attribute "
+                        f"{label} '{concept.id}': extended attribute "
                         f"'{attr_name}' is required but missing"
                     )
                     if strict:
@@ -410,7 +421,7 @@ class Model:
                 # type check
                 if not isinstance(attr_value, constraint.attr_type):
                     err = ValidationError(
-                        f"Element '{elem.id}': extended attribute "
+                        f"{label} '{concept.id}': extended attribute "
                         f"'{attr_name}' expected type "
                         f"{constraint.attr_type.__name__}, "
                         f"got {type(attr_value).__name__}"
@@ -423,7 +434,7 @@ class Model:
                 # allowed list check
                 if constraint.allowed is not None and attr_value not in constraint.allowed:
                     err = ValidationError(
-                        f"Element '{elem.id}': extended attribute "
+                        f"{label} '{concept.id}': extended attribute "
                         f"'{attr_name}' value {attr_value!r} is not in the "
                         f"allowed list {constraint.allowed!r}"
                     )
@@ -441,7 +452,7 @@ class Model:
                         below_min = False
                     if below_min:
                         err = ValidationError(
-                            f"Element '{elem.id}': extended attribute "
+                            f"{label} '{concept.id}': extended attribute "
                             f"'{attr_name}' value {attr_value!r} is below "
                             f"min {constraint.min!r}"
                         )
@@ -456,7 +467,7 @@ class Model:
                         above_max = False
                     if above_max:
                         err = ValidationError(
-                            f"Element '{elem.id}': extended attribute "
+                            f"{label} '{concept.id}': extended attribute "
                             f"'{attr_name}' value {attr_value!r} is above "
                             f"max {constraint.max!r}"
                         )

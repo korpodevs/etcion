@@ -52,6 +52,20 @@ _XSD_TO_PY_TYPE: dict[str, type] = {
 # Allowed Python type name strings for constraint deserialization.
 _ALLOWED_TYPES: dict[str, type] = {"str": str, "int": int, "float": float, "bool": bool}
 
+
+def _coerce_attr_value(text: str, py_type: type) -> Any:  # noqa: ANN401
+    """Coerce a serialized attribute value back to *py_type*.
+
+    Handles the bool special case where ``bool("False") is True``.  All other
+    types use the type constructor directly.  The return type is intentionally
+    ``Any`` because *py_type* is itself dynamic (str/int/float/bool from the
+    propdef map).
+    """
+    if py_type is bool:
+        return text.strip().lower() in {"true", "1", "yes"}
+    return py_type(text)
+
+
 # Well-known propertyDefinition identifier for the specialization field.
 _SPECIALIZATION_PROPDEF_ID = "propdef-specialization"
 
@@ -65,6 +79,30 @@ _ETCION_NSMAP: dict[str | None, str] = {**NSMAP, "etcion": _ETCION_NS}
 def _to_exchange_id(internal_id: str) -> str:
     """Wrap bare UUID as ``id-{uuid}``; pass through if already prefixed."""
     return internal_id if internal_id.startswith("id-") else f"id-{internal_id}"
+
+
+def _expanded_attribute_extensions(
+    profile: Profile, present_types: set[type[Concept]]
+) -> dict[type[Concept], dict[str, Any]]:
+    """Fan abstract profile keys out to concrete concept types in the model.
+
+    Profile.get_constraints honors abstract bases via issubclass matching, but
+    the XML Exchange Format keys property definitions by concrete type tag.
+    Abstract keys (e.g. ``Element``, ``Relationship``, ``Concept``) are absent
+    from TYPE_REGISTRY, so this helper expands each abstract entry to one
+    entry per concrete type of the right shape present in the model.  Concrete
+    keys pass through unchanged.  On (type, attr) collisions the later-declared
+    entry wins — matching Profile.get_constraints' merge order.
+    """
+    expanded: dict[type[Concept], dict[str, Any]] = {}
+    for cls, attrs in profile.attribute_extensions.items():
+        if cls in TYPE_REGISTRY:
+            targets: list[type[Concept]] = [cls]
+        else:
+            targets = [c for c in present_types if issubclass(c, cls)]
+        for tgt in targets:
+            expanded.setdefault(tgt, {}).update(attrs)
+    return expanded
 
 
 def serialize_element(elem: Element) -> etree._Element:
@@ -107,7 +145,14 @@ def serialize_element(elem: Element) -> etree._Element:
 
 
 def serialize_relationship(rel: Relationship) -> etree._Element:
-    """Serialize a single Relationship to an lxml element node."""
+    """Serialize a single Relationship to an lxml element node.
+
+    Per ADR-050, ``extended_attributes`` declared on a Relationship are
+    emitted as a ``<properties>`` block mirroring the Element path.  The
+    propdef-id scheme namespaces by the relationship's xml_tag so collisions
+    with element propdefs are not possible (relationship and element xml_tag
+    spaces are disjoint).
+    """
     desc = TYPE_REGISTRY[type(rel)]
     el = etree.Element(f"{{{ARCHIMATE_NS}}}relationship", nsmap=NSMAP)
     el.set("identifier", _to_exchange_id(rel.id))
@@ -119,6 +164,16 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
         name_el = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}name")
         name_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
         name_el.text = rel.name
+
+    if rel.extended_attributes:
+        props_container = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}properties")
+        type_name = desc.xml_tag
+        for attr_name, value in rel.extended_attributes.items():
+            prop_el = etree.SubElement(props_container, f"{{{ARCHIMATE_NS}}}property")
+            prop_el.set("propertyDefinitionRef", f"propdef-{type_name}-{attr_name}")
+            val_el = etree.SubElement(prop_el, f"{{{ARCHIMATE_NS}}}value")
+            val_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
+            val_el.text = str(value)
 
     for attr_name, extractor in desc.extra_attrs.items():
         val = extractor(rel)
@@ -221,20 +276,32 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
     # no dangling propertyDefinitionRef values remain.
     has_specializations = any(e.specialization for e in model.elements)
 
+    # Concrete concept types actually present in the model — drives expansion
+    # of abstract profile keys (Issue #110).  Includes both elements and
+    # relationships since ADR-050 broadened attribute_extensions keys from
+    # Element to Concept.
+    present_concept_types: set[type[Concept]] = {
+        type(c) for c in (*model.elements, *model.relationships)
+    }
+
     # Build set of profile-declared propdef ids and collect all element refs.
     declared_ids: set[str] = set()
     for profile in model.profiles:
-        for cls, attrs in profile.attribute_extensions.items():
+        for cls, attrs in _expanded_attribute_extensions(profile, present_concept_types).items():
             type_name = TYPE_REGISTRY[cls].xml_tag
             for attr_name in attrs:
                 declared_ids.add(f"propdef-{type_name}-{attr_name}")
 
-    # Discover undeclared extended attributes on elements.
+    # Discover undeclared extended attributes on elements and relationships.
+    # Per ADR-050 the propdef discovery walk includes relationships so that the
+    # <propertyDefinitions> block is complete for any concept that carries a
+    # property bag; the element/relationship xml_tag spaces are disjoint, so
+    # propdef ids cannot collide.
     undeclared: dict[str, str] = {}  # propdef_id -> attr_name
-    for elem in model.elements:
-        if elem.extended_attributes:
-            type_name = TYPE_REGISTRY[type(elem)].xml_tag
-            for attr_name in elem.extended_attributes:
+    for concept in (*model.elements, *model.relationships):
+        if concept.extended_attributes:
+            type_name = TYPE_REGISTRY[type(concept)].xml_tag
+            for attr_name in concept.extended_attributes:
                 pid = f"propdef-{type_name}-{attr_name}"
                 if pid not in declared_ids:
                     undeclared[pid] = attr_name
@@ -251,7 +318,9 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
             pd_name.text = "specialization"
 
         for profile in model.profiles:
-            for cls, attrs in profile.attribute_extensions.items():
+            for cls, attrs in _expanded_attribute_extensions(
+                profile, present_concept_types
+            ).items():
                 type_name = TYPE_REGISTRY[cls].xml_tag
                 for attr_name, raw_value in attrs.items():
                     # Resolve the Python type whether raw_value is a bare type or dict.
@@ -284,7 +353,7 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
     #       </etcion:elementType>
     #     </etcion:profile>
     #   </etcion:profileConstraints>
-    constraint_profiles = _collect_constraint_profiles(model)
+    constraint_profiles = _collect_constraint_profiles(model, present_concept_types)
     if constraint_profiles:
         pc_root = etree.SubElement(root, f"{{{_ETCION_NS}}}profileConstraints")
         for prof_name, type_attrs in constraint_profiles.items():
@@ -309,7 +378,7 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
 
 
 def _collect_constraint_profiles(
-    model: Model,
+    model: Model, present_concept_types: set[type[Concept]]
 ) -> dict[str, dict[str, dict[str, Any]]]:
     """Collect constraint metadata from profiles that use the dict constraint form.
 
@@ -321,11 +390,15 @@ def _collect_constraint_profiles(
     constraint with the ``type`` key replaced by the type's ``__name__`` string.
 
     Only profiles that have at least one dict-form constraint are included.
+
+    Abstract profile keys (e.g. ``Element``) are fanned out to the concrete
+    element types present in the model (Issue #110); the emitted metadata
+    matches the concrete propdef ids written elsewhere in the serializer.
     """
     result: dict[str, dict[str, dict[str, Any]]] = {}
     for profile in model.profiles:
         type_map: dict[str, dict[str, Any]] = {}
-        for cls, attrs in profile.attribute_extensions.items():
+        for cls, attrs in _expanded_attribute_extensions(profile, present_concept_types).items():
             xml_tag = TYPE_REGISTRY[cls].xml_tag
             attr_map: dict[str, Any] = {}
             for attr_name, raw_value in attrs.items():
@@ -400,7 +473,7 @@ def _deserialize_element(
                 specialization = val_node.text
             elif propdef_map and ref in propdef_map:
                 attr_name, attr_type = propdef_map[ref]
-                extended_attributes[attr_name] = attr_type(val_node.text)
+                extended_attributes[attr_name] = _coerce_attr_value(val_node.text, attr_type)
 
     kwargs: dict[str, Any] = {}
     if specialization:
@@ -413,12 +486,18 @@ def _deserialize_element(
 def _deserialize_relationship(
     node: etree._Element,
     id_map: dict[str, Concept],
+    propdef_map: dict[str, tuple[str, type]] | None = None,
 ) -> Relationship | None:
     """Deserialize a single ``<relationship>`` node.
 
     Source and target are resolved from ``id_map`` (keyed by exchange-format
     IDs, e.g. ``id-<uuid>``).  Returns ``None`` and emits a warning when the
     type is unknown or a reference cannot be resolved.
+
+    Per ADR-050, ``<properties>`` children declared on a relationship are
+    re-hydrated into ``extended_attributes`` via ``propdef_map`` (the same
+    mapping used by :func:`_deserialize_element`).  Pass ``None`` for models
+    without profile-declared relationship properties.
     """
     type_attr = node.get(f"{{{XSI_NS}}}type")
     if type_attr not in _TAG_TO_TYPE:
@@ -435,8 +514,23 @@ def _deserialize_relationship(
         return None
     name_node = node.find(f"{{{ARCHIMATE_NS}}}name")
     name: str = name_node.text or "" if name_node is not None else ""
+
+    extended_attributes: dict[str, Any] = {}
+    props_node = node.find(f"{{{ARCHIMATE_NS}}}properties")
+    if props_node is not None and propdef_map:
+        for prop_node in props_node:
+            ref = prop_node.get("propertyDefinitionRef", "")
+            val_node = prop_node.find(f"{{{ARCHIMATE_NS}}}value")
+            if val_node is None or not val_node.text:
+                continue
+            if ref in propdef_map:
+                attr_name, attr_type = propdef_map[ref]
+                extended_attributes[attr_name] = _coerce_attr_value(val_node.text, attr_type)
+
     # Extra attrs (access_mode, sign, etc.) are deferred; Serving has none.
     kwargs: dict[str, Any] = {}
+    if extended_attributes:
+        kwargs["extended_attributes"] = extended_attributes
     return cls(id=internal_id, name=name, source=source, target=target, **kwargs)  # type: ignore[call-arg, return-value]
 
 
@@ -457,9 +551,12 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
     root = tree.getroot()
     model = Model()
 
-    # Phase 1: parse propertyDefinitions
+    # Phase 1: parse propertyDefinitions.
+    # Per ADR-050 the synthetic "Imported" profile may target any Concept
+    # subclass (Element, Relationship, or RelationshipConnector), so the
+    # attr_extensions registry is keyed on Concept rather than Element only.
     propdef_map: dict[str, tuple[str, type]] = {}
-    attr_extensions: dict[type[Element], dict[str, type]] = {}
+    attr_extensions: dict[type[Concept], dict[str, type]] = {}
     propdefs_node = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
     if propdefs_node is not None:
         for pd_node in propdefs_node:
@@ -472,31 +569,26 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
             # Identifier scheme: "propdef-TypeName-attr_name"
             parts = pd_id.split("-", 2)
             if len(parts) == 3 and parts[1] in _TAG_TO_TYPE:
-                raw_cls = _TAG_TO_TYPE[parts[1]]
-                if not (isinstance(raw_cls, type) and issubclass(raw_cls, Element)):
-                    continue
-                elem_cls: type[Element] = raw_cls
-                if elem_cls not in attr_extensions:
-                    attr_extensions[elem_cls] = {}
-                attr_extensions[elem_cls][attr_name] = py_type
+                concept_cls: type[Concept] = _TAG_TO_TYPE[parts[1]]
+                if concept_cls not in attr_extensions:
+                    attr_extensions[concept_cls] = {}
+                attr_extensions[concept_cls][attr_name] = py_type
 
     # Phase 1b: parse <etcion:profileConstraints> if present (Issue #52).
     # This element carries the full constraint metadata for profiles that use
     # the dict constraint form and was written by serialize_model.
     # Constraint metadata is indexed by (xml_tag, attr_name) to allow overlay
     # onto the attr_extensions built from <propertyDefinitions>.
-    imported_constraints: dict[type[Element], dict[str, Any]] = {}
+    imported_constraints: dict[type[Concept], dict[str, Any]] = {}
     pc_node = root.find(f"{{{_ETCION_NS}}}profileConstraints")
     if pc_node is not None:
         for prof_el in pc_node:
             for et_el in prof_el:
                 xml_tag = et_el.get("tag", "")
                 elem_cls_raw = _TAG_TO_TYPE.get(xml_tag)
-                if elem_cls_raw is None or not (
-                    isinstance(elem_cls_raw, type) and issubclass(elem_cls_raw, Element)
-                ):
+                if elem_cls_raw is None:
                     continue
-                elem_cls_ct: type[Element] = elem_cls_raw
+                concept_cls_ct: type[Concept] = elem_cls_raw
                 for a_el in et_el:
                     a_name = a_el.get("name", "")
                     raw_text = a_el.text or "{}"
@@ -506,9 +598,9 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
                         constraint_dict["type"] = _ALLOWED_TYPES.get(
                             constraint_dict.get("type", "str"), str
                         )
-                        if elem_cls_ct not in imported_constraints:
-                            imported_constraints[elem_cls_ct] = {}
-                        imported_constraints[elem_cls_ct][a_name] = constraint_dict
+                        if concept_cls_ct not in imported_constraints:
+                            imported_constraints[concept_cls_ct] = {}
+                        imported_constraints[concept_cls_ct][a_name] = constraint_dict
                     except (json.JSONDecodeError, KeyError):
                         pass  # gracefully skip malformed constraint entries
 
@@ -550,11 +642,13 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
     for elem in parsed_elements:
         model.add(elem)
 
-    # Phase 5: relationships
+    # Phase 5: relationships.  Per ADR-050 the propdef_map is also threaded
+    # into the relationship deserializer so that <properties> on a
+    # <relationship> rehydrate into rel.extended_attributes.
     rels_node = root.find(f"{{{ARCHIMATE_NS}}}relationships")
     if rels_node is not None:
         for rel_node in rels_node:
-            rel = _deserialize_relationship(rel_node, id_map)
+            rel = _deserialize_relationship(rel_node, id_map, propdef_map if propdef_map else None)
             if rel is not None:
                 model.add(rel)
                 # Keep id_map up to date so views can reference relationships.

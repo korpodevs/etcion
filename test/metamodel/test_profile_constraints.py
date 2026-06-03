@@ -687,3 +687,74 @@ class TestXmlConstraintRoundTrip:
 
         errors = restored.validate()
         assert errors == []
+
+
+# ===========================================================================
+# ADR-050 / Issue #100 — extended_attributes on relationships and connectors
+# ===========================================================================
+
+
+class TestRelationshipExtendedAttributeValidation:
+    """ADR-050: Model.validate() walks relationships for extended-attribute checks.
+
+    Specialization remains Element-only; only the extended_attributes path
+    broadens to Concept.
+    """
+
+    def _build(self, attr_value: object) -> Model:
+        from etcion.metamodel.application import ApplicationComponent, ApplicationService
+        from etcion.metamodel.relationships import Serving
+
+        m = Model()
+        a = ApplicationComponent(name="src")
+        b = ApplicationService(name="tgt")
+        rel = Serving(source=a, target=b, extended_attributes={"priority": attr_value})
+        m.add(a)
+        m.add(b)
+        m.add(rel)
+        m.apply_profile(
+            Profile(
+                name="RelOps",
+                attribute_extensions={Serving: {"priority": str}},
+            )
+        )
+        return m
+
+    def test_valid_relationship_extension_passes(self) -> None:
+        """No extension-related errors when the relationship value matches the constraint.
+
+        The model may surface unrelated permission-matrix warnings for the
+        Serving combination; we filter to extension errors only.
+        """
+        errors = self._build("high").validate()
+        ext_errors = [e for e in errors if "extended attribute" in str(e)]
+        assert ext_errors == []
+
+    def test_undeclared_relationship_extension_flagged(self) -> None:
+        from etcion.metamodel.application import ApplicationComponent, ApplicationService
+        from etcion.metamodel.relationships import Serving
+
+        m = Model()
+        a = ApplicationComponent(name="src")
+        b = ApplicationService(name="tgt")
+        rel = Serving(source=a, target=b, extended_attributes={"unknown_key": "x"})
+        m.add(a)
+        m.add(b)
+        m.add(rel)
+        m.apply_profile(Profile(name="Rel", attribute_extensions={Serving: {"priority": str}}))
+        errors = m.validate()
+        assert any("Relationship" in str(e) and "unknown_key" in str(e) for e in errors)
+
+    def test_type_mismatch_on_relationship_extension(self) -> None:
+        errors = self._build(123).validate()
+        assert any(
+            "Relationship" in str(e) and "priority" in str(e) and "expected type str" in str(e)
+            for e in errors
+        )
+
+    def test_specialization_remains_element_only(self) -> None:
+        """ADR-050 explicitly keeps `specializations` keyed on Element."""
+        from etcion.metamodel.relationships import Serving
+
+        with pytest.raises(PydanticValidationError, match="not a subclass of Element"):
+            Profile(name="bad", specializations={Serving: ["fast"]})  # type: ignore[dict-item]

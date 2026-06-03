@@ -197,10 +197,14 @@ from etcion.metamodel.viewpoint_catalogue import VIEWPOINT_CATALOGUE, ViewpointC
 from etcion.metamodel.viewpoints import Concern, View, Viewpoint
 
 # Phase 8: Built-in provenance metadata profile and query helpers (Issues #25, #26)
+# Concept-wide counterparts added in Issue #100 (ADR-050).
 from etcion.provenance import (
     INGESTION_PROFILE,
+    concepts_by_source,
     elements_by_source,
+    low_confidence_concepts,
     low_confidence_elements,
+    unreviewed_concepts,
     unreviewed_elements,
 )
 from etcion.serialization.graph_data import (
@@ -380,11 +384,15 @@ __all__: list[str] = [
     "MergeResult",
     "merge_models",
     "apply_diff",
-    # Built-in provenance metadata profile and query helpers (Issues #25, #26)
+    # Built-in provenance metadata profile and query helpers (Issues #25, #26).
+    # Concept-wide counterparts added in Issue #100 (ADR-050).
     "INGESTION_PROFILE",
     "unreviewed_elements",
     "elements_by_source",
     "low_confidence_elements",
+    "unreviewed_concepts",
+    "concepts_by_source",
+    "low_confidence_concepts",
     # Graph metadata export helpers (ADR-047, Issue #38; covers #45, #46, #47)
     "ELEMENT_ICONS",
     "LAYER_COLORS",

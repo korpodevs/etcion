@@ -251,6 +251,126 @@ class TestToDict:
         assert d["_schema_version"] == "1.0"
 
 
+class TestFieldChangeToDict:
+    """Issue #105: FieldChange.to_dict() returns {"old", "new"}."""
+
+    def test_basic_shape(self) -> None:
+        fc = FieldChange(field="name", old="Alice", new="Alicia")
+        assert fc.to_dict() == {"old": "Alice", "new": "Alicia"}
+
+    def test_does_not_include_field_key(self) -> None:
+        """The field name is the outer dict key on the parent ConceptChange.
+
+        Embedding it inside the value would duplicate the data; this test
+        pins that contract.
+        """
+        fc = FieldChange(field="name", old="A", new="B")
+        assert "field" not in fc.to_dict()
+
+    def test_none_values_preserved(self) -> None:
+        fc = FieldChange(field="description", old=None, new="some text")
+        assert fc.to_dict() == {"old": None, "new": "some text"}
+
+    def test_nested_dict_value_passthrough(self) -> None:
+        """to_dict must not sanitize values; that is json.dumps's job."""
+        fc = FieldChange(field="extended_attributes", old={"a": 1}, new={"a": 2, "b": 3})
+        assert fc.to_dict() == {"old": {"a": 1}, "new": {"a": 2, "b": 3}}
+
+
+class TestConceptChangeToDict:
+    """Issue #105: ConceptChange.to_dict() exposes the per-row serialization helper."""
+
+    def test_full_shape(self) -> None:
+        cc = ConceptChange(
+            concept_id="a1",
+            concept_type="BusinessActor",
+            changes={
+                "name": FieldChange(field="name", old="Alice", new="Alicia"),
+                "description": FieldChange(field="description", old=None, new="primary user"),
+            },
+        )
+        assert cc.to_dict() == {
+            "concept_id": "a1",
+            "concept_type": "BusinessActor",
+            "changes": {
+                "name": {"old": "Alice", "new": "Alicia"},
+                "description": {"old": None, "new": "primary user"},
+            },
+        }
+
+    def test_empty_changes_dict(self) -> None:
+        """Edge case: a ConceptChange with no field-level changes still serializes cleanly."""
+        cc = ConceptChange(concept_id="a1", concept_type="BusinessActor", changes={})
+        assert cc.to_dict() == {
+            "concept_id": "a1",
+            "concept_type": "BusinessActor",
+            "changes": {},
+        }
+
+    def test_to_dict_is_json_serializable(self) -> None:
+        cc = ConceptChange(
+            concept_id="a1",
+            concept_type="BusinessActor",
+            changes={"name": FieldChange(field="name", old="A", new="B")},
+        )
+        # Must not raise.
+        result = json.dumps(cc.to_dict())
+        assert isinstance(result, str)
+
+
+class TestModelDiffToDictUnchangedShape:
+    """Issue #105: ModelDiff.to_dict() output must be byte-identical after the refactor.
+
+    This is the contract anchor: ModelDiff.to_dict() now delegates to
+    ConceptChange.to_dict() (which delegates to FieldChange.to_dict()), but
+    the wire shape is unchanged. _schema_version stays at "1.0".
+    """
+
+    def test_modeldiff_shape_unchanged_for_modified_entries(self) -> None:
+        """The fixed dict literal pins the wire shape across the refactor."""
+        cc = ConceptChange(
+            concept_id="a1",
+            concept_type="BusinessActor",
+            changes={"name": FieldChange(field="name", old="Alice", new="Alicia")},
+        )
+        diff = ModelDiff(added=(), removed=(), modified=(cc,))
+        assert diff.to_dict() == {
+            "_schema_version": "1.0",
+            "added": [],
+            "removed": [],
+            "modified": [
+                {
+                    "concept_id": "a1",
+                    "concept_type": "BusinessActor",
+                    "changes": {"name": {"old": "Alice", "new": "Alicia"}},
+                }
+            ],
+        }
+
+    def test_full_diff_shape_unchanged(self) -> None:
+        """Comprehensive shape pin: added + removed + modified all in one dict."""
+        added = BusinessActor(id="new1", name="New")
+        removed = BusinessActor(id="gone1", name="Gone")
+        cc = ConceptChange(
+            concept_id="mod1",
+            concept_type="BusinessActor",
+            changes={"name": FieldChange(field="name", old="Old", new="New name")},
+        )
+        diff = ModelDiff(added=(added,), removed=(removed,), modified=(cc,))
+        assert diff.to_dict() == {
+            "_schema_version": "1.0",
+            "added": [{"id": "new1", "type": "BusinessActor", "name": "New"}],
+            "removed": [{"id": "gone1", "type": "BusinessActor", "name": "Gone"}],
+            "modified": [
+                {
+                    "concept_id": "mod1",
+                    "concept_type": "BusinessActor",
+                    "changes": {"name": {"old": "Old", "new": "New name"}},
+                }
+            ],
+        }
+
+
 # ---------------------------------------------------------------------------
 # summary()
 # ---------------------------------------------------------------------------

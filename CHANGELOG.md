@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 02 Jun 2026
+
+### Behavior changes
+
+- **`extended_attributes` lifted from `Element` to `Concept`** (closes #100).
+  Relationships and connectors (Junction) can now carry profile-declared
+  extended attributes -- including provenance keys -- in the same way
+  elements do. `Element.extended_attributes` callers continue to work
+  unchanged; the field is now inherited from one level up. `Profile`'s
+  `attribute_extensions` keys broadened from `Element` to `Concept`;
+  `specializations` keys remain `Element`-only. `Model.validate()` now
+  walks all concepts when checking extended-attribute conformance.
+  Relationship `<properties>` round-trip cleanly through XML. See
+  [ADR-050](docs/adr/ADR-050-extended-attributes-on-concept.md).
+
+  Note: relationship-level `<properties>` written by etcion >= 0.12 cannot
+  be deserialized by older versions; extended-attribute data on
+  relationships is silently dropped on re-export by older readers.
+
+### Added
+
+- Concept-wide provenance helpers: `unreviewed_concepts`,
+  `concepts_by_source`, `low_confidence_concepts`. The element-scoped
+  helpers (`unreviewed_elements`, etc.) preserve their `list[Element]`
+  return contract unchanged.
+- `FieldChange.to_dict()` and `ConceptChange.to_dict()` (closes #105).
+  The per-row JSON-serializable helper that was previously inlined inside
+  `ModelDiff.to_dict()` is now public on each dataclass, so consumers
+  persisting individual diff rows (e.g. `MergeResult.conflicts` entries
+  into an audit table) no longer need to reimplement it.
+  `ModelDiff.to_dict()`'s output shape is byte-identical -- the
+  `_schema_version` stays at `"1.0"`.
+
+### Fixed
+
+- XML round-trip of `bool` extended attributes was previously broken
+  because `bool("False")` is `True`. The deserializer now coerces
+  bool values via case-insensitive string comparison.
+- `write_model` / `serialize_model` no longer raise `KeyError` when a
+  profile declares `attribute_extensions` against an abstract base
+  (`Element`, `Relationship`, or `Concept`). Abstract keys are now fanned
+  out to one property definition per concrete concept type present in the
+  model, matching `Profile.get_constraints`' subclass-aware semantics on
+  the validation side. The reconstructed profile after a round-trip is
+  keyed on those concrete types rather than the original abstract base.
+  Closes #110.
+
 ## [0.11.1] - 27 Apr 2026
 
 ### Behavior changes
