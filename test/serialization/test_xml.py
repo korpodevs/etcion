@@ -1127,3 +1127,105 @@ class TestViewXmlRoundTrip:
         """Models without views round-trip without error and produce no views."""
         restored = self._round_trip(simple_model)
         assert len(restored.views) == 0
+
+
+# ---------------------------------------------------------------------------
+# Issue #110: Element-keyed attribute_extensions must serialize to XML
+# ---------------------------------------------------------------------------
+
+
+class TestIssue110ElementKeyedProfile:
+    """Issue #110 — write_model fails for Profiles with abstract Element
+    attribute_extensions.
+
+    Validation already honors abstract Element keys via subclass matching
+    (Profile.get_constraints).  The XML writer must do the same: an
+    Element-keyed declaration should fan out to a propdef for every concrete
+    element type present in the model.
+    """
+
+    def _build(self) -> Model:
+        from etcion.metamodel.concepts import Element
+
+        m = Model()
+        comp = ApplicationComponent(
+            name="Order Service",
+            extended_attributes={"_owner": "architecture"},
+        )
+        actor = BusinessActor(
+            name="Customer Rep",
+            extended_attributes={"_owner": "ops"},
+        )
+        m.add(comp)
+        m.add(actor)
+        m.add(Association(name="", source=comp, target=actor))
+        m.apply_profile(
+            Profile(
+                name="PipelineMetadata",
+                attribute_extensions={
+                    Element: {"_owner": {"type": str, "required": True}},
+                },
+            )
+        )
+        return m
+
+    def test_serialize_does_not_raise(self) -> None:
+        """The KeyError reported in #110: serialize_model must not raise."""
+        serialize_model(self._build())
+
+    def test_propdef_emitted_per_concrete_type_present(self) -> None:
+        """One propdef per (concrete element type, attr) actually in the model."""
+        root = serialize_model(self._build()).getroot()
+        pd_container = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        assert pd_container is not None
+        identifiers = {pd.get("identifier") for pd in pd_container}
+        assert "propdef-ApplicationComponent-_owner" in identifiers
+        assert "propdef-BusinessActor-_owner" in identifiers
+        # No abstract-base propdef leaks through.
+        assert "propdef-Element-_owner" not in identifiers
+
+    def test_round_trip_validate_passes(self) -> None:
+        """Round-tripped model still validates clean (constraints survived)."""
+        original = self._build()
+        assert original.validate() == []
+        restored = deserialize_model(serialize_model(original))
+        assert restored.validate() == []
+
+    def test_round_trip_constraint_required_enforced(self) -> None:
+        """The 'required' constraint declared abstractly is preserved through XML.
+
+        Drop an _owner from one element after round-trip and confirm validate()
+        flags it — proving the constraint reached the restored profile.
+        """
+        original = self._build()
+        restored = deserialize_model(serialize_model(original))
+        # Strip _owner from one element to provoke the required-check.
+        target = next(e for e in restored.elements if isinstance(e, ApplicationComponent))
+        target.extended_attributes.pop("_owner", None)
+        errors = [str(e) for e in restored.validate()]
+        assert any("_owner" in msg and "required" in msg for msg in errors), errors
+
+    def test_concrete_override_wins_on_collision(self) -> None:
+        """When both Element and a concrete type declare the same attr, the
+        concrete declaration must win (matching Profile.get_constraints
+        last-declared-wins semantics)."""
+        from etcion.metamodel.concepts import Element
+
+        m = Model()
+        comp = ApplicationComponent(name="App", extended_attributes={"_owner": 42})
+        m.add(comp)
+        m.apply_profile(
+            Profile(
+                name="Mixed",
+                attribute_extensions={
+                    Element: {"_owner": str},
+                    ApplicationComponent: {"_owner": int},  # later wins
+                },
+            )
+        )
+        root = serialize_model(m).getroot()
+        pd_container = root.find(f"{{{ARCHIMATE_NS}}}propertyDefinitions")
+        assert pd_container is not None
+        type_by_id = {pd.get("identifier"): pd.get("type") for pd in pd_container}
+        # int -> XSD "number"; if Element's str had won we'd see "string".
+        assert type_by_id["propdef-ApplicationComponent-_owner"] == "number"

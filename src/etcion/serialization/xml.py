@@ -81,6 +81,30 @@ def _to_exchange_id(internal_id: str) -> str:
     return internal_id if internal_id.startswith("id-") else f"id-{internal_id}"
 
 
+def _expanded_attribute_extensions(
+    profile: Profile, present_types: set[type[Concept]]
+) -> dict[type[Concept], dict[str, Any]]:
+    """Fan abstract profile keys out to concrete concept types in the model.
+
+    Profile.get_constraints honors abstract bases via issubclass matching, but
+    the XML Exchange Format keys property definitions by concrete type tag.
+    Abstract keys (e.g. ``Element``, ``Relationship``, ``Concept``) are absent
+    from TYPE_REGISTRY, so this helper expands each abstract entry to one
+    entry per concrete type of the right shape present in the model.  Concrete
+    keys pass through unchanged.  On (type, attr) collisions the later-declared
+    entry wins — matching Profile.get_constraints' merge order.
+    """
+    expanded: dict[type[Concept], dict[str, Any]] = {}
+    for cls, attrs in profile.attribute_extensions.items():
+        if cls in TYPE_REGISTRY:
+            targets: list[type[Concept]] = [cls]
+        else:
+            targets = [c for c in present_types if issubclass(c, cls)]
+        for tgt in targets:
+            expanded.setdefault(tgt, {}).update(attrs)
+    return expanded
+
+
 def serialize_element(elem: Element) -> etree._Element:
     """Serialize a single Element to an lxml element node."""
     desc = TYPE_REGISTRY[type(elem)]
@@ -252,10 +276,18 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
     # no dangling propertyDefinitionRef values remain.
     has_specializations = any(e.specialization for e in model.elements)
 
+    # Concrete concept types actually present in the model — drives expansion
+    # of abstract profile keys (Issue #110).  Includes both elements and
+    # relationships since ADR-050 broadened attribute_extensions keys from
+    # Element to Concept.
+    present_concept_types: set[type[Concept]] = {
+        type(c) for c in (*model.elements, *model.relationships)
+    }
+
     # Build set of profile-declared propdef ids and collect all element refs.
     declared_ids: set[str] = set()
     for profile in model.profiles:
-        for cls, attrs in profile.attribute_extensions.items():
+        for cls, attrs in _expanded_attribute_extensions(profile, present_concept_types).items():
             type_name = TYPE_REGISTRY[cls].xml_tag
             for attr_name in attrs:
                 declared_ids.add(f"propdef-{type_name}-{attr_name}")
@@ -286,7 +318,9 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
             pd_name.text = "specialization"
 
         for profile in model.profiles:
-            for cls, attrs in profile.attribute_extensions.items():
+            for cls, attrs in _expanded_attribute_extensions(
+                profile, present_concept_types
+            ).items():
                 type_name = TYPE_REGISTRY[cls].xml_tag
                 for attr_name, raw_value in attrs.items():
                     # Resolve the Python type whether raw_value is a bare type or dict.
@@ -319,7 +353,7 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
     #       </etcion:elementType>
     #     </etcion:profile>
     #   </etcion:profileConstraints>
-    constraint_profiles = _collect_constraint_profiles(model)
+    constraint_profiles = _collect_constraint_profiles(model, present_concept_types)
     if constraint_profiles:
         pc_root = etree.SubElement(root, f"{{{_ETCION_NS}}}profileConstraints")
         for prof_name, type_attrs in constraint_profiles.items():
@@ -344,7 +378,7 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
 
 
 def _collect_constraint_profiles(
-    model: Model,
+    model: Model, present_concept_types: set[type[Concept]]
 ) -> dict[str, dict[str, dict[str, Any]]]:
     """Collect constraint metadata from profiles that use the dict constraint form.
 
@@ -356,11 +390,15 @@ def _collect_constraint_profiles(
     constraint with the ``type`` key replaced by the type's ``__name__`` string.
 
     Only profiles that have at least one dict-form constraint are included.
+
+    Abstract profile keys (e.g. ``Element``) are fanned out to the concrete
+    element types present in the model (Issue #110); the emitted metadata
+    matches the concrete propdef ids written elsewhere in the serializer.
     """
     result: dict[str, dict[str, dict[str, Any]]] = {}
     for profile in model.profiles:
         type_map: dict[str, dict[str, Any]] = {}
-        for cls, attrs in profile.attribute_extensions.items():
+        for cls, attrs in _expanded_attribute_extensions(profile, present_concept_types).items():
             xml_tag = TYPE_REGISTRY[cls].xml_tag
             attr_map: dict[str, Any] = {}
             for attr_name, raw_value in attrs.items():
