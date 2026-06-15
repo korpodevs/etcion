@@ -1199,9 +1199,11 @@ class TestIssue110ElementKeyedProfile:
         """
         original = self._build()
         restored = deserialize_model(serialize_model(original))
-        # Strip _owner from one element to provoke the required-check.
+        # Replace one element with a copy lacking _owner to provoke the
+        # required-check (concepts are immutable; ADR-051).
         target = next(e for e in restored.elements if isinstance(e, ApplicationComponent))
-        target.extended_attributes.pop("_owner", None)
+        stripped = {k: v for k, v in target.extended_attributes.items() if k != "_owner"}
+        restored._concepts[target.id] = target.model_copy(update={"extended_attributes": stripped})
         errors = [str(e) for e in restored.validate()]
         assert any("_owner" in msg and "required" in msg for msg in errors), errors
 

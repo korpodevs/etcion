@@ -183,7 +183,7 @@ class TestNotation_2:
 class TestMembers:
     def test_members_defaults_to_empty(self) -> None:
         p = Plateau(name="x")
-        assert p.members == []
+        assert p.members == ()
 
     def test_accepts_core_element_as_member(self) -> None:
         wp = WorkPackage(name="Build phase 1")
@@ -197,11 +197,13 @@ class TestMembers:
         p = Plateau(name="x", members=[wp1, wp2])
         assert len(p.members) == 2
 
-    def test_members_list_is_independent_per_instance(self) -> None:
+    def test_members_is_immutable(self) -> None:
+        # members is an immutable tuple (ADR-051), so the shared-mutable-default
+        # hazard cannot occur and in-place mutation is rejected.
         p1 = Plateau(name="a")
-        p2 = Plateau(name="b")
-        p1.members.append(WorkPackage(name="wp"))
-        assert len(p2.members) == 0
+        assert isinstance(p1.members, tuple)
+        with pytest.raises(AttributeError):
+            p1.members.append(WorkPackage(name="wp"))  # type: ignore[attr-defined]
 
 
 @pytest.fixture()

@@ -75,8 +75,10 @@ def _build_lifecycle_model() -> tuple[Model, Profile, Viewpoint, View]:
     """
     model = Model()
 
-    processor = ApplicationComponent(name="Payment Processor")
-    gateway = ApplicationService(name="Payment Gateway")
+    processor = ApplicationComponent(
+        name="Payment Processor", extended_attributes={"risk_score": 0.75}
+    )
+    gateway = ApplicationService(name="Payment Gateway", specialization="primary")
     model.add(processor)
     model.add(gateway)
     # Assignment from ApplicationComponent -> ApplicationService is permitted
@@ -90,10 +92,6 @@ def _build_lifecycle_model() -> tuple[Model, Profile, Viewpoint, View]:
         attribute_extensions={ApplicationComponent: {"risk_score": float}},
     )
     model.apply_profile(profile)
-
-    # Customize elements via the profile
-    gateway.specialization = "primary"
-    processor.extended_attributes["risk_score"] = 0.75
 
     vp = Viewpoint(
         name="Application Usage",
@@ -449,7 +447,9 @@ class TestJsonRoundTrip:
         as ``int`` (not silently promoted to float as happens in XML).
         """
         model = Model()
-        component = ApplicationComponent(name="Auth Service")
+        component = ApplicationComponent(
+            name="Auth Service", extended_attributes={"replica_count": 3}
+        )
         model.add(component)
 
         profile = Profile(
@@ -457,7 +457,6 @@ class TestJsonRoundTrip:
             attribute_extensions={ApplicationComponent: {"replica_count": int}},
         )
         model.apply_profile(profile)
-        component.extended_attributes["replica_count"] = 3
 
         data = model_to_dict(model)
         recovered = model_from_dict(data)

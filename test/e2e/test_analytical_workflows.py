@@ -370,7 +370,8 @@ class TestModelDiffKnownChanges:
         # Rename the first ApplicationComponent in the mutated copy
         target_app = next(iter(model.elements_of_type(ApplicationComponent)))
         original_name = target_app.name
-        target_app.name = "Renamed Application XYZZY"
+        target_app = target_app.model_copy(update={"name": "Renamed Application XYZZY"})
+        model._concepts[target_app.id] = target_app
 
         diff = diff_models(baseline, model)
         modified_ids = {cc.concept_id for cc in diff.modified}
@@ -385,7 +386,8 @@ class TestModelDiffKnownChanges:
         baseline = copy.deepcopy(model)
 
         target_app = next(iter(model.elements_of_type(ApplicationComponent)))
-        target_app.name = "Renamed Application XYZZY"
+        target_app = target_app.model_copy(update={"name": "Renamed Application XYZZY"})
+        model._concepts[target_app.id] = target_app
 
         diff = diff_models(baseline, model)
         change = next((cc for cc in diff.modified if cc.concept_id == target_app.id), None)
@@ -485,11 +487,12 @@ class TestModelMergeConflictDetection:
 
         # Find the shared element in both copies by the same ID
         shared_app_id = next(iter(model.elements_of_type(ApplicationComponent))).id
-        app_in_a = branch_a._concepts[shared_app_id]
-        app_in_b = branch_b._concepts[shared_app_id]
-
-        app_in_a.name = "Branch A Name"
-        app_in_b.name = "Branch B Name"
+        branch_a._concepts[shared_app_id] = branch_a._concepts[shared_app_id].model_copy(
+            update={"name": "Branch A Name"}
+        )
+        branch_b._concepts[shared_app_id] = branch_b._concepts[shared_app_id].model_copy(
+            update={"name": "Branch B Name"}
+        )
 
         # Each branch adds a unique element (non-conflicting)
         branch_a.add(ApplicationComponent(name="Branch A Exclusive App"))

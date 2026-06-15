@@ -21,6 +21,7 @@ Reference: GitHub Issues #2, #3, ADR-041.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Protocol
 
@@ -92,7 +93,7 @@ class AttrPredicate:
         """
         # Resolve the attribute value: extended_attributes first, then direct field.
         ext = getattr(concept, "extended_attributes", {})
-        if isinstance(ext, dict) and self.attr_name in ext:
+        if isinstance(ext, Mapping) and self.attr_name in ext:
             actual = ext[self.attr_name]
         else:
             actual = getattr(concept, self.attr_name, None)

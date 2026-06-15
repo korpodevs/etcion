@@ -66,7 +66,7 @@ class BusinessRole(BusinessInternalActiveStructureElement):
 
 
 class BusinessCollaboration(BusinessInternalActiveStructureElement):
-    assigned_elements: list[ActiveStructureElement] = Field(default_factory=list)
+    assigned_elements: tuple[ActiveStructureElement, ...] = Field(default_factory=tuple)
     notation: ClassVar[NotationMetadata] = NotationMetadata(
         corner_shape="square",
         layer_color="#FFFFB5",
