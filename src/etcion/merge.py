@@ -281,8 +281,8 @@ def merge_models(
     dangling_violations: list[Violation] = []
 
     for rel in rels:
-        new_src = id_map.get(rel.source.id)
-        new_tgt = id_map.get(rel.target.id)
+        new_src = id_map.get(rel.source_id)
+        new_tgt = id_map.get(rel.target_id)
         if new_src is None or new_tgt is None:
             dangling_violations.append(
                 Violation(
@@ -290,12 +290,14 @@ def merge_models(
                     reason=(
                         f"Relationship '{rel.id}' has a dangling endpoint "
                         f"in the merged model "
-                        f"(source='{rel.source.id}', target='{rel.target.id}')"
+                        f"(source='{rel.source_id}', target='{rel.target_id}')"
                     ),
                 )
             )
             continue
-        copied_rels.append(rel.model_copy(deep=True, update={"source": new_src, "target": new_tgt}))
+        # Endpoints are addressed by ID (ADR-051); copies preserve them, so no
+        # re-linking of source/target is required.
+        copied_rels.append(rel.model_copy(deep=True))
 
     # ------------------------------------------------------------------
     # Step 5: assemble the merged Model.
@@ -386,8 +388,8 @@ def apply_diff(
     dangling: list[Violation] = []
 
     for rel in rels:
-        new_src = id_map.get(rel.source.id)
-        new_tgt = id_map.get(rel.target.id)
+        new_src = id_map.get(rel.source_id)
+        new_tgt = id_map.get(rel.target_id)
         if new_src is None or new_tgt is None:
             dangling.append(
                 Violation(
@@ -395,12 +397,14 @@ def apply_diff(
                     reason=(
                         f"Relationship '{rel.id}' has a dangling endpoint "
                         f"after diff application "
-                        f"(source='{rel.source.id}', target='{rel.target.id}')"
+                        f"(source='{rel.source_id}', target='{rel.target_id}')"
                     ),
                 )
             )
             continue
-        copied_rels.append(rel.model_copy(deep=True, update={"source": new_src, "target": new_tgt}))
+        # Endpoints are addressed by ID (ADR-051); copies preserve them, so no
+        # re-linking of source/target is required.
+        copied_rels.append(rel.model_copy(deep=True))
 
     # ------------------------------------------------------------------
     # Assemble the result Model.

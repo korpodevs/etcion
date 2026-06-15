@@ -87,8 +87,8 @@ class TestFromDataFrame:
         assert len(model.relationships) == 1
         rel = model.relationships[0]
         assert type(rel).__name__ == "Serving"
-        assert rel.source.name == "Alice"
-        assert rel.target.name == "Order Handling"
+        assert model[rel.source_id].name == "Alice"
+        assert model[rel.target_id].name == "Order Handling"
 
     def test_import_error(self) -> None:
         """When pandas is not available, from_dataframe raises ImportError with a clear message."""

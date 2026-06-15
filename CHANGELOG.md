@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Structural sharing for impact analysis and model editing
+([ADR-051](docs/adr/ADR-051-copy-on-write-result-models.md), closes #113).
+`analyze_impact` (and `chain_impacts`) no longer deep-copy the entire model to
+build `resulting_model`; a single-concept operation is now `O(affected)` rather
+than `O(model_size)`. A 1-element remove on a 150K-concept model drops from the
+multi-second range to ~1s (dominated by graph construction, not copying), and a
+rename on the same model is ~6ms.
+
+### Breaking changes
+
+- **Concepts are now immutable (frozen).** `elem.name = "x"` and other
+  post-construction attribute assignments raise `ValidationError`. Produce an
+  edited concept with `concept.model_copy(update={"name": "x"})` instead.
+  Isolation between a model and an impact `resulting_model` is now guaranteed by
+  immutability (shared instances cannot mutate) rather than by deep copying.
+- **`resulting_model` shares untouched concepts by reference.** Untouched
+  survivors in `ImpactResult.resulting_model` are now the *same* objects as in
+  the source model, not distinct copies. Code relying on object distinctness
+  (`id()` inequality) must instead rely on immutability for isolation.
+- **Relationship endpoints are addressed by ID.** `Relationship.source` /
+  `target` (object references) are replaced by `source_id` / `target_id`
+  strings. Resolve an endpoint to its concept via the owning model, e.g.
+  `model[rel.source_id]`. Construction still accepts `source=` / `target=` as a
+  `Concept` (or bare ID string) for convenience. The JSON/XML wire format is
+  unchanged (endpoints remain bare ID strings under `source`/`target`).
+- **`extended_attributes` is an immutable mapping (`FrozenMap`).** In-place
+  mutation (`concept.extended_attributes["k"] = v`) raises. Reads (`.get`,
+  iteration, `in`, `.items()`) are unchanged; serialization still emits a plain
+  `dict`. Set attributes at construction or via `model_copy(update=...)`.
+- **Element collection fields are immutable tuples.** `assigned_elements` and
+  `members` are now `tuple[...]` instead of `list[...]`.
+
+### Added
+
+- **`analyze_impact(substitute=(old, new))`** — *substitute/version* semantics
+  for replacement, complementing `replace=` (*redirect*). `new` takes over
+  `old`'s identity slot (registered under `old`'s ID), so relationships are left
+  untouched and resolve to `new`. Each relationship incident to `old` is
+  re-checked against `new`'s type and reported in `violations` if it becomes
+  impermissible; `old`'s direct neighbours are reported as affected at depth 1.
+  `replace=` is unchanged (it removes `old` and rewires its relationships onto
+  `new`).
+- **Structural-sharing editing API on `Model`**: `with_added(concept)`,
+  `with_replaced(concept)`, and `with_removed(concept_or_id)` each return a new
+  immutable `Model` that shares unchanged concept instances with the source
+  model. `with_replaced` is the cheap-edit primitive — combined with
+  `concept.model_copy(update={...})` it renames/edits a concept in roughly
+  constant time regardless of model size, with no relationship re-linking
+  (endpoints resolve by ID). `with_removed` also drops relationships left
+  dangling by the removal. Views are not carried into the new model (a `View`
+  binds to a specific model instance).
+
 ## [0.12.0] - 02 Jun 2026
 
 ### Behavior changes

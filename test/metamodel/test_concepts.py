@@ -197,8 +197,8 @@ class TestRelationship:
         src = ConcreteElement_2(name="src")
         tgt = ConcreteElement_2(name="tgt")
         rel = ConcreteRelationship(name="R", source=src, target=tgt)
-        assert rel.source is src
-        assert rel.target is tgt
+        assert rel.source_id == src.id
+        assert rel.target_id == tgt.id
 
     def test_is_derived_defaults_to_false(self) -> None:
         """ConcreteRelationship(...).is_derived is False."""

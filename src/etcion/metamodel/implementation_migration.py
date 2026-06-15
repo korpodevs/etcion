@@ -75,7 +75,7 @@ class Plateau(CompositeElement):
         badge_letter="I",
     )
 
-    members: list[Concept] = Field(default_factory=list)
+    members: tuple[Concept, ...] = Field(default_factory=tuple)
 
     @property
     def _type_name(self) -> str:

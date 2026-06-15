@@ -364,8 +364,8 @@ class TestRelationshipFactories:
         db = b.data_object("CustomerDB")
         rel = b.access(crm, db)
         assert isinstance(rel, Access)
-        assert rel.source is crm
-        assert rel.target is db
+        assert rel.source_id == crm.id
+        assert rel.target_id == db.id
 
     def test_serving_returns_serving_type(self) -> None:
         """serving() returns a Serving relationship."""
@@ -397,7 +397,7 @@ class TestRelationshipFactories:
         crm = b.application_component("CRM")
         db = b.data_object("CustomerDB")
         rel = b.access(crm.id, db)
-        assert rel.source is crm
+        assert rel.source_id == crm.id
 
     def test_string_id_resolution_target(self) -> None:
         """target can be passed as a string ID; builder resolves the element."""
@@ -407,7 +407,7 @@ class TestRelationshipFactories:
         crm = b.application_component("CRM")
         db = b.data_object("CustomerDB")
         rel = b.access(crm, db.id)
-        assert rel.target is db
+        assert rel.target_id == db.id
 
     def test_both_string_ids(self) -> None:
         """Both source and target can be passed as string IDs."""
@@ -417,8 +417,8 @@ class TestRelationshipFactories:
         actor = b.business_actor("Alice")
         role = b.business_role("Analyst")
         rel = b.assignment(actor.id, role.id)
-        assert rel.source is actor
-        assert rel.target is role
+        assert rel.source_id == actor.id
+        assert rel.target_id == role.id
 
     def test_unknown_string_id_raises(self) -> None:
         """Passing an unrecognised string ID raises KeyError or ValueError."""
@@ -628,8 +628,8 @@ class TestEdgeCases:
         actor = b.business_actor("Alice", id="actor-001")
         role = b.business_role("Analyst", id="role-001")
         rel = b.assignment("actor-001", "role-001")
-        assert rel.source is actor
-        assert rel.target is role
+        assert rel.source_id == actor.id
+        assert rel.target_id == role.id
 
 
 # ---------------------------------------------------------------------------
@@ -677,8 +677,8 @@ class TestFromDicts:
         assert len(model) == 3
         rels = [c for c in model.concepts if isinstance(c, Access)]
         assert len(rels) == 1
-        assert rels[0].source.id == "crm-1"
-        assert rels[0].target.id == "db-1"
+        assert rels[0].source_id == "crm-1"
+        assert rels[0].target_id == "db-1"
         assert rels[0].name == "reads"
 
     def test_from_dicts_unknown_type_raises(self) -> None:
@@ -877,8 +877,8 @@ class TestFromDataFrame:
         assert len(model) == 3
         rels = [c for c in model.concepts if isinstance(c, Access)]
         assert len(rels) == 1
-        assert rels[0].source.id == "crm-1"
-        assert rels[0].target.id == "db-1"
+        assert rels[0].source_id == "crm-1"
+        assert rels[0].target_id == "db-1"
         assert rels[0].name == "reads"
 
     def test_from_dataframe_custom_type_column(self) -> None:

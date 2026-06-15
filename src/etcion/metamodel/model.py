@@ -248,8 +248,8 @@ class Model:
         # Add edges: one directed edge per Relationship.
         for rel in self.relationships:
             g.add_edge(  # type: ignore[attr-defined]
-                rel.source.id,
-                rel.target.id,
+                rel.source_id,
+                rel.target_id,
                 type=type(rel),
                 name=getattr(rel, "name", None),
                 rel_id=rel.id,
@@ -260,16 +260,104 @@ class Model:
         return g
 
     def connected_to(self, concept: Concept) -> list[Relationship]:
-        """Return all relationships where *concept* is source or target (identity check)."""
-        return [r for r in self.relationships if r.source is concept or r.target is concept]
+        """Return all relationships where *concept* is source or target (by ID)."""
+        return [
+            r for r in self.relationships if r.source_id == concept.id or r.target_id == concept.id
+        ]
 
     def sources_of(self, concept: Concept) -> list[Concept]:
         """Return source concepts of all relationships targeting *concept*."""
-        return [r.source for r in self.relationships if r.target is concept]
+        return [
+            src
+            for r in self.relationships
+            if r.target_id == concept.id and (src := self._concepts.get(r.source_id)) is not None
+        ]
 
     def targets_of(self, concept: Concept) -> list[Concept]:
         """Return target concepts of all relationships sourced from *concept*."""
-        return [r.target for r in self.relationships if r.source is concept]
+        return [
+            tgt
+            for r in self.relationships
+            if r.source_id == concept.id and (tgt := self._concepts.get(r.target_id)) is not None
+        ]
+
+    def _shallow_clone(self) -> Model:
+        """Return a new model sharing this model's concepts and config by reference.
+
+        The registry dict is *shallow*-copied (cheap pointer copies); the immutable
+        concept instances themselves are shared (ADR-051).  Profiles, the
+        specialization registry, and custom rules are carried over.  The graph
+        cache is left empty so it recomputes against the (possibly edited)
+        registry.  Views are not carried over: a :class:`View` binds to a specific
+        model instance, so views must be rebuilt against the new model if needed.
+        """
+        new = Model()
+        new._concepts = dict(self._concepts)
+        new._profiles = list(self._profiles)
+        new._specialization_registry = dict(self._specialization_registry)
+        new._custom_rules = list(self._custom_rules)
+        return new
+
+    def with_added(self, concept: Concept) -> Model:
+        """Return a new model with *concept* added, sharing all existing concepts.
+
+        The original model is left unchanged (ADR-051 structural sharing): the new
+        model shares every existing concept instance by reference and adds *concept*.
+
+        :param concept: The concept to add.
+        :raises TypeError: if *concept* is not a :class:`Concept` instance.
+        :raises ValueError: if a concept with the same ``id`` already exists.
+        :returns: A new :class:`Model` instance.
+        """
+        if not isinstance(concept, Concept):
+            raise TypeError(f"Expected an instance of Concept, got {type(concept).__name__}")
+        if concept.id in self._concepts:
+            raise ValueError(f"Duplicate concept ID: '{concept.id}'")
+        new = self._shallow_clone()
+        new._concepts[concept.id] = concept
+        return new
+
+    def with_replaced(self, concept: Concept) -> Model:
+        """Return a new model with the concept of the same ``id`` replaced by *concept*.
+
+        This is the cheap-edit primitive (ADR-051): produce an edited instance with
+        ``concept.model_copy(update={...})`` and pass it here.  Because relationship
+        endpoints are addressed by ID, relationships referencing this concept need no
+        re-linking — they resolve the unchanged ID to the new instance.  ``O(1)`` plus
+        a shallow registry copy.
+
+        :param concept: The replacement concept; its ``id`` must already exist.
+        :raises TypeError: if *concept* is not a :class:`Concept` instance.
+        :raises KeyError: if no concept with that ``id`` exists in the model.
+        :returns: A new :class:`Model` instance.
+        """
+        if not isinstance(concept, Concept):
+            raise TypeError(f"Expected an instance of Concept, got {type(concept).__name__}")
+        if concept.id not in self._concepts:
+            raise KeyError(concept.id)
+        new = self._shallow_clone()
+        new._concepts[concept.id] = concept
+        return new
+
+    def with_removed(self, concept_or_id: Concept | str) -> Model:
+        """Return a new model without the given concept and any dangling relationships.
+
+        Relationships left with a missing source or target endpoint are dropped
+        (they would be broken).  All other concepts are shared by reference.
+
+        :param concept_or_id: The concept to remove, or its ``id``.
+        :raises KeyError: if no concept with that ``id`` exists in the model.
+        :returns: A new :class:`Model` instance.
+        """
+        cid = concept_or_id.id if isinstance(concept_or_id, Concept) else concept_or_id
+        if cid not in self._concepts:
+            raise KeyError(cid)
+        new = self._shallow_clone()
+        del new._concepts[cid]
+        for rid, concept in list(new._concepts.items()):
+            if isinstance(concept, Relationship) and cid in (concept.source_id, concept.target_id):
+                del new._concepts[rid]
+        return new
 
     def validate(self, *, strict: bool = False) -> list[ValidationError]:
         """Run all model-level validation rules.
@@ -289,18 +377,23 @@ class Model:
         # Standard permission checks (skip Junction-connected relationships).
         junction_rels: dict[str, list[Relationship]] = {}
         for rel in self.relationships:
-            src_is_junc = isinstance(rel.source, RelationshipConnector)
-            tgt_is_junc = isinstance(rel.target, RelationshipConnector)
+            src = self._concepts.get(rel.source_id)
+            tgt = self._concepts.get(rel.target_id)
+            src_is_junc = isinstance(src, RelationshipConnector)
+            tgt_is_junc = isinstance(tgt, RelationshipConnector)
             # Track Junction adjacency for later validation.
             if src_is_junc:
-                junction_rels.setdefault(rel.source.id, []).append(rel)
+                junction_rels.setdefault(rel.source_id, []).append(rel)
             if tgt_is_junc:
-                junction_rels.setdefault(rel.target.id, []).append(rel)
+                junction_rels.setdefault(rel.target_id, []).append(rel)
             # Skip standard permission check for Junction-connected rels.
             if src_is_junc or tgt_is_junc:
                 continue
-            source_type = type(rel.source)
-            target_type = type(rel.target)
+            # Endpoints missing from the model cannot be permission-checked.
+            if src is None or tgt is None:
+                continue
+            source_type = type(src)
+            target_type = type(tgt)
             if not is_permitted(type(rel), source_type, target_type):  # type: ignore[arg-type]
                 err = ValidationError(
                     f"Relationship '{rel.id}' ({type(rel).__name__}: "
@@ -328,18 +421,20 @@ class Model:
             sources: list[type] = []
             targets: list[type] = []
             for r in rels:
-                if isinstance(r.source, RelationshipConnector):
+                r_src = self._concepts.get(r.source_id)
+                r_tgt = self._concepts.get(r.target_id)
+                if isinstance(r_src, RelationshipConnector):
                     # Junction is source -> r.target is the real target endpoint
-                    targets.append(type(r.target))
+                    targets.append(type(r_tgt))
                 else:
                     # Junction is target -> r.source is the real source endpoint
-                    sources.append(type(r.source))
-            for src in sources:
-                for tgt in targets:
-                    if not is_permitted(rel_type, src, tgt):
+                    sources.append(type(r_src))
+            for src_type in sources:
+                for tgt_type in targets:
+                    if not is_permitted(rel_type, src_type, tgt_type):
                         err = ValidationError(
                             f"Junction '{jid}': {rel_type.__name__} from "
-                            f"{src.__name__} to {tgt.__name__} is not permitted"
+                            f"{src_type.__name__} to {tgt_type.__name__} is not permitted"
                         )
                         if strict:
                             raise err

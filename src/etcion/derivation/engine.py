@@ -61,19 +61,19 @@ class DerivationEngine:
             # Build adjacency list: source_id -> list of (target_concept, rel)
             adjacency: dict[str, list[Relationship]] = defaultdict(list)
             for rel in rels:
-                adjacency[rel.source.id].append(rel)
+                adjacency[rel.source_id].append(rel)
 
             # For each relationship A->B, look for B->C to derive A->C.
             # We only need one pass for two-hop chains (spec req for the tests);
             # the existing direct relationships already cover the one-hop case.
-            existing_pairs: set[tuple[str, str]] = {(r.source.id, r.target.id) for r in rels}
+            existing_pairs: set[tuple[str, str]] = {(r.source_id, r.target_id) for r in rels}
 
             for rel_ab in rels:
-                intermediate_id = rel_ab.target.id
+                intermediate_id = rel_ab.target_id
                 if intermediate_id not in adjacency:
                     continue
                 for rel_bc in adjacency[intermediate_id]:
-                    pair = (rel_ab.source.id, rel_bc.target.id)
+                    pair = (rel_ab.source_id, rel_bc.target_id)
                     if pair in existing_pairs:
                         # Relationship already exists directly; skip.
                         continue
@@ -82,15 +82,15 @@ class DerivationEngine:
                         continue
                     existing_pairs.add(pair)
                     derived_name = (
-                        f"derived:{rel_type.__name__}:{rel_ab.source.id}->{rel_bc.target.id}"
+                        f"derived:{rel_type.__name__}:{rel_ab.source_id}->{rel_bc.target_id}"
                     )
                     # Cast to Any: rel_type is a concrete Relationship subclass
                     # that carries `name` via AttributeMixin, but mypy cannot
                     # resolve the mixin field through the abstract base type.
                     derived_rel: Relationship = cast(Any, rel_type)(
                         name=derived_name,
-                        source=rel_ab.source,
-                        target=rel_bc.target,
+                        source_id=rel_ab.source_id,
+                        target_id=rel_bc.target_id,
                         is_derived=True,
                     )
                     derived.append(derived_rel)

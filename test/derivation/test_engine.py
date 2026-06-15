@@ -144,8 +144,8 @@ class TestCrossLayerRealizationChain:
         assert len(derived) == 1
         d = derived[0]
         assert isinstance(d, Realization)
-        assert d.source is art
-        assert d.target is bo
+        assert d.source_id == art.id
+        assert d.target_id == bo.id
         assert d.is_derived is True
 
     def test_tech_app_business_process_chain(self) -> None:
@@ -164,8 +164,8 @@ class TestCrossLayerRealizationChain:
         assert len(derived) == 1
         d = derived[0]
         assert isinstance(d, Realization)
-        assert d.source is tp
-        assert d.target is bp
+        assert d.source_id == tp.id
+        assert d.target_id == bp.id
         assert d.is_derived is True
 
 

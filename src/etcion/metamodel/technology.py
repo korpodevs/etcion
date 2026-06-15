@@ -72,7 +72,7 @@ class SystemSoftware(Node):
 
 
 class TechnologyCollaboration(TechnologyInternalActiveStructureElement):
-    assigned_elements: list[ActiveStructureElement] = Field(default_factory=list)
+    assigned_elements: tuple[ActiveStructureElement, ...] = Field(default_factory=tuple)
     notation: ClassVar[NotationMetadata] = NotationMetadata(
         corner_shape="square",
         layer_color="#C9E7B7",

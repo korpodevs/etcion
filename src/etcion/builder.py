@@ -213,7 +213,9 @@ def _relationship_factory(cls: type[Relationship]) -> Any:  # noqa: ANN401
         self._check_not_built()
         src = self._resolve(source)
         tgt = self._resolve(target)
-        rel: cls = cls(source=src, target=tgt, name=name, **kwargs)  # type: ignore[valid-type]
+        src_id = src.id if isinstance(src, Concept) else src
+        tgt_id = tgt.id if isinstance(tgt, Concept) else tgt
+        rel: cls = cls(source_id=src_id, target_id=tgt_id, name=name, **kwargs)  # type: ignore[valid-type]
         self._concepts.append(rel)
         self._id_map[rel.id] = rel  # type: ignore[attr-defined]
         return rel

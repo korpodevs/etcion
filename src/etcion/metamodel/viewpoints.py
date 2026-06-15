@@ -102,14 +102,13 @@ class View(BaseModel):
                 # Relationship type must itself be permitted.
                 if not any(issubclass(type(concept), t) for t in permitted):
                     continue
-                new_src = id_map.get(concept.source.id)
-                new_tgt = id_map.get(concept.target.id)
+                new_src = id_map.get(concept.source_id)
+                new_tgt = id_map.get(concept.target_id)
                 if new_src is None or new_tgt is None:
                     # One or both endpoints were excluded — drop this relationship.
                     continue
-                copied_rels.append(
-                    concept.model_copy(deep=True, update={"source": new_src, "target": new_tgt})
-                )
+                # Endpoints are addressed by ID (ADR-051); the copy preserves them.
+                copied_rels.append(concept.model_copy(deep=True))
 
         # Phase 3: assemble the result model.
         result = _Model()

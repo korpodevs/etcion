@@ -741,8 +741,8 @@ class TestCompositionPatterns:
         result = [
             r
             for r in full_model.relationships_of_type(Serving)
-            if isinstance(r.source, ApplicationComponent)
-            and isinstance(r.target, ApplicationService)
+            if isinstance(full_model[r.source_id], ApplicationComponent)
+            and isinstance(full_model[r.target_id], ApplicationService)
         ]
         assert len(result) == 1
         assert result[0].name == "serve-1"
