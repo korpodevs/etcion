@@ -90,22 +90,22 @@ class TestRelationshipIntegrity:
         model, _ = petco_model
         element_ids = self._element_ids(model)
         for rel in model.relationships_of_type(Realization):
-            assert rel.source.id in element_ids, (
-                f"Realization '{rel.id}' source '{rel.source.id}' not in model.elements"
+            assert rel.source_id in element_ids, (
+                f"Realization '{rel.id}' source '{rel.source_id}' not in model.elements"
             )
-            assert rel.target.id in element_ids, (
-                f"Realization '{rel.id}' target '{rel.target.id}' not in model.elements"
+            assert rel.target_id in element_ids, (
+                f"Realization '{rel.id}' target '{rel.target_id}' not in model.elements"
             )
 
     def test_servings_have_valid_endpoints(self, petco_model):
         model, _ = petco_model
         element_ids = self._element_ids(model)
         for rel in model.relationships_of_type(Serving):
-            assert rel.source.id in element_ids, (
-                f"Serving '{rel.id}' source '{rel.source.id}' not in model.elements"
+            assert rel.source_id in element_ids, (
+                f"Serving '{rel.id}' source '{rel.source_id}' not in model.elements"
             )
-            assert rel.target.id in element_ids, (
-                f"Serving '{rel.id}' target '{rel.target.id}' not in model.elements"
+            assert rel.target_id in element_ids, (
+                f"Serving '{rel.id}' target '{rel.target_id}' not in model.elements"
             )
 
     def test_no_dangling_references(self, petco_model):
@@ -115,7 +115,7 @@ class TestRelationshipIntegrity:
         dangling = [
             rel
             for rel in model.relationships
-            if rel.source.id not in element_ids or rel.target.id not in element_ids
+            if rel.source_id not in element_ids or rel.target_id not in element_ids
         ]
         assert dangling == [], (
             f"Found {len(dangling)} relationship(s) with dangling endpoint(s): "
@@ -229,15 +229,16 @@ class TestCapabilityHierarchyIntegrity:
         return [
             r
             for r in model.relationships_of_type(Composition)
-            if isinstance(r.source, Capability) and isinstance(r.target, Capability)
+            if isinstance(model[r.source_id], Capability)
+            and isinstance(model[r.target_id], Capability)
         ]
 
     def test_l0_capabilities_have_at_least_one_child(self, petco_model):
         """Every L0 capability (not a Composition target) must compose at least one child."""
         model, _ = petco_model
         comp_rels = self._capability_composition_rels(model)
-        comp_targets = {r.target.id for r in comp_rels}
-        comp_sources = {r.source.id for r in comp_rels}
+        comp_targets = {r.target_id for r in comp_rels}
+        comp_sources = {r.source_id for r in comp_rels}
 
         caps = model.elements_of_type(Capability)
         l0_caps = [c for c in caps if c.id not in comp_targets]
@@ -252,7 +253,7 @@ class TestCapabilityHierarchyIntegrity:
         """Every non-L0 Capability must be a Composition target."""
         model, _ = petco_model
         comp_rels = self._capability_composition_rels(model)
-        comp_targets = {r.target.id for r in comp_rels}
+        comp_targets = {r.target_id for r in comp_rels}
 
         caps = model.elements_of_type(Capability)
         l0_caps_ids = {c.id for c in caps if c.id not in comp_targets}
@@ -277,7 +278,7 @@ class TestCapabilityHierarchyIntegrity:
         # Build adjacency list (source -> set of targets)
         adj: dict[str, set[str]] = {}
         for r in comp_rels:
-            adj.setdefault(r.source.id, set()).add(r.target.id)
+            adj.setdefault(r.source_id, set()).add(r.target_id)
 
         caps = model.elements_of_type(Capability)
         visited: set[str] = set()
@@ -328,8 +329,8 @@ class TestDataGovernanceCompleteness:
         # Map DataObject ID -> list of WRITE Access relationships
         do_write_access: dict[str, list] = {}
         for rel in model.relationships_of_type(Access):
-            if rel.access_mode == AccessMode.WRITE and isinstance(rel.target, DataObject):
-                do_write_access.setdefault(rel.target.id, []).append(rel)
+            if rel.access_mode == AccessMode.WRITE and isinstance(model[rel.target_id], DataObject):
+                do_write_access.setdefault(rel.target_id, []).append(rel)
 
         missing_sor = [do for do in dos if do.id not in do_write_access]
         assert not missing_sor, f"DataObjects without a system of record (WRITE Access): " + str(

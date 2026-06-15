@@ -245,12 +245,12 @@ class TestXmlRoundTrip:
     def test_relationship_source_target_preserved(self) -> None:
         """Relationship source and target IDs survive an XML round-trip."""
         model, _, _, _ = _build_lifecycle_model()
-        original_rels = {(r.source.id, r.target.id) for r in model.relationships}
+        original_rels = {(r.source_id, r.target_id) for r in model.relationships}
 
         tree = serialize_model(model)
         recovered = deserialize_model(tree)
 
-        recovered_rels = {(r.source.id, r.target.id) for r in recovered.relationships}
+        recovered_rels = {(r.source_id, r.target_id) for r in recovered.relationships}
         assert recovered_rels == original_rels
 
     def test_specialization_survives_xml_round_trip(self) -> None:
@@ -396,8 +396,8 @@ class TestJsonRoundTrip:
         data = model_to_dict(model)
         recovered = model_from_dict(data)
 
-        original_rels = {(r.source.id, r.target.id) for r in model.relationships}
-        recovered_rels = {(r.source.id, r.target.id) for r in recovered.relationships}
+        original_rels = {(r.source_id, r.target_id) for r in model.relationships}
+        recovered_rels = {(r.source_id, r.target_id) for r in recovered.relationships}
         assert recovered_rels == original_rels
 
     def test_specialization_survives_json_round_trip(self) -> None:

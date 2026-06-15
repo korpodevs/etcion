@@ -826,9 +826,9 @@ class Pattern:
             for rel in connected:
                 if not isinstance(rel, cc.rel_type):
                     continue
-                if cc.direction == "incoming" and rel.target is concept:
+                if cc.direction == "incoming" and rel.target_id == concept.id:
                     count += 1
-                elif cc.direction == "outgoing" and rel.source is concept:
+                elif cc.direction == "outgoing" and rel.source_id == concept.id:
                     count += 1
                 elif cc.direction == "any":
                     count += 1
@@ -997,7 +997,9 @@ class Pattern:
                 # Anchor is source — look for outgoing edges to the target type.
                 other_type = self._nodes[tgt_alias]
                 has_match = any(
-                    isinstance(r, rel_type) and isinstance(r.target, other_type) for r in connected
+                    isinstance(r, rel_type)
+                    and isinstance(model._concepts.get(r.target_id), other_type)
+                    for r in connected
                 )
                 if not has_match:
                     missing.append(f"No {rel_type.__name__} edge to any {other_type.__name__}")
@@ -1005,7 +1007,9 @@ class Pattern:
                 # Anchor is target — look for incoming edges from the source type.
                 other_type = self._nodes[src_alias]
                 has_match = any(
-                    isinstance(r, rel_type) and isinstance(r.source, other_type) for r in connected
+                    isinstance(r, rel_type)
+                    and isinstance(model._concepts.get(r.source_id), other_type)
+                    for r in connected
                 )
                 if not has_match:
                     missing.append(f"No {rel_type.__name__} edge from any {other_type.__name__}")
@@ -1017,9 +1021,9 @@ class Pattern:
             for rel in connected:
                 if not isinstance(rel, cc.rel_type):
                     continue
-                if cc.direction == "incoming" and rel.target is elem:
+                if cc.direction == "incoming" and rel.target_id == elem.id:
                     count += 1
-                elif cc.direction == "outgoing" and rel.source is elem:
+                elif cc.direction == "outgoing" and rel.source_id == elem.id:
                     count += 1
                 elif cc.direction == "any":
                     count += 1

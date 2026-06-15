@@ -101,14 +101,15 @@ class TestPatternMatchingPawsPlus:
         orphaned_leaf_caps: list[str] = []
         for cap in model.elements_of_type(Capability):
             apps = [
-                r.source
+                model[r.source_id]
                 for r in model.connected_to(cap)
-                if isinstance(r, Realization) and isinstance(r.source, ApplicationComponent)
+                if isinstance(r, Realization)
+                and isinstance(model[r.source_id], ApplicationComponent)
             ]
             children = [
                 r
                 for r in model.relationships_of_type(Composition)
-                if r.source is cap and isinstance(r.target, Capability)
+                if r.source_id == cap.id and isinstance(model[r.target_id], Capability)
             ]
             if not apps and not children:
                 orphaned_leaf_caps.append(cap.name)
@@ -129,10 +130,10 @@ class TestPatternMatchingPawsPlus:
 
         svc_count: Counter[str] = Counter()
         for rel in model.relationships_of_type(Serving):
-            if isinstance(rel.source, ApplicationService) and isinstance(
-                rel.target, ApplicationComponent
+            if isinstance(model[rel.source_id], ApplicationService) and isinstance(
+                model[rel.target_id], ApplicationComponent
             ):
-                svc_count[rel.source.name] += 1
+                svc_count[model[rel.source_id].name] += 1
 
         high_fanout = {name: count for name, count in svc_count.items() if count >= 2}
         assert "Process Payment" in high_fanout, (
@@ -148,10 +149,10 @@ class TestPatternMatchingPawsPlus:
 
         svc_count: Counter[str] = Counter()
         for rel in model.relationships_of_type(Serving):
-            if isinstance(rel.source, ApplicationService) and isinstance(
-                rel.target, ApplicationComponent
+            if isinstance(model[rel.source_id], ApplicationService) and isinstance(
+                model[rel.target_id], ApplicationComponent
             ):
-                svc_count[rel.source.name] += 1
+                svc_count[model[rel.source_id].name] += 1
 
         high_fanout_names = [name for name, count in svc_count.items() if count >= 2]
         assert len(high_fanout_names) == 1, (
@@ -170,11 +171,11 @@ class TestPatternMatchingPawsPlus:
         contested: list[str] = []
         for data in model.elements_of_type(DataObject):
             writers = [
-                r.source
+                model[r.source_id]
                 for r in model.connected_to(data)
                 if isinstance(r, Access)
                 and r.access_mode == AccessMode.WRITE
-                and isinstance(r.source, ApplicationComponent)
+                and isinstance(model[r.source_id], ApplicationComponent)
             ]
             if len(writers) > 1:
                 contested.append(data.name)

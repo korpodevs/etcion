@@ -398,11 +398,11 @@ def test_data_governance_audit_confidential(
     for rel in model.relationships:
         if (
             isinstance(rel, Access)
-            and isinstance(rel.source, ApplicationComponent)
-            and isinstance(rel.target, DataObject)
+            and isinstance(model[rel.source_id], ApplicationComponent)
+            and isinstance(model[rel.target_id], DataObject)
             and rel.access_mode == AccessMode.READ
         ):
-            read_sources.setdefault(rel.target.id, []).append(rel.source)
+            read_sources.setdefault(rel.target_id, []).append(model[rel.source_id])
 
     high_access_objects: list[DataObject] = [
         m["obj"]  # type: ignore[assignment]

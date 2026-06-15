@@ -137,8 +137,8 @@ class ImpactResult:
                 {
                     "id": r.id,
                     "type": type(r).__name__,
-                    "source_id": r.source.id,
-                    "target_id": r.target.id,
+                    "source_id": r.source_id,
+                    "target_id": r.target_id,
                 }
                 for r in self.broken_relationships
             ],
@@ -194,8 +194,10 @@ class ImpactResult:
                 "</tr>"
             )
             for rel in self.broken_relationships:
-                src_name = getattr(rel.source, "name", None) or rel.source.id
-                tgt_name = getattr(rel.target, "name", None) or rel.target.id
+                # Endpoints are addressed by ID (ADR-051); the result carries no
+                # model reference, so display the IDs directly.
+                src_name = rel.source_id
+                tgt_name = rel.target_id
                 parts.append(
                     f"<tr style='background:#f8d7da;'>"
                     f"<td style='padding:4px;'>{rel.id[:12]}...</td>"
@@ -259,7 +261,7 @@ def _build_result_model(original: Model, exclude_ids: set[str]) -> Model:
         if concept.id in exclude_ids:
             continue
         if isinstance(concept, Relationship) and (
-            concept.source.id in exclude_ids or concept.target.id in exclude_ids
+            concept.source_id in exclude_ids or concept.target_id in exclude_ids
         ):
             # Source or target was excluded; skip (broken relationship).
             continue
@@ -334,7 +336,7 @@ def _analyze_merge(
 
     # Collect all relationships touching any merged element.
     touching: list[Relationship] = [
-        r for r in model.relationships if r.source.id in merged_ids or r.target.id in merged_ids
+        r for r in model.relationships if r.source_id in merged_ids or r.target_id in merged_ids
     ]
 
     # Result model shares unchanged concept instances (ADR-051 structural
@@ -354,14 +356,14 @@ def _analyze_merge(
     # Key: (rel_type, new_source_id, new_target_id) — first wins.
     seen_keys: dict[tuple[type, str, str], Relationship] = {}
     for rel in touching:
-        new_src_id = target_id if rel.source.id in merged_ids else rel.source.id
-        new_tgt_id = target_id if rel.target.id in merged_ids else rel.target.id
+        new_src_id = target_id if rel.source_id in merged_ids else rel.source_id
+        new_tgt_id = target_id if rel.target_id in merged_ids else rel.target_id
         key = (type(rel), new_src_id, new_tgt_id)
         if key not in seen_keys:
             new_src = id_map.get(new_src_id)
             new_tgt = id_map.get(new_tgt_id)
             if new_src is not None and new_tgt is not None:
-                rewired = rel.model_copy(update={"source": new_src, "target": new_tgt})
+                rewired = rel.model_copy(update={"source_id": new_src_id, "target_id": new_tgt_id})
                 seen_keys[key] = rewired
 
     # Permission-check deduplicated rewired relationships.
@@ -401,8 +403,8 @@ def _analyze_merge(
             continue
         if isinstance(concept, Relationship) and concept.id not in touching_ids:
             if (
-                id_map.get(concept.source.id) is not None
-                and id_map.get(concept.target.id) is not None
+                id_map.get(concept.source_id) is not None
+                and id_map.get(concept.target_id) is not None
             ):
                 surviving_rels.append(concept)
 
@@ -427,31 +429,22 @@ def _analyze_add_relationship(model: Model, relationship: Relationship) -> Impac
     """Implement the add_relationship operation for :func:`analyze_impact`.
 
     Builds a result model consisting of all concepts from the original model
-    plus the new relationship (deep-copied with source/target re-linked to
-    copies of the original elements).  Reports source and target elements as
-    affected at depth 1.
+    plus the new relationship.  Endpoints are addressed by ID (ADR-051), so the
+    relationship needs no re-linking — its source_id/target_id already resolve
+    against the shared elements.  Reports source and target elements as affected
+    at depth 1.
 
     :param model: Source model.
     :param relationship: The relationship to add.
     :returns: :class:`ImpactResult` describing the add-relationship impact.
     """
-    from etcion.metamodel.model import Model as _Model
-
     result_model = _build_result_model(model, set())
-
-    # Re-link the new relationship's source/target to the copies in result_model.
-    new_src = result_model._concepts.get(relationship.source.id)
-    new_tgt = result_model._concepts.get(relationship.target.id)
-    if new_src is not None and new_tgt is not None:
-        new_rel = relationship.model_copy(update={"source": new_src, "target": new_tgt})
-    else:
-        new_rel = relationship.model_copy()
-    result_model.add(new_rel)
+    result_model.add(relationship.model_copy())
 
     # Affected: source and target elements at depth 1.
     affected: list[ImpactedConcept] = []
-    src_concept = result_model._concepts.get(relationship.source.id)
-    tgt_concept = result_model._concepts.get(relationship.target.id)
+    src_concept = result_model._concepts.get(relationship.source_id)
+    tgt_concept = result_model._concepts.get(relationship.target_id)
     if src_concept is not None:
         affected.append(ImpactedConcept(concept=src_concept, depth=1))
     if tgt_concept is not None:
@@ -481,8 +474,8 @@ def _analyze_remove_relationship(model: Model, relationship: Relationship) -> Im
 
     # Affected: source and target elements at depth 1 (copies in result model).
     affected: list[ImpactedConcept] = []
-    src_concept = result_model._concepts.get(relationship.source.id)
-    tgt_concept = result_model._concepts.get(relationship.target.id)
+    src_concept = result_model._concepts.get(relationship.source_id)
+    tgt_concept = result_model._concepts.get(relationship.target_id)
     if src_concept is not None:
         affected.append(ImpactedConcept(concept=src_concept, depth=1))
     if tgt_concept is not None:
@@ -665,7 +658,7 @@ def analyze_impact(
 
     # Identify broken relationships (any relationship touching the removed element).
     broken: tuple[Relationship, ...] = tuple(
-        r for r in model.relationships if r.source.id == start_id or r.target.id == start_id
+        r for r in model.relationships if r.source_id == start_id or r.target_id == start_id
     )
 
     # Build result model excluding the removed element and all broken relationships.

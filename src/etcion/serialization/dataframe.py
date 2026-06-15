@@ -115,8 +115,8 @@ def to_dataframe(model: Model) -> tuple[Any, Any]:
         rel_rows.append(
             {
                 "type": type(rel).__name__,
-                "source": rel.source.id,
-                "target": rel.target.id,
+                "source": rel.source_id,
+                "target": rel.target_id,
                 "name": rel.name or "",
             }
         )
@@ -244,23 +244,23 @@ def to_flat_dataframe(model: Model) -> Any:  # noqa: ANN401
     connected_ids: set[str] = set()
 
     for rel in model.relationships:
-        src = rel.source
-        tgt = rel.target
-        connected_ids.add(src.id)
-        connected_ids.add(tgt.id)
-        src_layer = getattr(type(src), "layer", None)
-        tgt_layer = getattr(type(tgt), "layer", None)
+        src = model._concepts.get(rel.source_id)
+        tgt = model._concepts.get(rel.target_id)
+        connected_ids.add(rel.source_id)
+        connected_ids.add(rel.target_id)
+        src_layer = getattr(type(src), "layer", None) if src is not None else None
+        tgt_layer = getattr(type(tgt), "layer", None) if tgt is not None else None
         rows.append(
             {
                 "rel_type": type(rel).__name__,
                 "rel_id": rel.id,
                 "rel_name": getattr(rel, "name", None) or None,
-                "source_id": src.id,
-                "source_type": type(src).__name__,
+                "source_id": rel.source_id,
+                "source_type": type(src).__name__ if src is not None else None,
                 "source_name": getattr(src, "name", None),
                 "source_layer": src_layer.value if src_layer is not None else None,
-                "target_id": tgt.id,
-                "target_type": type(tgt).__name__,
+                "target_id": rel.target_id,
+                "target_type": type(tgt).__name__ if tgt is not None else None,
                 "target_name": getattr(tgt, "name", None),
                 "target_layer": tgt_layer.value if tgt_layer is not None else None,
             }

@@ -758,8 +758,8 @@ class TestResultModelDeepCopy:
         # endpoints are the same instances as in the original model.
         result_rel = result.resulting_model["rel-bc"]
         assert isinstance(result_rel, Relationship)
-        assert result_rel.source is b  # type: ignore[union-attr]
-        assert result_rel.target is c  # type: ignore[union-attr]
+        assert result_rel.source_id == b.id  # type: ignore[union-attr]
+        assert result_rel.target_id == c.id  # type: ignore[union-attr]
 
     def test_original_mutation_does_not_affect_result(self) -> None:
         """Mutating the original model after analysis does not alter resulting_model."""
@@ -971,7 +971,7 @@ class TestMergeBasic:
 
         # After merging A and B into T, relationships should use T as source
         rels_in_result = [c for c in result.resulting_model if isinstance(c, Relationship)]
-        source_ids = {r.source.id for r in rels_in_result}  # type: ignore[union-attr]
+        source_ids = {r.source_id for r in rels_in_result}  # type: ignore[union-attr]
         # T should be the source for the rewired relationships
         assert t.id in source_ids
         # A and B must not be sources in the result
@@ -1000,7 +1000,7 @@ class TestMergeDeduplication:
         tx_rels = [
             r
             for r in rels_in_result
-            if r.source.id == t.id and r.target.id == "x1"  # type: ignore[union-attr]
+            if r.source_id == t.id and r.target_id == "x1"  # type: ignore[union-attr]
         ]
         assert len(tx_rels) == 1
 
@@ -1078,7 +1078,7 @@ class TestMergeSelfLoop:
         self_loops = [
             r
             for r in rels_in_result
-            if r.source.id == t.id and r.target.id == t.id  # type: ignore[union-attr]
+            if r.source_id == t.id and r.target_id == t.id  # type: ignore[union-attr]
         ]
         assert len(self_loops) == 1
 
@@ -1117,7 +1117,7 @@ class TestMergeSelfMerge:
         ax_rels = [
             r
             for r in rels_in_result
-            if r.source.id == a.id and r.target.id == x.id  # type: ignore[union-attr]
+            if r.source_id == a.id and r.target_id == x.id  # type: ignore[union-attr]
         ]
         assert len(ax_rels) == 1
 
@@ -1214,11 +1214,11 @@ class TestReplaceBasic:
         assert result.resulting_model is not None
 
         rels_in_result = [c for c in result.resulting_model if isinstance(c, Relationship)]
-        source_ids = {r.source.id for r in rels_in_result}  # type: ignore[union-attr]
+        source_ids = {r.source_id for r in rels_in_result}  # type: ignore[union-attr]
         # new should be the source of the transferred relationship
         assert new.id in source_ids
         # old must not appear as source or target in any surviving relationship
-        target_ids = {r.target.id for r in rels_in_result}  # type: ignore[union-attr]
+        target_ids = {r.target_id for r in rels_in_result}  # type: ignore[union-attr]
         assert old.id not in source_ids
         assert old.id not in target_ids
 

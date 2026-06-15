@@ -21,7 +21,14 @@ from abc import abstractmethod
 from collections.abc import Iterator, Mapping
 from typing import Any, ClassVar, Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from etcion.enums import RelationshipCategory
 from etcion.metamodel.mixins import AttributeMixin
@@ -190,21 +197,40 @@ class Element(AttributeMixin, Concept):
 class Relationship(AttributeMixin, Concept):
     """Abstract base class for ArchiMate relationship types.
 
-    A Relationship is a directed connection from a ``source`` Concept to a
-    ``target`` Concept.  Every concrete relationship subclass must define
-    ``category`` as a class variable.
+    A Relationship is a directed connection from a source Concept to a target
+    Concept, identified by :attr:`source_id` and :attr:`target_id` (ADR-051).
+    Endpoints are stored by ID -- not by object reference -- so that editing an
+    endpoint (rename, attribute change) leaves relationships untouched: the
+    model registry resolves the unchanged ID to the new instance.  Resolve an
+    endpoint to its concept via the owning model, e.g. ``model[rel.source_id]``.
 
-    Direct instantiation raises :class:`TypeError`.  Concrete relationship
-    types are defined in EPIC-005.
+    For ergonomics, the constructor also accepts ``source=`` / ``target=`` as a
+    :class:`Concept` (or a bare ID string); both are coerced to the stored
+    ``source_id`` / ``target_id``.
 
-    Reference: ArchiMate 3.2 Specification, Section 3.1.
+    Every concrete relationship subclass must define ``category`` as a class
+    variable.  Direct instantiation raises :class:`TypeError`.
+
+    Reference: ArchiMate 3.2 Specification, Section 3.1; ADR-051.
     """
 
     name: str = ""
-    source: Concept
-    target: Concept
+    source_id: str
+    target_id: str
     is_derived: bool = False
     category: ClassVar[RelationshipCategory]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_endpoints(cls, data: Any) -> Any:  # noqa: ANN401 — raw pre-validation input
+        """Accept ``source``/``target`` (Concept or ID) as ``source_id``/``target_id``."""
+        if isinstance(data, dict):
+            data = dict(data)
+            for field_name in ("source", "target"):
+                if field_name in data and f"{field_name}_id" not in data:
+                    value = data.pop(field_name)
+                    data[f"{field_name}_id"] = value.id if isinstance(value, Concept) else value
+        return data
 
 
 class RelationshipConnector(Concept):

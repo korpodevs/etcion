@@ -115,10 +115,10 @@ def _serialize_concept(concept: Concept) -> dict[str, Any]:
     data: dict[str, Any] = concept.model_dump(mode="json")
     data["_type"] = concept._type_name
     if isinstance(concept, Relationship):
-        # model_dump produces {"id": "<uuid>"} for nested Concept fields;
-        # replace with a plain ID string for portability.
-        data["source"] = concept.source.id
-        data["target"] = concept.target.id
+        # Endpoints are stored as source_id/target_id (ADR-051); emit them under
+        # the stable "source"/"target" wire keys (bare ID strings).
+        data["source"] = data.pop("source_id")
+        data["target"] = data.pop("target_id")
     return data
 
 
@@ -196,7 +196,6 @@ def model_from_dict(data: dict[str, Any]) -> Model:
         :data:`_NAME_TO_TYPE` or a relationship references an unknown element ID.
     """
     model = Model()
-    id_map: dict[str, Concept] = {}
 
     for prof_data in data.get("profiles", []):
         profile = _deserialize_profile(prof_data)
@@ -207,15 +206,16 @@ def model_from_dict(data: dict[str, Any]) -> Model:
         type_name = elem_data.pop("_type")
         cls = _NAME_TO_TYPE[type_name]
         elem = cls.model_validate(elem_data)
-        id_map[elem.id] = elem
         model.add(elem)
 
     for rel_data in data.get("relationships", []):
         rel_data = dict(rel_data)  # copy so we don't mutate the caller's dict
         type_name = rel_data.pop("_type")
         cls = _NAME_TO_TYPE[type_name]
-        rel_data["source"] = id_map[rel_data["source"]]
-        rel_data["target"] = id_map[rel_data["target"]]
+        # Endpoints are stored by ID (ADR-051); map the wire "source"/"target"
+        # keys to the source_id/target_id fields.
+        rel_data["source_id"] = rel_data.pop("source")
+        rel_data["target_id"] = rel_data.pop("target")
         rel = cls.model_validate(rel_data)
         model.add(rel)
 

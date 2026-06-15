@@ -176,8 +176,8 @@ def _normalize_dump(concept: Concept) -> dict[str, Any]:
     d = concept.model_dump()
     d.pop("id", None)
     if isinstance(concept, Relationship):
-        d["source"] = concept.source.id
-        d["target"] = concept.target.id
+        d["source"] = concept.source_id
+        d["target"] = concept.target_id
     return d
 
 
