@@ -281,6 +281,84 @@ class Model:
             if r.source_id == concept.id and (tgt := self._concepts.get(r.target_id)) is not None
         ]
 
+    def _shallow_clone(self) -> Model:
+        """Return a new model sharing this model's concepts and config by reference.
+
+        The registry dict is *shallow*-copied (cheap pointer copies); the immutable
+        concept instances themselves are shared (ADR-051).  Profiles, the
+        specialization registry, and custom rules are carried over.  The graph
+        cache is left empty so it recomputes against the (possibly edited)
+        registry.  Views are not carried over: a :class:`View` binds to a specific
+        model instance, so views must be rebuilt against the new model if needed.
+        """
+        new = Model()
+        new._concepts = dict(self._concepts)
+        new._profiles = list(self._profiles)
+        new._specialization_registry = dict(self._specialization_registry)
+        new._custom_rules = list(self._custom_rules)
+        return new
+
+    def with_added(self, concept: Concept) -> Model:
+        """Return a new model with *concept* added, sharing all existing concepts.
+
+        The original model is left unchanged (ADR-051 structural sharing): the new
+        model shares every existing concept instance by reference and adds *concept*.
+
+        :param concept: The concept to add.
+        :raises TypeError: if *concept* is not a :class:`Concept` instance.
+        :raises ValueError: if a concept with the same ``id`` already exists.
+        :returns: A new :class:`Model` instance.
+        """
+        if not isinstance(concept, Concept):
+            raise TypeError(f"Expected an instance of Concept, got {type(concept).__name__}")
+        if concept.id in self._concepts:
+            raise ValueError(f"Duplicate concept ID: '{concept.id}'")
+        new = self._shallow_clone()
+        new._concepts[concept.id] = concept
+        return new
+
+    def with_replaced(self, concept: Concept) -> Model:
+        """Return a new model with the concept of the same ``id`` replaced by *concept*.
+
+        This is the cheap-edit primitive (ADR-051): produce an edited instance with
+        ``concept.model_copy(update={...})`` and pass it here.  Because relationship
+        endpoints are addressed by ID, relationships referencing this concept need no
+        re-linking — they resolve the unchanged ID to the new instance.  ``O(1)`` plus
+        a shallow registry copy.
+
+        :param concept: The replacement concept; its ``id`` must already exist.
+        :raises TypeError: if *concept* is not a :class:`Concept` instance.
+        :raises KeyError: if no concept with that ``id`` exists in the model.
+        :returns: A new :class:`Model` instance.
+        """
+        if not isinstance(concept, Concept):
+            raise TypeError(f"Expected an instance of Concept, got {type(concept).__name__}")
+        if concept.id not in self._concepts:
+            raise KeyError(concept.id)
+        new = self._shallow_clone()
+        new._concepts[concept.id] = concept
+        return new
+
+    def with_removed(self, concept_or_id: Concept | str) -> Model:
+        """Return a new model without the given concept and any dangling relationships.
+
+        Relationships left with a missing source or target endpoint are dropped
+        (they would be broken).  All other concepts are shared by reference.
+
+        :param concept_or_id: The concept to remove, or its ``id``.
+        :raises KeyError: if no concept with that ``id`` exists in the model.
+        :returns: A new :class:`Model` instance.
+        """
+        cid = concept_or_id.id if isinstance(concept_or_id, Concept) else concept_or_id
+        if cid not in self._concepts:
+            raise KeyError(cid)
+        new = self._shallow_clone()
+        del new._concepts[cid]
+        for rid, concept in list(new._concepts.items()):
+            if isinstance(concept, Relationship) and cid in (concept.source_id, concept.target_id):
+                del new._concepts[rid]
+        return new
+
     def validate(self, *, strict: bool = False) -> list[ValidationError]:
         """Run all model-level validation rules.
 

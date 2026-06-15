@@ -39,6 +39,18 @@ rename on the same model is ~6ms.
 - **Element collection fields are immutable tuples.** `assigned_elements` and
   `members` are now `tuple[...]` instead of `list[...]`.
 
+### Added
+
+- **Structural-sharing editing API on `Model`**: `with_added(concept)`,
+  `with_replaced(concept)`, and `with_removed(concept_or_id)` each return a new
+  immutable `Model` that shares unchanged concept instances with the source
+  model. `with_replaced` is the cheap-edit primitive — combined with
+  `concept.model_copy(update={...})` it renames/edits a concept in roughly
+  constant time regardless of model size, with no relationship re-linking
+  (endpoints resolve by ID). `with_removed` also drops relationships left
+  dangling by the removal. Views are not carried into the new model (a `View`
+  binds to a specific model instance).
+
 ## [0.12.0] - 02 Jun 2026
 
 ### Behavior changes
