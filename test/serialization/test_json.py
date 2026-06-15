@@ -83,8 +83,8 @@ class TestModelFromDict:
         data = model_to_dict(simple_model)
         restored = model_from_dict(data)
         rel = restored.relationships[0]
-        assert isinstance(rel.source, BusinessActor)
-        assert isinstance(rel.target, BusinessProcess)
+        assert isinstance(restored[rel.source_id], BusinessActor)
+        assert isinstance(restored[rel.target_id], BusinessProcess)
 
     def test_round_trip_ids_preserved(self, simple_model):
         original_ids = {c.id for c in simple_model.concepts}

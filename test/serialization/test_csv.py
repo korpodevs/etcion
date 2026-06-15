@@ -79,8 +79,8 @@ class TestFromCsv:
         assert len(model.relationships) == 1
         rel = model.relationships[0]
         assert type(rel).__name__ == "Serving"
-        assert rel.source.name == "Alice"
-        assert rel.target.name == "Order Handling"
+        assert model[rel.source_id].name == "Alice"
+        assert model[rel.target_id].name == "Order Handling"
 
     def test_optional_id_column(self, tmp_path: Path) -> None:
         """When an id column is present the element receives that exact ID."""

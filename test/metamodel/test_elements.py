@@ -203,9 +203,9 @@ class TestGroupingInstantiation:
         g = Grouping(name="g")
         assert g.name == "g"
 
-    def test_members_defaults_to_empty_list(self) -> None:
+    def test_members_defaults_to_empty(self) -> None:
         g = Grouping(name="g")
-        assert g.members == []
+        assert g.members == ()
 
     def test_type_name(self) -> None:
         g = Grouping(name="g")

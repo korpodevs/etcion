@@ -55,8 +55,8 @@ def profiled_model() -> Model:
     """
     model = Model()
 
-    svc = ApplicationService(name="Payment Gateway")
-    app = ApplicationComponent(name="Payment Processor")
+    svc = ApplicationService(name="Payment Gateway", specialization="primary")
+    app = ApplicationComponent(name="Payment Processor", extended_attributes={"risk_score": 0.85})
     model.add(svc)
     model.add(app)
     model.add(Serving(name="", source=app, target=svc))
@@ -67,9 +67,6 @@ def profiled_model() -> Model:
         attribute_extensions={ApplicationComponent: {"risk_score": float}},
     )
     model.apply_profile(profile)
-
-    svc.specialization = "primary"
-    app.extended_attributes["risk_score"] = 0.85
 
     return model
 

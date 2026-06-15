@@ -85,8 +85,8 @@ class TestRelationshipCommon:
     def test_source_and_target(self, spec: RelSpec) -> None:
         a, b = StubActiveStructure(name="a"), StubActiveStructure(name="b")
         r = spec.cls(name="r", source=a, target=b)
-        assert r.source is a
-        assert r.target is b
+        assert r.source_id == a.id
+        assert r.target_id == b.id
 
     def test_category(self, spec: RelSpec) -> None:
         assert spec.cls.category is spec.category
@@ -369,8 +369,8 @@ class TestAssociation:
         a = StubActiveStructure(name="a")
         b = StubBehavior(name="b")
         r = Association(name="assoc", source=a, target=b)
-        assert r.source is a
-        assert r.target is b
+        assert r.source_id == a.id
+        assert r.target_id == b.id
 
     def test_accepts_relationship_as_target(self) -> None:
         """Association can target a Relationship (per spec, any two concepts)."""
@@ -386,7 +386,7 @@ class TestAssociation:
         b = StubActiveStructure(name="b")
         rel = _StubRel(name="r", source=a, target=b)
         assoc = Association(name="assoc", source=a, target=rel)
-        assert assoc.target is rel
+        assert assoc.target_id == rel.id
 
 
 # ---------------------------------------------------------------------------
@@ -770,4 +770,4 @@ class TestPassiveBehaviorModelValidate:
         bo = BusinessObject(name="obj")
         bp = BusinessProcess(name="proc")
         rel = Assignment(name="bad", source=bo, target=bp)  # no error here
-        assert rel.source is bo
+        assert rel.source_id == bo.id

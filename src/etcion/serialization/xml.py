@@ -156,8 +156,8 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
     desc = TYPE_REGISTRY[type(rel)]
     el = etree.Element(f"{{{ARCHIMATE_NS}}}relationship", nsmap=NSMAP)
     el.set("identifier", _to_exchange_id(rel.id))
-    el.set("source", _to_exchange_id(rel.source.id))
-    el.set("target", _to_exchange_id(rel.target.id))
+    el.set("source", _to_exchange_id(rel.source_id))
+    el.set("target", _to_exchange_id(rel.target_id))
     el.set(f"{{{XSI_NS}}}type", desc.xml_tag)
 
     if rel.name:
@@ -232,8 +232,8 @@ def _serialize_view(view: View, parent: etree._Element) -> None:
         node_el.set("h", str(_node_h))
 
     for rel in view_relationships:
-        src_exchange_id = _to_exchange_id(rel.source.id)
-        tgt_exchange_id = _to_exchange_id(rel.target.id)
+        src_exchange_id = _to_exchange_id(rel.source_id)
+        tgt_exchange_id = _to_exchange_id(rel.target_id)
         src_node_id = elem_exchange_id_to_node_id.get(src_exchange_id)
         tgt_node_id = elem_exchange_id_to_node_id.get(tgt_exchange_id)
         # Skip connections whose endpoints have no node in this view.

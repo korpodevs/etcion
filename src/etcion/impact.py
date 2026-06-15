@@ -137,8 +137,8 @@ class ImpactResult:
                 {
                     "id": r.id,
                     "type": type(r).__name__,
-                    "source_id": r.source.id,
-                    "target_id": r.target.id,
+                    "source_id": r.source_id,
+                    "target_id": r.target_id,
                 }
                 for r in self.broken_relationships
             ],
@@ -194,8 +194,10 @@ class ImpactResult:
                 "</tr>"
             )
             for rel in self.broken_relationships:
-                src_name = getattr(rel.source, "name", None) or rel.source.id
-                tgt_name = getattr(rel.target, "name", None) or rel.target.id
+                # Endpoints are addressed by ID (ADR-051); the result carries no
+                # model reference, so display the IDs directly.
+                src_name = rel.source_id
+                tgt_name = rel.target_id
                 parts.append(
                     f"<tr style='background:#f8d7da;'>"
                     f"<td style='padding:4px;'>{rel.id[:12]}...</td>"
@@ -236,50 +238,35 @@ def _find_rel_id(graph: object, node_a: str, node_b: str) -> str:
 def _build_result_model(original: Model, exclude_ids: set[str]) -> Model:
     """Build a new Model excluding concepts whose IDs are in *exclude_ids*.
 
-    Phase 1: Deep-copy all Elements and RelationshipConnectors (excluding IDs
-    in *exclude_ids*) and build an id→copy map.
-    Phase 2: Deep-copy each surviving Relationship, re-linking its ``source``
-    and ``target`` fields to the copies produced in Phase 1.  Relationships
-    whose source or target was excluded are skipped (they are broken).
-    Phase 3: Construct a new :class:`~etcion.metamodel.model.Model` from all
-    copied concepts.
+    Copy-on-write (ADR-051): concepts are immutable, so the result *shares* every
+    surviving concept instance by reference rather than deep-copying it.  Cost is
+    therefore ``O(model_size)`` in cheap pointer copies (shallow registry copy),
+    not ``O(model_size)`` pydantic deep copies.  Relationships left dangling by an
+    excluded endpoint are dropped (they are broken).  No re-linking is needed:
+    surviving relationships already reference the shared (unchanged) endpoint
+    instances.
+
+    The fresh :class:`~etcion.metamodel.model.Model` starts with an empty graph
+    cache, so traversal recomputes against the surviving set (ADR-051 Decision 7).
 
     :param original: The source model.
     :param exclude_ids: Set of concept IDs to omit from the result.
     :returns: A new :class:`~etcion.metamodel.model.Model` instance.
     """
-    from etcion.metamodel.concepts import Element, Relationship, RelationshipConnector
+    from etcion.metamodel.concepts import Relationship
     from etcion.metamodel.model import Model
 
-    # Phase 1 — copy Elements and RelationshipConnectors.
-    id_map: dict[str, Element | RelationshipConnector] = {}
-    for concept in original.concepts:
-        if concept.id in exclude_ids:
-            continue
-        if isinstance(concept, (Element, RelationshipConnector)):
-            id_map[concept.id] = concept.model_copy(deep=True)
-
-    # Phase 2 — copy Relationships with re-linked source/target.
-    copied_rels: list[Relationship] = []
-    for concept in original.concepts:
-        if concept.id in exclude_ids:
-            continue
-        if isinstance(concept, Relationship):
-            new_src = id_map.get(concept.source.id)
-            new_tgt = id_map.get(concept.target.id)
-            if new_src is None or new_tgt is None:
-                # Source or target was excluded; skip (broken relationship).
-                continue
-            copied_rels.append(
-                concept.model_copy(deep=True, update={"source": new_src, "target": new_tgt})
-            )
-
-    # Phase 3 — assemble the new Model.
     new_model = Model()
-    for copied in id_map.values():
-        new_model.add(copied)
-    for copied_rel in copied_rels:
-        new_model.add(copied_rel)
+    for concept in original.concepts:
+        if concept.id in exclude_ids:
+            continue
+        if isinstance(concept, Relationship) and (
+            concept.source_id in exclude_ids or concept.target_id in exclude_ids
+        ):
+            # Source or target was excluded; skip (broken relationship).
+            continue
+        # Share the immutable instance by reference (structural sharing).
+        new_model.add(concept)
     return new_model
 
 
@@ -349,34 +336,34 @@ def _analyze_merge(
 
     # Collect all relationships touching any merged element.
     touching: list[Relationship] = [
-        r for r in model.relationships if r.source.id in merged_ids or r.target.id in merged_ids
+        r for r in model.relationships if r.source_id in merged_ids or r.target_id in merged_ids
     ]
 
-    # Ensure target is in the id_map for the result model.
-    # Phase 1 — copy Elements and RelationshipConnectors, excluding remove_ids.
+    # Result model shares unchanged concept instances (ADR-051 structural
+    # sharing); only rewired relationships are copied (their endpoints change).
     id_map: dict[str, Element | RelationshipConnector] = {}
     for concept in model.concepts:
         if concept.id in remove_ids:
             continue
         if isinstance(concept, (Element, RelationshipConnector)):
-            id_map[concept.id] = concept.model_copy(deep=True)
+            id_map[concept.id] = concept
 
-    # If the target is not in the original model, add a copy.
+    # If the target is not in the original model, include it (shared).
     if target_id not in id_map and isinstance(target, (Element, RelationshipConnector)):
-        id_map[target_id] = target.model_copy(deep=True)
+        id_map[target_id] = target
 
     # Rewire touching relationships, then deduplicate.
     # Key: (rel_type, new_source_id, new_target_id) — first wins.
     seen_keys: dict[tuple[type, str, str], Relationship] = {}
     for rel in touching:
-        new_src_id = target_id if rel.source.id in merged_ids else rel.source.id
-        new_tgt_id = target_id if rel.target.id in merged_ids else rel.target.id
+        new_src_id = target_id if rel.source_id in merged_ids else rel.source_id
+        new_tgt_id = target_id if rel.target_id in merged_ids else rel.target_id
         key = (type(rel), new_src_id, new_tgt_id)
         if key not in seen_keys:
             new_src = id_map.get(new_src_id)
             new_tgt = id_map.get(new_tgt_id)
             if new_src is not None and new_tgt is not None:
-                rewired = rel.model_copy(deep=True, update={"source": new_src, "target": new_tgt})
+                rewired = rel.model_copy(update={"source_id": new_src_id, "target_id": new_tgt_id})
                 seen_keys[key] = rewired
 
     # Permission-check deduplicated rewired relationships.
@@ -407,20 +394,19 @@ def _analyze_merge(
                 )
             )
 
-    # Collect surviving (non-touching) relationships from the original model,
-    # copying and re-linking them via id_map.
+    # Surviving (non-touching) relationships are shared unchanged — their
+    # endpoints are not merged, so they still reference valid instances.
     surviving_rels: list[Relationship] = []
     touching_ids = {r.id for r in touching}
     for concept in model.concepts:
         if concept.id in remove_ids:
             continue
         if isinstance(concept, Relationship) and concept.id not in touching_ids:
-            new_src = id_map.get(concept.source.id)
-            new_tgt = id_map.get(concept.target.id)
-            if new_src is not None and new_tgt is not None:
-                surviving_rels.append(
-                    concept.model_copy(deep=True, update={"source": new_src, "target": new_tgt})
-                )
+            if (
+                id_map.get(concept.source_id) is not None
+                and id_map.get(concept.target_id) is not None
+            ):
+                surviving_rels.append(concept)
 
     # Assemble result model.
     result_model = _Model()
@@ -439,35 +425,91 @@ def _analyze_merge(
     )
 
 
+def _analyze_substitute(model: Model, old: Concept, new: Concept) -> ImpactResult:
+    """Implement the substitute/version operation for :func:`analyze_impact`.
+
+    *new* takes over *old*'s identity slot: it is registered under ``old.id`` so
+    that relationships -- which reference endpoints by ID (ADR-051) -- are left
+    untouched and resolve to *new*.  This is an ``O(1)`` structural edit (plus a
+    shallow registry copy).
+
+    Each relationship incident to ``old.id`` is re-checked against *new*'s type
+    and reported in ``violations`` if it becomes impermissible.  ``old``'s direct
+    neighbours are reported as affected at depth 1.
+
+    :param model: Source model.
+    :param old: The concept whose identity slot is being filled.
+    :param new: The replacement concept (re-keyed to ``old.id`` if it differs).
+    :returns: :class:`ImpactResult` describing the substitution.
+    """
+    from etcion.metamodel.concepts import Element
+    from etcion.validation.permissions import is_permitted
+
+    # new occupies old's identity slot.
+    new_keyed = new if new.id == old.id else new.model_copy(update={"id": old.id})
+    resulting_model = model.with_replaced(new_keyed)
+
+    incident = model.connected_to(old)
+
+    # Affected: old's direct neighbours (now connected to new) at depth 1.
+    affected: list[ImpactedConcept] = []
+    seen: set[str] = set()
+    for rel in incident:
+        other_id = rel.target_id if rel.source_id == old.id else rel.source_id
+        other = model._concepts.get(other_id)
+        if other is not None and other.id != old.id and other.id not in seen:
+            seen.add(other.id)
+            affected.append(ImpactedConcept(concept=other, depth=1))
+
+    # Violations: relationships whose permission breaks now that they connect to
+    # new's type instead of old's. Only element-to-element rels are checked.
+    violations: list[Violation] = []
+    for rel in incident:
+        src = new_keyed if rel.source_id == old.id else model._concepts.get(rel.source_id)
+        tgt = new_keyed if rel.target_id == old.id else model._concepts.get(rel.target_id)
+        if not isinstance(src, Element) or not isinstance(tgt, Element):
+            continue
+        if not is_permitted(type(rel), type(src), type(tgt)):
+            violations.append(
+                Violation(
+                    relationship=rel,
+                    reason=(
+                        f"{type(rel).__name__}("
+                        f"{type(src).__name__} -> {type(tgt).__name__}) is not permitted "
+                        f"by ArchiMate 3.2 Appendix B after substituting "
+                        f"{type(old).__name__} with {type(new).__name__}"
+                    ),
+                )
+            )
+
+    return ImpactResult(
+        affected=tuple(affected),
+        broken_relationships=(),
+        resulting_model=resulting_model,
+        violations=tuple(violations),
+    )
+
+
 def _analyze_add_relationship(model: Model, relationship: Relationship) -> ImpactResult:
     """Implement the add_relationship operation for :func:`analyze_impact`.
 
     Builds a result model consisting of all concepts from the original model
-    plus the new relationship (deep-copied with source/target re-linked to
-    copies of the original elements).  Reports source and target elements as
-    affected at depth 1.
+    plus the new relationship.  Endpoints are addressed by ID (ADR-051), so the
+    relationship needs no re-linking — its source_id/target_id already resolve
+    against the shared elements.  Reports source and target elements as affected
+    at depth 1.
 
     :param model: Source model.
     :param relationship: The relationship to add.
     :returns: :class:`ImpactResult` describing the add-relationship impact.
     """
-    from etcion.metamodel.model import Model as _Model
-
     result_model = _build_result_model(model, set())
-
-    # Re-link the new relationship's source/target to the copies in result_model.
-    new_src = result_model._concepts.get(relationship.source.id)
-    new_tgt = result_model._concepts.get(relationship.target.id)
-    if new_src is not None and new_tgt is not None:
-        new_rel = relationship.model_copy(deep=True, update={"source": new_src, "target": new_tgt})
-    else:
-        new_rel = relationship.model_copy(deep=True)
-    result_model.add(new_rel)
+    result_model.add(relationship.model_copy())
 
     # Affected: source and target elements at depth 1.
     affected: list[ImpactedConcept] = []
-    src_concept = result_model._concepts.get(relationship.source.id)
-    tgt_concept = result_model._concepts.get(relationship.target.id)
+    src_concept = result_model._concepts.get(relationship.source_id)
+    tgt_concept = result_model._concepts.get(relationship.target_id)
     if src_concept is not None:
         affected.append(ImpactedConcept(concept=src_concept, depth=1))
     if tgt_concept is not None:
@@ -497,8 +539,8 @@ def _analyze_remove_relationship(model: Model, relationship: Relationship) -> Im
 
     # Affected: source and target elements at depth 1 (copies in result model).
     affected: list[ImpactedConcept] = []
-    src_concept = result_model._concepts.get(relationship.source.id)
-    tgt_concept = result_model._concepts.get(relationship.target.id)
+    src_concept = result_model._concepts.get(relationship.source_id)
+    tgt_concept = result_model._concepts.get(relationship.target_id)
     if src_concept is not None:
         affected.append(ImpactedConcept(concept=src_concept, depth=1))
     if tgt_concept is not None:
@@ -555,6 +597,7 @@ def analyze_impact(
     remove: Concept | None = None,
     merge: tuple[list[Concept], Concept] | None = None,
     replace: tuple[Concept, Concept] | None = None,
+    substitute: tuple[Concept, Concept] | None = None,
     add_relationship: Relationship | None = None,
     remove_relationship: Relationship | None = None,
     max_depth: int | None = None,
@@ -579,10 +622,18 @@ def analyze_impact(
     :param merge: A ``(merged_list, target)`` tuple.  All concepts in
         ``merged_list`` are collapsed into ``target``.  Relationships are
         rewired, deduplicated, and permission-checked.
-    :param replace: A ``(old, new)`` tuple.  ``old`` is removed from the
-        model and all its relationships are transferred to ``new``.
-        Equivalent to ``merge([old], new)`` and subject to the same
-        permission-checking logic.
+    :param replace: A ``(old, new)`` tuple — *redirect* semantics.  ``old`` is
+        removed and its relationships are rewired onto ``new`` (a different
+        entity).  Equivalent to ``merge([old], new)`` and subject to the same
+        permission-checking logic.  Use ``substitute`` instead when ``new`` is a
+        new *version* of ``old`` that should keep ``old``'s identity.
+    :param substitute: A ``(old, new)`` tuple — *substitute/version* semantics.
+        ``new`` takes over ``old``'s identity slot (it is registered under
+        ``old``'s ID), so relationships are left untouched — they resolve the
+        unchanged ID to ``new``.  Each relationship incident to ``old`` is
+        re-checked against ``new``'s type and reported in ``violations`` if it
+        becomes impermissible.  ``old``'s direct neighbours are reported as
+        affected at depth 1.
     :param add_relationship: A :class:`~etcion.metamodel.concepts.Relationship`
         to hypothetically add to the model.  The resulting model contains all
         original concepts plus this new relationship.  The source and target
@@ -605,6 +656,7 @@ def analyze_impact(
         remove is None
         and merge is None
         and replace is None
+        and substitute is None
         and add_relationship is None
         and remove_relationship is None
     ):
@@ -617,10 +669,15 @@ def analyze_impact(
             "networkx is required for impact analysis. Install it with: pip install etcion[graph]"
         ) from None
 
-    # Dispatch replace operation — delegate to merge with a single-element list.
+    # Dispatch replace operation (redirect) — delegate to merge with a single-element list.
     if replace is not None:
         old, new = replace
         return _analyze_merge(model, [old], new)
+
+    # Dispatch substitute operation (version) — new takes old's identity slot.
+    if substitute is not None:
+        old, new = substitute
+        return _analyze_substitute(model, old, new)
 
     # Dispatch merge operation.
     if merge is not None:
@@ -681,7 +738,7 @@ def analyze_impact(
 
     # Identify broken relationships (any relationship touching the removed element).
     broken: tuple[Relationship, ...] = tuple(
-        r for r in model.relationships if r.source.id == start_id or r.target.id == start_id
+        r for r in model.relationships if r.source_id == start_id or r.target_id == start_id
     )
 
     # Build result model excluding the removed element and all broken relationships.

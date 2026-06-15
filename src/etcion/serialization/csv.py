@@ -235,7 +235,7 @@ def from_csv(
                         # Blank cell for a required str field (typically `name`):
                         # pass "" so writer/reader are symmetric (issue #102).
                         kwargs[key] = ""
-                rel = cls(source=id_map[source_id], target=id_map[target_id], **kwargs)
+                rel = cls(source_id=source_id, target_id=target_id, **kwargs)
                 model.add(rel)
 
     return model
@@ -288,8 +288,8 @@ def to_csv(
                 writer.writerow(
                     [
                         type(rel).__name__,
-                        rel.source.id,
-                        rel.target.id,
+                        rel.source_id,
+                        rel.target_id,
                         getattr(rel, "name", "") or "",
                     ]
                 )

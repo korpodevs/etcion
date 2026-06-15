@@ -101,14 +101,15 @@ class TestPatternMatchingPawsPlus:
         orphaned_leaf_caps: list[str] = []
         for cap in model.elements_of_type(Capability):
             apps = [
-                r.source
+                model[r.source_id]
                 for r in model.connected_to(cap)
-                if isinstance(r, Realization) and isinstance(r.source, ApplicationComponent)
+                if isinstance(r, Realization)
+                and isinstance(model[r.source_id], ApplicationComponent)
             ]
             children = [
                 r
                 for r in model.relationships_of_type(Composition)
-                if r.source is cap and isinstance(r.target, Capability)
+                if r.source_id == cap.id and isinstance(model[r.target_id], Capability)
             ]
             if not apps and not children:
                 orphaned_leaf_caps.append(cap.name)
@@ -129,10 +130,10 @@ class TestPatternMatchingPawsPlus:
 
         svc_count: Counter[str] = Counter()
         for rel in model.relationships_of_type(Serving):
-            if isinstance(rel.source, ApplicationService) and isinstance(
-                rel.target, ApplicationComponent
+            if isinstance(model[rel.source_id], ApplicationService) and isinstance(
+                model[rel.target_id], ApplicationComponent
             ):
-                svc_count[rel.source.name] += 1
+                svc_count[model[rel.source_id].name] += 1
 
         high_fanout = {name: count for name, count in svc_count.items() if count >= 2}
         assert "Process Payment" in high_fanout, (
@@ -148,10 +149,10 @@ class TestPatternMatchingPawsPlus:
 
         svc_count: Counter[str] = Counter()
         for rel in model.relationships_of_type(Serving):
-            if isinstance(rel.source, ApplicationService) and isinstance(
-                rel.target, ApplicationComponent
+            if isinstance(model[rel.source_id], ApplicationService) and isinstance(
+                model[rel.target_id], ApplicationComponent
             ):
-                svc_count[rel.source.name] += 1
+                svc_count[model[rel.source_id].name] += 1
 
         high_fanout_names = [name for name, count in svc_count.items() if count >= 2]
         assert len(high_fanout_names) == 1, (
@@ -170,11 +171,11 @@ class TestPatternMatchingPawsPlus:
         contested: list[str] = []
         for data in model.elements_of_type(DataObject):
             writers = [
-                r.source
+                model[r.source_id]
                 for r in model.connected_to(data)
                 if isinstance(r, Access)
                 and r.access_mode == AccessMode.WRITE
-                and isinstance(r.source, ApplicationComponent)
+                and isinstance(model[r.source_id], ApplicationComponent)
             ]
             if len(writers) > 1:
                 contested.append(data.name)
@@ -370,7 +371,8 @@ class TestModelDiffKnownChanges:
         # Rename the first ApplicationComponent in the mutated copy
         target_app = next(iter(model.elements_of_type(ApplicationComponent)))
         original_name = target_app.name
-        target_app.name = "Renamed Application XYZZY"
+        target_app = target_app.model_copy(update={"name": "Renamed Application XYZZY"})
+        model._concepts[target_app.id] = target_app
 
         diff = diff_models(baseline, model)
         modified_ids = {cc.concept_id for cc in diff.modified}
@@ -385,7 +387,8 @@ class TestModelDiffKnownChanges:
         baseline = copy.deepcopy(model)
 
         target_app = next(iter(model.elements_of_type(ApplicationComponent)))
-        target_app.name = "Renamed Application XYZZY"
+        target_app = target_app.model_copy(update={"name": "Renamed Application XYZZY"})
+        model._concepts[target_app.id] = target_app
 
         diff = diff_models(baseline, model)
         change = next((cc for cc in diff.modified if cc.concept_id == target_app.id), None)
@@ -485,11 +488,12 @@ class TestModelMergeConflictDetection:
 
         # Find the shared element in both copies by the same ID
         shared_app_id = next(iter(model.elements_of_type(ApplicationComponent))).id
-        app_in_a = branch_a._concepts[shared_app_id]
-        app_in_b = branch_b._concepts[shared_app_id]
-
-        app_in_a.name = "Branch A Name"
-        app_in_b.name = "Branch B Name"
+        branch_a._concepts[shared_app_id] = branch_a._concepts[shared_app_id].model_copy(
+            update={"name": "Branch A Name"}
+        )
+        branch_b._concepts[shared_app_id] = branch_b._concepts[shared_app_id].model_copy(
+            update={"name": "Branch B Name"}
+        )
 
         # Each branch adds a unique element (non-conflicting)
         branch_a.add(ApplicationComponent(name="Branch A Exclusive App"))

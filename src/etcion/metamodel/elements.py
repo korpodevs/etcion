@@ -66,7 +66,7 @@ class Function(InternalBehaviorElement): ...
 
 
 class Interaction(InternalBehaviorElement):
-    assigned_elements: list[ActiveStructureElement] = Field(default_factory=list)
+    assigned_elements: tuple[ActiveStructureElement, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
     def _validate_assigned_elements(self) -> Interaction:
@@ -97,7 +97,7 @@ class CompositeElement(Element): ...
 class Grouping(CompositeElement):
     layer: ClassVar[Layer] = Layer.IMPLEMENTATION_MIGRATION
     aspect: ClassVar[Aspect] = Aspect.COMPOSITE
-    members: list[Concept] = Field(default_factory=list)
+    members: tuple[Concept, ...] = Field(default_factory=tuple)
 
     @property
     def _type_name(self) -> str:
