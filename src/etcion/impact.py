@@ -236,50 +236,35 @@ def _find_rel_id(graph: object, node_a: str, node_b: str) -> str:
 def _build_result_model(original: Model, exclude_ids: set[str]) -> Model:
     """Build a new Model excluding concepts whose IDs are in *exclude_ids*.
 
-    Phase 1: Deep-copy all Elements and RelationshipConnectors (excluding IDs
-    in *exclude_ids*) and build an id→copy map.
-    Phase 2: Deep-copy each surviving Relationship, re-linking its ``source``
-    and ``target`` fields to the copies produced in Phase 1.  Relationships
-    whose source or target was excluded are skipped (they are broken).
-    Phase 3: Construct a new :class:`~etcion.metamodel.model.Model` from all
-    copied concepts.
+    Copy-on-write (ADR-051): concepts are immutable, so the result *shares* every
+    surviving concept instance by reference rather than deep-copying it.  Cost is
+    therefore ``O(model_size)`` in cheap pointer copies (shallow registry copy),
+    not ``O(model_size)`` pydantic deep copies.  Relationships left dangling by an
+    excluded endpoint are dropped (they are broken).  No re-linking is needed:
+    surviving relationships already reference the shared (unchanged) endpoint
+    instances.
+
+    The fresh :class:`~etcion.metamodel.model.Model` starts with an empty graph
+    cache, so traversal recomputes against the surviving set (ADR-051 Decision 7).
 
     :param original: The source model.
     :param exclude_ids: Set of concept IDs to omit from the result.
     :returns: A new :class:`~etcion.metamodel.model.Model` instance.
     """
-    from etcion.metamodel.concepts import Element, Relationship, RelationshipConnector
+    from etcion.metamodel.concepts import Relationship
     from etcion.metamodel.model import Model
 
-    # Phase 1 — copy Elements and RelationshipConnectors.
-    id_map: dict[str, Element | RelationshipConnector] = {}
-    for concept in original.concepts:
-        if concept.id in exclude_ids:
-            continue
-        if isinstance(concept, (Element, RelationshipConnector)):
-            id_map[concept.id] = concept.model_copy(deep=True)
-
-    # Phase 2 — copy Relationships with re-linked source/target.
-    copied_rels: list[Relationship] = []
-    for concept in original.concepts:
-        if concept.id in exclude_ids:
-            continue
-        if isinstance(concept, Relationship):
-            new_src = id_map.get(concept.source.id)
-            new_tgt = id_map.get(concept.target.id)
-            if new_src is None or new_tgt is None:
-                # Source or target was excluded; skip (broken relationship).
-                continue
-            copied_rels.append(
-                concept.model_copy(deep=True, update={"source": new_src, "target": new_tgt})
-            )
-
-    # Phase 3 — assemble the new Model.
     new_model = Model()
-    for copied in id_map.values():
-        new_model.add(copied)
-    for copied_rel in copied_rels:
-        new_model.add(copied_rel)
+    for concept in original.concepts:
+        if concept.id in exclude_ids:
+            continue
+        if isinstance(concept, Relationship) and (
+            concept.source.id in exclude_ids or concept.target.id in exclude_ids
+        ):
+            # Source or target was excluded; skip (broken relationship).
+            continue
+        # Share the immutable instance by reference (structural sharing).
+        new_model.add(concept)
     return new_model
 
 
@@ -352,18 +337,18 @@ def _analyze_merge(
         r for r in model.relationships if r.source.id in merged_ids or r.target.id in merged_ids
     ]
 
-    # Ensure target is in the id_map for the result model.
-    # Phase 1 — copy Elements and RelationshipConnectors, excluding remove_ids.
+    # Result model shares unchanged concept instances (ADR-051 structural
+    # sharing); only rewired relationships are copied (their endpoints change).
     id_map: dict[str, Element | RelationshipConnector] = {}
     for concept in model.concepts:
         if concept.id in remove_ids:
             continue
         if isinstance(concept, (Element, RelationshipConnector)):
-            id_map[concept.id] = concept.model_copy(deep=True)
+            id_map[concept.id] = concept
 
-    # If the target is not in the original model, add a copy.
+    # If the target is not in the original model, include it (shared).
     if target_id not in id_map and isinstance(target, (Element, RelationshipConnector)):
-        id_map[target_id] = target.model_copy(deep=True)
+        id_map[target_id] = target
 
     # Rewire touching relationships, then deduplicate.
     # Key: (rel_type, new_source_id, new_target_id) — first wins.
@@ -376,7 +361,7 @@ def _analyze_merge(
             new_src = id_map.get(new_src_id)
             new_tgt = id_map.get(new_tgt_id)
             if new_src is not None and new_tgt is not None:
-                rewired = rel.model_copy(deep=True, update={"source": new_src, "target": new_tgt})
+                rewired = rel.model_copy(update={"source": new_src, "target": new_tgt})
                 seen_keys[key] = rewired
 
     # Permission-check deduplicated rewired relationships.
@@ -407,20 +392,19 @@ def _analyze_merge(
                 )
             )
 
-    # Collect surviving (non-touching) relationships from the original model,
-    # copying and re-linking them via id_map.
+    # Surviving (non-touching) relationships are shared unchanged — their
+    # endpoints are not merged, so they still reference valid instances.
     surviving_rels: list[Relationship] = []
     touching_ids = {r.id for r in touching}
     for concept in model.concepts:
         if concept.id in remove_ids:
             continue
         if isinstance(concept, Relationship) and concept.id not in touching_ids:
-            new_src = id_map.get(concept.source.id)
-            new_tgt = id_map.get(concept.target.id)
-            if new_src is not None and new_tgt is not None:
-                surviving_rels.append(
-                    concept.model_copy(deep=True, update={"source": new_src, "target": new_tgt})
-                )
+            if (
+                id_map.get(concept.source.id) is not None
+                and id_map.get(concept.target.id) is not None
+            ):
+                surviving_rels.append(concept)
 
     # Assemble result model.
     result_model = _Model()
@@ -459,9 +443,9 @@ def _analyze_add_relationship(model: Model, relationship: Relationship) -> Impac
     new_src = result_model._concepts.get(relationship.source.id)
     new_tgt = result_model._concepts.get(relationship.target.id)
     if new_src is not None and new_tgt is not None:
-        new_rel = relationship.model_copy(deep=True, update={"source": new_src, "target": new_tgt})
+        new_rel = relationship.model_copy(update={"source": new_src, "target": new_tgt})
     else:
-        new_rel = relationship.model_copy(deep=True)
+        new_rel = relationship.model_copy()
     result_model.add(new_rel)
 
     # Affected: source and target elements at depth 1.

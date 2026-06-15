@@ -717,8 +717,13 @@ class TestByDepthOnRealResult:
 
 
 class TestResultModelDeepCopy:
-    def test_result_model_elements_are_copies(self) -> None:
-        """Elements in resulting_model are distinct objects (not the originals)."""
+    def test_result_model_shares_untouched_elements(self) -> None:
+        """Untouched elements are shared by reference (ADR-051 structural sharing).
+
+        Isolation is now guaranteed by immutability (frozen concepts), not by
+        producing distinct objects, so an unchanged survivor is the *same*
+        instance in both models.
+        """
         pytest.importorskip("networkx")
         from etcion.impact import analyze_impact
 
@@ -726,20 +731,19 @@ class TestResultModelDeepCopy:
         result = analyze_impact(model, remove=a)
         assert result.resulting_model is not None
 
-        # B survives; its copy in resulting_model must be a different object
+        # B survives untouched, so resulting_model shares the same instance.
         result_b = result.resulting_model["b1"]
-        assert id(result_b) != id(b)
-        # But the ArchiMate id field must be the same
+        assert result_b is b
         assert result_b.id == b.id
 
-    def test_result_relationships_reference_new_elements(self) -> None:
-        """Relationships in resulting_model reference the copied elements, not the originals."""
+    def test_result_relationships_reference_shared_elements(self) -> None:
+        """Surviving relationships reference the shared element instances (ADR-051)."""
         pytest.importorskip("networkx")
         from etcion.impact import analyze_impact
         from etcion.metamodel.business import BusinessActor, BusinessFunction, BusinessProcess
         from etcion.metamodel.concepts import Relationship
         from etcion.metamodel.model import Model
-        from etcion.metamodel.relationships import Assignment, Composition
+        from etcion.metamodel.relationships import Composition
 
         a = BusinessActor(id="a1", name="A")
         b = BusinessProcess(id="b1", name="B")
@@ -750,14 +754,12 @@ class TestResultModelDeepCopy:
         result = analyze_impact(model, remove=a)
         assert result.resulting_model is not None
 
-        # rel_bc survives (it does not touch A)
+        # rel_bc survives (it does not touch A) and is shared unchanged, so its
+        # endpoints are the same instances as in the original model.
         result_rel = result.resulting_model["rel-bc"]
         assert isinstance(result_rel, Relationship)
-        # source and target must be the copies from resulting_model, not the originals
-        assert id(result_rel.source) != id(b)  # type: ignore[union-attr]
-        assert id(result_rel.target) != id(c)  # type: ignore[union-attr]
-        assert result_rel.source.id == b.id  # type: ignore[union-attr]
-        assert result_rel.target.id == c.id  # type: ignore[union-attr]
+        assert result_rel.source is b  # type: ignore[union-attr]
+        assert result_rel.target is c  # type: ignore[union-attr]
 
     def test_original_mutation_does_not_affect_result(self) -> None:
         """Mutating the original model after analysis does not alter resulting_model."""
@@ -853,9 +855,9 @@ class TestResultModelJunction:
         assert "j1" in result_concept_ids
         assert "b1" in result_concept_ids
 
-        # Junction in result must be a copy, not the original
+        # Junction survives untouched, so it is shared by reference (ADR-051).
         result_j = result.resulting_model["j1"]
-        assert id(result_j) != id(j)
+        assert result_j is j
         assert result_j.id == j.id
 
 
