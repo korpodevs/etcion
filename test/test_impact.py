@@ -1786,3 +1786,123 @@ class TestImpactResultToDict:
             assert layer_val is None or isinstance(layer_val, str), (
                 f"layer must be str or None, got {type(layer_val)!r}: {layer_val!r}"
             )
+
+
+# ---------------------------------------------------------------------------
+# ADR-051: TestSubstitute — substitute/version semantics for replace
+# ---------------------------------------------------------------------------
+
+
+class TestSubstitute:
+    """``analyze_impact(substitute=(old, new))`` — new takes old's identity slot."""
+
+    @staticmethod
+    def _serving_model():
+        from etcion.metamodel.business import BusinessProcess, BusinessService
+        from etcion.metamodel.model import Model
+        from etcion.metamodel.relationships import Serving
+
+        # BusinessService -Serving-> BusinessProcess is permitted.
+        svc = BusinessService(id="svc1", name="Svc")
+        proc = BusinessProcess(id="proc1", name="Proc")
+        rel = Serving(id="rel-sp", name="SP", source=svc, target=proc)
+        return Model(concepts=[svc, proc, rel]), svc, proc, rel
+
+    def test_new_takes_old_id_slot(self) -> None:
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessService
+
+        model, svc, _proc, _rel = self._serving_model()
+        new = BusinessService(id="svc1", name="Svc v2")
+
+        result = analyze_impact(model, substitute=(svc, new))
+
+        assert result.resulting_model is not None
+        assert result.resulting_model["svc1"].name == "Svc v2"
+
+    def test_relationships_untouched_resolve_to_new(self) -> None:
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessService
+
+        model, svc, _proc, rel = self._serving_model()
+        new = BusinessService(id="svc1", name="Svc v2")
+
+        result = analyze_impact(model, substitute=(svc, new))
+        rm = result.resulting_model
+        assert rm is not None
+        # The relationship still references "svc1" by ID; it now resolves to new.
+        result_rel = rm["rel-sp"]
+        assert result_rel.source_id == "svc1"
+        assert rm[result_rel.source_id].name == "Svc v2"
+
+    def test_original_is_unchanged(self) -> None:
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessService
+
+        model, svc, _proc, _rel = self._serving_model()
+        analyze_impact(model, substitute=(svc, BusinessService(id="svc1", name="Svc v2")))
+        assert model["svc1"].name == "Svc"
+
+    def test_affected_reports_direct_neighbours(self) -> None:
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessService
+
+        model, svc, proc, _rel = self._serving_model()
+        result = analyze_impact(model, substitute=(svc, BusinessService(id="svc1", name="v2")))
+        affected_ids = {ic.concept.id for ic in result.affected}
+        assert affected_ids == {proc.id}
+        assert all(ic.depth == 1 for ic in result.affected)
+
+    def test_same_type_no_violations(self) -> None:
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessService
+
+        model, svc, _proc, _rel = self._serving_model()
+        result = analyze_impact(model, substitute=(svc, BusinessService(id="svc1", name="v2")))
+        assert result.violations == ()
+        assert result.broken_relationships == ()
+
+    def test_incompatible_type_creates_violation(self) -> None:
+        pytest.importorskip("networkx")
+        from etcion.impact import Violation, analyze_impact
+        from etcion.metamodel.business import BusinessActor
+
+        # BusinessService -Serving-> BusinessProcess is permitted, but
+        # BusinessActor -Serving-> BusinessProcess is NOT.
+        model, svc, _proc, rel = self._serving_model()
+        result = analyze_impact(model, substitute=(svc, BusinessActor(id="svc1", name="Actor")))
+
+        assert len(result.violations) > 0
+        assert all(isinstance(v, Violation) for v in result.violations)
+        assert any(v.relationship.id == rel.id for v in result.violations)
+
+    def test_new_rekeyed_when_ids_differ(self) -> None:
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessService
+
+        model, svc, _proc, _rel = self._serving_model()
+        # new carries a different id; it should be re-keyed into old's slot.
+        new = BusinessService(id="different-id", name="v2")
+        result = analyze_impact(model, substitute=(svc, new))
+        rm = result.resulting_model
+        assert rm is not None
+        assert rm["svc1"].name == "v2"
+        assert "different-id" not in {c.id for c in rm}
+
+    def test_untouched_concepts_shared(self) -> None:
+        pytest.importorskip("networkx")
+        from etcion.impact import analyze_impact
+        from etcion.metamodel.business import BusinessService
+
+        model, svc, proc, rel = self._serving_model()
+        result = analyze_impact(model, substitute=(svc, BusinessService(id="svc1", name="v2")))
+        rm = result.resulting_model
+        assert rm is not None
+        assert rm["proc1"] is proc
+        assert rm["rel-sp"] is rel

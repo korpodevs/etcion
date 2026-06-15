@@ -2,7 +2,7 @@
 
 **Status:** ACCEPTED
 **Date:** 2026-06-15
-**Implemented in:** 0.13.0 — Decisions 1–8 shipped (frozen concepts, structural-sharing result models, ID-ref endpoints, unified COW builder, graph-cache invalidation, and a structural-sharing editing API: `Model.with_added` / `with_replaced` / `with_removed`). Remaining follow-up: Decision 5's *substitute/version* mode for `analyze_impact(replace=...)` is not yet exposed — `replace` currently performs *redirect* semantics only.
+**Implemented in:** 0.13.0 — Decisions 1–8 shipped in full: frozen concepts, structural-sharing result models, ID-ref endpoints, unified COW builder, graph-cache invalidation, the structural-sharing editing API (`Model.with_added` / `with_replaced` / `with_removed`), and both replace modes from Decision 5 — `analyze_impact(replace=...)` (*redirect*) and `analyze_impact(substitute=...)` (*substitute/version*).
 **Scope:** How `analyze_impact()` / `chain_impacts()` produce isolated result models, and how the metamodel supports cheap model editing, so that the cost of an operation scales with the *affected* set rather than total model size. Supersedes Decision 1 and Consequence "Negative #2" of [ADR-043](ADR-043-impact-analysis-engine.md); revisits relationship endpoint storage from [ADR-007](ADR-007-element-relationship-abcs.md) / [ADR-041](ADR-041-networkx-graph-conversion.md).
 
 ## Context

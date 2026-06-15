@@ -425,6 +425,71 @@ def _analyze_merge(
     )
 
 
+def _analyze_substitute(model: Model, old: Concept, new: Concept) -> ImpactResult:
+    """Implement the substitute/version operation for :func:`analyze_impact`.
+
+    *new* takes over *old*'s identity slot: it is registered under ``old.id`` so
+    that relationships -- which reference endpoints by ID (ADR-051) -- are left
+    untouched and resolve to *new*.  This is an ``O(1)`` structural edit (plus a
+    shallow registry copy).
+
+    Each relationship incident to ``old.id`` is re-checked against *new*'s type
+    and reported in ``violations`` if it becomes impermissible.  ``old``'s direct
+    neighbours are reported as affected at depth 1.
+
+    :param model: Source model.
+    :param old: The concept whose identity slot is being filled.
+    :param new: The replacement concept (re-keyed to ``old.id`` if it differs).
+    :returns: :class:`ImpactResult` describing the substitution.
+    """
+    from etcion.metamodel.concepts import Element
+    from etcion.validation.permissions import is_permitted
+
+    # new occupies old's identity slot.
+    new_keyed = new if new.id == old.id else new.model_copy(update={"id": old.id})
+    resulting_model = model.with_replaced(new_keyed)
+
+    incident = model.connected_to(old)
+
+    # Affected: old's direct neighbours (now connected to new) at depth 1.
+    affected: list[ImpactedConcept] = []
+    seen: set[str] = set()
+    for rel in incident:
+        other_id = rel.target_id if rel.source_id == old.id else rel.source_id
+        other = model._concepts.get(other_id)
+        if other is not None and other.id != old.id and other.id not in seen:
+            seen.add(other.id)
+            affected.append(ImpactedConcept(concept=other, depth=1))
+
+    # Violations: relationships whose permission breaks now that they connect to
+    # new's type instead of old's. Only element-to-element rels are checked.
+    violations: list[Violation] = []
+    for rel in incident:
+        src = new_keyed if rel.source_id == old.id else model._concepts.get(rel.source_id)
+        tgt = new_keyed if rel.target_id == old.id else model._concepts.get(rel.target_id)
+        if not isinstance(src, Element) or not isinstance(tgt, Element):
+            continue
+        if not is_permitted(type(rel), type(src), type(tgt)):
+            violations.append(
+                Violation(
+                    relationship=rel,
+                    reason=(
+                        f"{type(rel).__name__}("
+                        f"{type(src).__name__} -> {type(tgt).__name__}) is not permitted "
+                        f"by ArchiMate 3.2 Appendix B after substituting "
+                        f"{type(old).__name__} with {type(new).__name__}"
+                    ),
+                )
+            )
+
+    return ImpactResult(
+        affected=tuple(affected),
+        broken_relationships=(),
+        resulting_model=resulting_model,
+        violations=tuple(violations),
+    )
+
+
 def _analyze_add_relationship(model: Model, relationship: Relationship) -> ImpactResult:
     """Implement the add_relationship operation for :func:`analyze_impact`.
 
@@ -532,6 +597,7 @@ def analyze_impact(
     remove: Concept | None = None,
     merge: tuple[list[Concept], Concept] | None = None,
     replace: tuple[Concept, Concept] | None = None,
+    substitute: tuple[Concept, Concept] | None = None,
     add_relationship: Relationship | None = None,
     remove_relationship: Relationship | None = None,
     max_depth: int | None = None,
@@ -556,10 +622,18 @@ def analyze_impact(
     :param merge: A ``(merged_list, target)`` tuple.  All concepts in
         ``merged_list`` are collapsed into ``target``.  Relationships are
         rewired, deduplicated, and permission-checked.
-    :param replace: A ``(old, new)`` tuple.  ``old`` is removed from the
-        model and all its relationships are transferred to ``new``.
-        Equivalent to ``merge([old], new)`` and subject to the same
-        permission-checking logic.
+    :param replace: A ``(old, new)`` tuple — *redirect* semantics.  ``old`` is
+        removed and its relationships are rewired onto ``new`` (a different
+        entity).  Equivalent to ``merge([old], new)`` and subject to the same
+        permission-checking logic.  Use ``substitute`` instead when ``new`` is a
+        new *version* of ``old`` that should keep ``old``'s identity.
+    :param substitute: A ``(old, new)`` tuple — *substitute/version* semantics.
+        ``new`` takes over ``old``'s identity slot (it is registered under
+        ``old``'s ID), so relationships are left untouched — they resolve the
+        unchanged ID to ``new``.  Each relationship incident to ``old`` is
+        re-checked against ``new``'s type and reported in ``violations`` if it
+        becomes impermissible.  ``old``'s direct neighbours are reported as
+        affected at depth 1.
     :param add_relationship: A :class:`~etcion.metamodel.concepts.Relationship`
         to hypothetically add to the model.  The resulting model contains all
         original concepts plus this new relationship.  The source and target
@@ -582,6 +656,7 @@ def analyze_impact(
         remove is None
         and merge is None
         and replace is None
+        and substitute is None
         and add_relationship is None
         and remove_relationship is None
     ):
@@ -594,10 +669,15 @@ def analyze_impact(
             "networkx is required for impact analysis. Install it with: pip install etcion[graph]"
         ) from None
 
-    # Dispatch replace operation — delegate to merge with a single-element list.
+    # Dispatch replace operation (redirect) — delegate to merge with a single-element list.
     if replace is not None:
         old, new = replace
         return _analyze_merge(model, [old], new)
+
+    # Dispatch substitute operation (version) — new takes old's identity slot.
+    if substitute is not None:
+        old, new = substitute
+        return _analyze_substitute(model, old, new)
 
     # Dispatch merge operation.
     if merge is not None:

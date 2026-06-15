@@ -41,6 +41,14 @@ rename on the same model is ~6ms.
 
 ### Added
 
+- **`analyze_impact(substitute=(old, new))`** — *substitute/version* semantics
+  for replacement, complementing `replace=` (*redirect*). `new` takes over
+  `old`'s identity slot (registered under `old`'s ID), so relationships are left
+  untouched and resolve to `new`. Each relationship incident to `old` is
+  re-checked against `new`'s type and reported in `violations` if it becomes
+  impermissible; `old`'s direct neighbours are reported as affected at depth 1.
+  `replace=` is unchanged (it removes `old` and rewires its relationships onto
+  `new`).
 - **Structural-sharing editing API on `Model`**: `with_added(concept)`,
   `with_replaced(concept)`, and `with_removed(concept_or_id)` each return a new
   immutable `Model` that shares unchanged concept instances with the source
