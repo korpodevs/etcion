@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 28 Jun 2026
+
+ArchiMate Exchange Format conformance hardening and a restored
+referential-integrity guarantee. Models built with etcion now produce XML that
+imports cleanly into Archi, and corrupt models fail closer to where they are
+introduced.
+
+### Breaking changes
+
+- **`write_model` now raises by default on non-`NCName` identifiers.** Element
+  and relationship ids, relationship endpoints, and `extended_attributes` keys
+  that are not valid XML `NCName` values previously serialized verbatim,
+  producing XML that fails the Exchange Format XSD and is rejected by Archi on
+  import. `write_model` / `serialize_model` now raise
+  `InvalidExchangeIdentifierError` by default. Pass `on_invalid_id="sanitize"`
+  to auto-rewrite identifiers (keeping ID/IDREF pairings consistent) or
+  `on_invalid_id="allow"` for the previous verbatim behavior (#117).
+- **`Model.validate()` now reports relationships with absent endpoints.** A
+  relationship whose `source_id` / `target_id` is not present in the model now
+  yields a `ValidationError` (and raises under `strict=True`) instead of being
+  silently skipped (#116).
+- **`validate_exchange_format` validates against the full Model + View + Diagram
+  schema set** (previously the Model schema only), so the diagram side and its
+  `elementRef` / `relationshipRef` IDREFs are now checked. Documents that
+  previously passed but contain diagram-side violations will now report
+  errors (#119).
+- **Serialized XML changed for Influence and Junctions.** Influence now emits a
+  single conformant `@modifier` (the XSD has no `@strength`); junctions are
+  emitted as `<element xsi:type="AndJunction"|"OrJunction">`. Consumers parsing
+  etcion's previous output (or comparing against golden files) are affected
+  (#118).
+
+### Added
+
+- `on_invalid_id` policy on `write_model` / `serialize_model`
+  (`"raise"` (default) | `"sanitize"` | `"allow"`) and the
+  `InvalidExchangeIdentifierError` exception it raises (closes #117).
+- `Model.dangling_relationships()` — returns every relationship whose
+  `source_id` / `target_id` is absent from the model (closes #116).
+- `validate_endpoints` (opt-in, default `False`) on `model_from_dict` to
+  fail fast on dangling relationship endpoints during JSON load (closes #116).
+
+### Fixed
+
+- Junctions are now serialized (as `<element xsi:type="AndJunction"|"OrJunction">`)
+  and round-trip correctly. Previously junction concepts were dropped entirely,
+  leaving their relationships pointing at dangling IDREFs that failed XSD
+  validation and Archi import (#118).
+- Influence `sign` and free-text `strength` round-trip through the `@modifier`
+  attribute (#118).
+- Element-only (and empty) models no longer emit an empty `<elements>` /
+  `<relationships>` container, which the XSD rejects (#121).
+
 ## [0.13.0] - 15 Jun 2026
 
 Structural sharing for impact analysis and model editing
