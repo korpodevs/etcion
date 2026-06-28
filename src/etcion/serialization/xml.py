@@ -6,10 +6,11 @@ Reference: ADR-031.
 from __future__ import annotations
 
 import json
+import re
 import uuid
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 try:
     from lxml import etree
@@ -18,6 +19,7 @@ except ImportError as exc:
         "lxml is required for XML serialization. Install it with: pip install etcion[xml]"
     ) from exc
 
+from etcion.exceptions import InvalidExchangeIdentifierError
 from etcion.metamodel.concepts import Concept, Element, Relationship
 from etcion.metamodel.model import Model
 from etcion.metamodel.profiles import Profile
@@ -81,6 +83,107 @@ def _to_exchange_id(internal_id: str) -> str:
     return internal_id if internal_id.startswith("id-") else f"id-{internal_id}"
 
 
+# Policy governing identifiers that are not valid XML NCNames on write (#117).
+OnInvalidId = Literal["raise", "sanitize", "allow"]
+
+# XML NCName character classes (XML 1.0 NameStartChar/NameChar minus ':').
+# Covers ASCII plus the common Unicode ranges; the rarely-used astral planes
+# (>= U+10000) are omitted for simplicity.
+_NCNAME_START = (
+    "A-Za-z_"
+    "\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u02ff\u0370-\u037d\u037f-\u1fff"
+    "\u200c-\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd"
+)
+_NCNAME_CHAR = _NCNAME_START + "\\-.0-9\u00b7\u0300-\u036f\u203f-\u2040"
+_NCNAME_START_RE = re.compile(f"[{_NCNAME_START}]")
+_NCNAME_CHAR_RE = re.compile(f"[{_NCNAME_CHAR}]")
+_NCNAME_RE = re.compile(f"^[{_NCNAME_START}][{_NCNAME_CHAR}]*$")
+
+
+def _ncname_violation(value: str) -> str | None:
+    """Return a human-readable reason *value* is not a valid NCName, else ``None``."""
+    if value == "":
+        return "empty identifier"
+    if _NCNAME_RE.match(value):
+        return None
+    if not _NCNAME_START_RE.match(value[0]):
+        return f"must start with a letter or underscore, not {value[0]!r}"
+    illegal = sorted({c for c in value if not _NCNAME_CHAR_RE.match(c)})
+    if illegal:
+        chars = ", ".join(repr(c) for c in illegal)
+        return f"contains characters not allowed in an NCName: {chars}"
+    return "not a valid NCName"  # pragma: no cover - defensive
+
+
+def _sanitize_ncname(value: str) -> str:
+    """Rewrite *value* into a valid NCName by replacing illegal characters with ``-``."""
+    out = "".join(c if _NCNAME_CHAR_RE.match(c) else "-" for c in value)
+    if not out or not _NCNAME_START_RE.match(out[0]):
+        out = "_" + out
+    return out
+
+
+class _IdMapper:
+    """Maps internal/raw identifiers to NCName-safe Exchange Format identifiers.
+
+    A single instance is shared across a whole ``serialize_model`` call so that
+    every reference to a given identifier (an element id and the ``source`` /
+    ``target`` / ``elementRef`` / ``relationshipRef`` that point at it, or a
+    ``propertyDefinition`` id and the ``propertyDefinitionRef`` that cites it)
+    resolves to the same output — keeping ID/IDREF pairings intact even when
+    sanitization rewrites a value (ADR-031 addendum, #117).
+
+    When ``sanitize`` is false, invalid identifiers pass through verbatim and are
+    recorded in :attr:`invalid`; the caller decides whether to raise (``"raise"``)
+    or emit them anyway (``"allow"``).
+    """
+
+    def __init__(self, *, sanitize: bool) -> None:
+        self._sanitize = sanitize
+        self._cache: dict[str, str] = {}
+        self._used: set[str] = set()
+        self.invalid: dict[str, str] = {}
+
+    def concept(self, internal_id: str) -> str:
+        """Map a concept's internal id to its (validated) Exchange Format id."""
+        return self._map(_to_exchange_id(internal_id))
+
+    def propdef(self, raw_id: str) -> str:
+        """Map a ``propdef-*`` identifier (built from a user-supplied attr name)."""
+        return self._map(raw_id)
+
+    def _map(self, raw: str) -> str:
+        cached = self._cache.get(raw)
+        if cached is not None:
+            return cached
+        reason = _ncname_violation(raw)
+        if reason is None:
+            # In sanitize mode, dedupe even already-valid ids so a sanitized
+            # value can never collide with a verbatim one (xs:ID uniqueness).
+            result = self._unique(raw) if self._sanitize else raw
+        elif self._sanitize:
+            result = self._unique(_sanitize_ncname(raw))
+        else:
+            self.invalid[raw] = reason
+            result = raw
+        self._cache[raw] = result
+        self._used.add(result)
+        return result
+
+    def _unique(self, candidate: str) -> str:
+        if candidate not in self._used:
+            return candidate
+        suffix = 2
+        while f"{candidate}-{suffix}" in self._used:
+            suffix += 1
+        return f"{candidate}-{suffix}"
+
+
+def _default_mapper(id_mapper: _IdMapper | None) -> _IdMapper:
+    """Return *id_mapper* or a permissive standalone mapper (verbatim, never raises)."""
+    return id_mapper if id_mapper is not None else _IdMapper(sanitize=False)
+
+
 def _expanded_attribute_extensions(
     profile: Profile, present_types: set[type[Concept]]
 ) -> dict[type[Concept], dict[str, Any]]:
@@ -105,11 +208,16 @@ def _expanded_attribute_extensions(
     return expanded
 
 
-def serialize_element(elem: Element) -> etree._Element:
-    """Serialize a single Element to an lxml element node."""
+def serialize_element(elem: Element, *, id_mapper: _IdMapper | None = None) -> etree._Element:
+    """Serialize a single Element to an lxml element node.
+
+    *id_mapper* (internal) carries the NCName-safety policy across a full model
+    serialization; when omitted, identifiers are emitted verbatim (#117).
+    """
+    mapper = _default_mapper(id_mapper)
     desc = TYPE_REGISTRY[type(elem)]
     el = etree.Element(f"{{{ARCHIMATE_NS}}}element", nsmap=NSMAP)
-    el.set("identifier", _to_exchange_id(elem.id))
+    el.set("identifier", mapper.concept(elem.id))
     el.set(f"{{{XSI_NS}}}type", desc.xml_tag)
 
     name_el = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}name")
@@ -136,7 +244,9 @@ def serialize_element(elem: Element) -> etree._Element:
             type_name = TYPE_REGISTRY[type(elem)].xml_tag
             for attr_name, value in elem.extended_attributes.items():
                 prop_el = etree.SubElement(props_container, f"{{{ARCHIMATE_NS}}}property")
-                prop_el.set("propertyDefinitionRef", f"propdef-{type_name}-{attr_name}")
+                prop_el.set(
+                    "propertyDefinitionRef", mapper.propdef(f"propdef-{type_name}-{attr_name}")
+                )
                 val_el = etree.SubElement(prop_el, f"{{{ARCHIMATE_NS}}}value")
                 val_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
                 val_el.text = str(value)
@@ -144,7 +254,9 @@ def serialize_element(elem: Element) -> etree._Element:
     return el
 
 
-def serialize_relationship(rel: Relationship) -> etree._Element:
+def serialize_relationship(
+    rel: Relationship, *, id_mapper: _IdMapper | None = None
+) -> etree._Element:
     """Serialize a single Relationship to an lxml element node.
 
     Per ADR-050, ``extended_attributes`` declared on a Relationship are
@@ -152,12 +264,16 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
     propdef-id scheme namespaces by the relationship's xml_tag so collisions
     with element propdefs are not possible (relationship and element xml_tag
     spaces are disjoint).
+
+    *id_mapper* (internal) carries the NCName-safety policy across a full model
+    serialization; when omitted, identifiers are emitted verbatim (#117).
     """
+    mapper = _default_mapper(id_mapper)
     desc = TYPE_REGISTRY[type(rel)]
     el = etree.Element(f"{{{ARCHIMATE_NS}}}relationship", nsmap=NSMAP)
-    el.set("identifier", _to_exchange_id(rel.id))
-    el.set("source", _to_exchange_id(rel.source_id))
-    el.set("target", _to_exchange_id(rel.target_id))
+    el.set("identifier", mapper.concept(rel.id))
+    el.set("source", mapper.concept(rel.source_id))
+    el.set("target", mapper.concept(rel.target_id))
     el.set(f"{{{XSI_NS}}}type", desc.xml_tag)
 
     if rel.name:
@@ -170,7 +286,7 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
         type_name = desc.xml_tag
         for attr_name, value in rel.extended_attributes.items():
             prop_el = etree.SubElement(props_container, f"{{{ARCHIMATE_NS}}}property")
-            prop_el.set("propertyDefinitionRef", f"propdef-{type_name}-{attr_name}")
+            prop_el.set("propertyDefinitionRef", mapper.propdef(f"propdef-{type_name}-{attr_name}"))
             val_el = etree.SubElement(prop_el, f"{{{ARCHIMATE_NS}}}value")
             val_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
             val_el.text = str(value)
@@ -183,7 +299,9 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
     return el
 
 
-def _serialize_view(view: View, parent: etree._Element) -> None:
+def _serialize_view(
+    view: View, parent: etree._Element, *, id_mapper: _IdMapper | None = None
+) -> None:
     """Serialize a single View as a ``<view>`` element appended to *parent*.
 
     Emits ``<node>`` children for every :class:`~etcion.metamodel.concepts.Element`
@@ -193,6 +311,7 @@ def _serialize_view(view: View, parent: etree._Element) -> None:
     Connections whose source or target element is absent from the view are
     silently skipped.
     """
+    mapper = _default_mapper(id_mapper)
     view_id = f"id-view-{uuid.uuid4()}"
     view_el = etree.SubElement(parent, f"{{{ARCHIMATE_NS}}}view")
     view_el.set("identifier", view_id)
@@ -219,7 +338,7 @@ def _serialize_view(view: View, parent: etree._Element) -> None:
         col = index % _columns
         row = index // _columns
         node_id = f"id-node-{uuid.uuid4()}"
-        exchange_id = _to_exchange_id(elem.id)
+        exchange_id = mapper.concept(elem.id)
         elem_exchange_id_to_node_id[exchange_id] = node_id
 
         node_el = etree.SubElement(view_el, f"{{{ARCHIMATE_NS}}}node")
@@ -232,8 +351,8 @@ def _serialize_view(view: View, parent: etree._Element) -> None:
         node_el.set("h", str(_node_h))
 
     for rel in view_relationships:
-        src_exchange_id = _to_exchange_id(rel.source_id)
-        tgt_exchange_id = _to_exchange_id(rel.target_id)
+        src_exchange_id = mapper.concept(rel.source_id)
+        tgt_exchange_id = mapper.concept(rel.target_id)
         src_node_id = elem_exchange_id_to_node_id.get(src_exchange_id)
         tgt_node_id = elem_exchange_id_to_node_id.get(tgt_exchange_id)
         # Skip connections whose endpoints have no node in this view.
@@ -242,14 +361,32 @@ def _serialize_view(view: View, parent: etree._Element) -> None:
 
         conn_el = etree.SubElement(view_el, f"{{{ARCHIMATE_NS}}}connection")
         conn_el.set("identifier", f"id-conn-{uuid.uuid4()}")
-        conn_el.set("relationshipRef", _to_exchange_id(rel.id))
+        conn_el.set("relationshipRef", mapper.concept(rel.id))
         conn_el.set(f"{{{XSI_NS}}}type", "Relationship")
         conn_el.set("source", src_node_id)
         conn_el.set("target", tgt_node_id)
 
 
-def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etree._ElementTree:
-    """Serialize a Model to a complete Exchange Format ElementTree."""
+def serialize_model(
+    model: Model,
+    *,
+    model_name: str = "Untitled Model",
+    on_invalid_id: OnInvalidId = "raise",
+) -> etree._ElementTree:
+    """Serialize a Model to a complete Exchange Format ElementTree.
+
+    *on_invalid_id* governs identifiers that are not valid XML ``NCName`` values
+    once written (element/relationship ids, relationship ``source``/``target``,
+    and ``extended_attributes`` keys — the only user-controlled values that
+    reach ``xs:ID``/``xs:IDREF`` slots; see ADR-031 addendum, #117):
+
+    - ``"raise"`` (default): collect every offending identifier and raise
+      :class:`~etcion.exceptions.InvalidExchangeIdentifierError`.
+    - ``"sanitize"``: rewrite offending identifiers to valid NCNames, keeping
+      ID/IDREF pairings consistent. The *model* object is not mutated.
+    - ``"allow"``: emit identifiers verbatim (pre-#117 behavior).
+    """
+    mapper = _IdMapper(sanitize=(on_invalid_id == "sanitize"))
     root = etree.Element(f"{{{ARCHIMATE_NS}}}model", nsmap=NSMAP)
     root.set("identifier", "id-model-root")
     root.set(f"{{{XSI_NS}}}schemaLocation", ARCHIMATE_SCHEMA_LOCATION)
@@ -260,11 +397,11 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
 
     elements_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}elements")
     for elem in model.elements:
-        elements_container.append(serialize_element(elem))
+        elements_container.append(serialize_element(elem, id_mapper=mapper))
 
     rels_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}relationships")
     for rel in model.relationships:
-        rels_container.append(serialize_relationship(rel))
+        rels_container.append(serialize_relationship(rel, id_mapper=mapper))
 
     opaque = getattr(model, "_opaque_xml", [])
     for node in opaque:
@@ -328,7 +465,7 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
                         raw_value if isinstance(raw_value, type) else raw_value["type"]
                     )
                     pd = etree.SubElement(propdefs, f"{{{ARCHIMATE_NS}}}propertyDefinition")
-                    pd.set("identifier", f"propdef-{type_name}-{attr_name}")
+                    pd.set("identifier", mapper.propdef(f"propdef-{type_name}-{attr_name}"))
                     pd.set("type", _PY_TO_XSD_TYPE.get(attr_type.__name__, "string"))
                     pd_name = etree.SubElement(pd, f"{{{ARCHIMATE_NS}}}name")
                     pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
@@ -336,7 +473,7 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
 
         for pid, attr_name in undeclared.items():
             pd = etree.SubElement(propdefs, f"{{{ARCHIMATE_NS}}}propertyDefinition")
-            pd.set("identifier", pid)
+            pd.set("identifier", mapper.propdef(pid))
             pd.set("type", "string")
             pd_name = etree.SubElement(pd, f"{{{ARCHIMATE_NS}}}name")
             pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
@@ -372,7 +509,12 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
         views_el = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}views")
         diagrams_el = etree.SubElement(views_el, f"{{{ARCHIMATE_NS}}}diagrams")
         for view in model.views:
-            _serialize_view(view, diagrams_el)
+            _serialize_view(view, diagrams_el, id_mapper=mapper)
+
+    # Under the default "raise" policy, fail once with every offending id rather
+    # than emitting XML that violates the bundled XSD (ADR-031 addendum, #117).
+    if on_invalid_id == "raise" and mapper.invalid:
+        raise InvalidExchangeIdentifierError(mapper.invalid)
 
     return etree.ElementTree(root)
 
@@ -414,9 +556,19 @@ def _collect_constraint_profiles(
     return result
 
 
-def write_model(model: Model, path: str | Path, *, model_name: str = "Untitled Model") -> None:
-    """Write a Model to an XML file in Exchange Format."""
-    tree = serialize_model(model, model_name=model_name)
+def write_model(
+    model: Model,
+    path: str | Path,
+    *,
+    model_name: str = "Untitled Model",
+    on_invalid_id: OnInvalidId = "raise",
+) -> None:
+    """Write a Model to an XML file in Exchange Format.
+
+    *on_invalid_id* controls handling of identifiers that are not valid XML
+    ``NCName`` values; see :func:`serialize_model` (#117).
+    """
+    tree = serialize_model(model, model_name=model_name, on_invalid_id=on_invalid_id)
     etree.indent(tree, space="  ")
     tree.write(
         str(path),

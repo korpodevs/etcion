@@ -13,6 +13,7 @@ from lxml import etree
 lxml = pytest.importorskip("lxml")
 
 from etcion.enums import AccessMode, ContentCategory, InfluenceSign, PurposeCategory  # noqa: E402
+from etcion.exceptions import InvalidExchangeIdentifierError  # noqa: E402
 from etcion.metamodel.application import (  # noqa: E402
     ApplicationComponent,
     DataObject,  # noqa: E402
@@ -44,6 +45,8 @@ from etcion.serialization.registry import (  # noqa: E402
 )
 from etcion.serialization.xml import (  # noqa: E402  # noqa: E402  # noqa: E402  # noqa: E402  # noqa: E402
     _from_exchange_id,
+    _ncname_violation,
+    _sanitize_ncname,
     _to_exchange_id,
     deserialize_model,
     read_model,
@@ -1231,3 +1234,113 @@ class TestIssue110ElementKeyedProfile:
         type_by_id = {pd.get("identifier"): pd.get("type") for pd in pd_container}
         # int -> XSD "number"; if Element's str had won we'd see "string".
         assert type_by_id["propdef-ApplicationComponent-_owner"] == "number"
+
+
+class TestNCNameHelpers:
+    """Unit tests for the NCName validation/sanitization primitives (#117)."""
+
+    def test_valid_ncname_returns_none(self) -> None:
+        assert _ncname_violation("id-good_id.1") is None
+
+    def test_colon_and_slash_rejected(self) -> None:
+        reason = _ncname_violation("id-api:default/load")
+        assert reason is not None
+        assert "'/'" in reason and "':'" in reason
+
+    def test_space_rejected(self) -> None:
+        assert _ncname_violation("id-a b") is not None
+
+    def test_empty_rejected(self) -> None:
+        assert _ncname_violation("") == "empty identifier"
+
+    def test_leading_digit_rejected(self) -> None:
+        # A bare value (no id- prefix) starting with a digit is not a valid start.
+        reason = _ncname_violation("3abc")
+        assert reason is not None and "start" in reason
+
+    def test_sanitize_replaces_illegal_chars(self) -> None:
+        assert _sanitize_ncname("id-api:default/load") == "id-api-default-load"
+
+    def test_sanitize_yields_valid_ncname(self) -> None:
+        assert _ncname_violation(_sanitize_ncname("3 weird/id:x")) is None
+
+
+class TestOnInvalidIdPolicy:
+    """write/serialize_model behavior for non-NCName identifiers (#117)."""
+
+    def _model_with_bad_ids(self) -> Model:
+        m = Model()
+        a = ApplicationComponent(id="api:default/load-template-api", name="API")
+        b = BusinessService(id="svc 1", name="Svc")
+        m.add(a)
+        m.add(b)
+        m.add(Serving(id="rel:1", source_id=a.id, target_id=b.id, name="serves"))
+        return m
+
+    def test_raise_is_default(self) -> None:
+        with pytest.raises(InvalidExchangeIdentifierError) as exc_info:
+            serialize_model(self._model_with_bad_ids())
+        # All three offending ids are reported in a single pass.
+        assert len(exc_info.value.invalid) == 3
+
+    def test_write_model_raises_by_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bad.xml"
+            with pytest.raises(InvalidExchangeIdentifierError):
+                write_model(self._model_with_bad_ids(), path)
+
+    def test_allow_emits_verbatim(self) -> None:
+        tree = serialize_model(self._model_with_bad_ids(), on_invalid_id="allow")
+        ids = {el.get("identifier") for el in tree.iter() if el.get("identifier")}
+        assert "id-api:default/load-template-api" in ids
+
+    def test_sanitize_produces_xsd_valid_output(self) -> None:
+        tree = serialize_model(self._model_with_bad_ids(), on_invalid_id="sanitize")
+        assert validate_exchange_format(tree) == []
+
+    def test_sanitize_keeps_source_target_consistent(self) -> None:
+        tree = serialize_model(self._model_with_bad_ids(), on_invalid_id="sanitize")
+        root = tree.getroot()
+        # Collect element identifiers and the relationship's source/target.
+        elem_ids = {el.get("identifier") for el in root.iter(f"{{{ARCHIMATE_NS}}}element")}
+        rel = root.find(f"{{{ARCHIMATE_NS}}}relationships/{{{ARCHIMATE_NS}}}relationship")
+        assert rel is not None
+        assert rel.get("source") in elem_ids
+        assert rel.get("target") in elem_ids
+
+    def test_sanitize_does_not_mutate_model(self) -> None:
+        model = self._model_with_bad_ids()
+        serialize_model(model, on_invalid_id="sanitize")
+        # Original ids on the in-memory model are untouched.
+        assert any(e.id == "api:default/load-template-api" for e in model.elements)
+
+    def test_extended_attribute_key_is_validated(self) -> None:
+        # A bad extended_attributes key reaches both an xs:ID and an xs:IDREF.
+        m = Model()
+        m.add(ApplicationComponent(name="App", extended_attributes={"bad key/x": 1}))
+        with pytest.raises(InvalidExchangeIdentifierError) as exc_info:
+            serialize_model(m)
+        assert any("bad key/x" in k for k in exc_info.value.invalid)
+
+    def test_extended_attribute_key_sanitized_consistently(self) -> None:
+        m = Model()
+        a = ApplicationComponent(name="App", extended_attributes={"bad key/x": 1})
+        b = BusinessService(name="Svc")
+        m.add(a)
+        m.add(b)
+        m.add(Serving(source_id=a.id, target_id=b.id))  # keep the model XSD-valid
+        tree = serialize_model(m, on_invalid_id="sanitize")
+        # The property ref and the propertyDefinition id must still match,
+        # which the XSD's IDREF->ID keyref enforces.
+        assert validate_exchange_format(tree) == []
+
+    def test_valid_uuid_model_unaffected(self) -> None:
+        # The default policy must not disturb ordinary UUID-id models.
+        m = Model()
+        a = ApplicationComponent(name="A")
+        b = BusinessService(name="B")
+        m.add(a)
+        m.add(b)
+        m.add(Serving(source_id=a.id, target_id=b.id))
+        tree = serialize_model(m)  # default "raise" — should not raise
+        assert validate_exchange_format(tree) == []
