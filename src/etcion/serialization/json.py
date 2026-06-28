@@ -180,20 +180,32 @@ def model_to_dict(model: Model, *, include_views: bool = False) -> dict[str, Any
     return result
 
 
-def model_from_dict(data: dict[str, Any]) -> Model:
+def model_from_dict(data: dict[str, Any], *, validate_endpoints: bool = False) -> Model:
     """Reconstruct a :class:`~etcion.metamodel.model.Model` from a JSON-compatible dictionary.
 
     Deserialization is two-phase:
 
     1. **Elements** — each element dict is validated into its correct
-       concrete class and added to the model; an ``id_map`` is built
-       for cross-reference resolution.
+       concrete class and added to the model.
     2. **Relationships** — the ``source`` and ``target`` bare ID strings
-       are resolved to the corresponding :class:`~etcion.metamodel.concepts.Concept`
-       instances before the relationship is validated and added.
+       are stored as ``source_id`` / ``target_id`` (ADR-051) before the
+       relationship is validated and added.
 
-    :raises KeyError: if a ``_type`` value is not present in
-        :data:`_NAME_TO_TYPE` or a relationship references an unknown element ID.
+    Since ADR-051 (Issue #113) relationship endpoints are bare ID strings, so a
+    relationship may reference an id that is not among the loaded concepts.  By
+    default such *dangling* edges load silently (no referential-integrity check),
+    matching the post-0.11 behavior.  Pass ``validate_endpoints=True`` to opt in
+    to a fail-fast check.
+
+    :param validate_endpoints: When ``True``, after all concepts are added the
+        model is checked for dangling relationships (via
+        :meth:`~etcion.metamodel.model.Model.dangling_relationships`) and a
+        :class:`~etcion.exceptions.ValidationError` is raised listing every
+        offending relationship id together with its missing endpoint id(s).
+        Defaults to ``False`` to avoid a breaking change on the patch line.
+    :raises KeyError: if a ``_type`` value is not present in :data:`_NAME_TO_TYPE`.
+    :raises etcion.exceptions.ValidationError: if ``validate_endpoints`` is
+        ``True`` and one or more relationships reference unknown endpoint ids.
     """
     model = Model()
 
@@ -218,5 +230,19 @@ def model_from_dict(data: dict[str, Any]) -> Model:
         rel_data["target_id"] = rel_data.pop("target")
         rel = cls.model_validate(rel_data)
         model.add(rel)
+
+    if validate_endpoints:
+        dangling = model.dangling_relationships()
+        if dangling:
+            from etcion.exceptions import ValidationError
+
+            known_ids = {c.id for c in model.concepts}
+            details = []
+            for rel in dangling:
+                missing = [eid for eid in (rel.source_id, rel.target_id) if eid not in known_ids]
+                details.append(f"'{rel.id}' (missing {missing})")
+            raise ValidationError(
+                "Relationship(s) reference unknown endpoint id(s): " + "; ".join(details)
+            )
 
     return model
