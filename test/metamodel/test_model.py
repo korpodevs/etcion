@@ -902,3 +902,65 @@ class TestElementsWhere:
     def test_is_callable(self, model: Model) -> None:
         """elements_where is callable on Model."""
         assert callable(model.elements_where)
+
+
+class TestDanglingRelationships:
+    """Model.dangling_relationships() referential-integrity primitive (Issue #116)."""
+
+    def test_clean_model_returns_empty(self) -> None:
+        actor = BusinessActor(name="A")
+        proc = BusinessProcess(name="P")
+        rel = Serving(name="s", source=actor, target=proc)
+        m = Model(concepts=[actor, proc, rel])
+        assert m.dangling_relationships() == []
+
+    def test_missing_target_detected(self) -> None:
+        actor = BusinessActor(name="A")
+        proc = BusinessProcess(name="P")
+        rel = Serving(name="s", source=actor, target=proc)
+        # Add the relationship but not its target.
+        m = Model(concepts=[actor, rel])
+        assert m.dangling_relationships() == [rel]
+
+    def test_missing_source_detected(self) -> None:
+        actor = BusinessActor(name="A")
+        proc = BusinessProcess(name="P")
+        rel = Serving(name="s", source=actor, target=proc)
+        # Add the relationship but not its source.
+        m = Model(concepts=[proc, rel])
+        assert m.dangling_relationships() == [rel]
+
+
+class TestValidateDanglingEndpoints:
+    """Model.validate() now reports absent endpoints (Issue #116)."""
+
+    def test_absent_endpoint_reported(self) -> None:
+        actor = BusinessActor(name="A")
+        proc = BusinessProcess(name="P")
+        rel = Serving(name="s", source=actor, target=proc)
+        m = Model(concepts=[actor, rel])  # target missing
+        errors = m.validate()
+        assert any("missing endpoint" in str(e) for e in errors)
+
+    def test_absent_endpoint_strict_raises(self) -> None:
+        actor = BusinessActor(name="A")
+        proc = BusinessProcess(name="P")
+        rel = Serving(name="s", source=actor, target=proc)
+        m = Model(concepts=[actor, rel])  # target missing
+        with pytest.raises(ValidationError):
+            m.validate(strict=True)
+
+    def test_valid_junction_no_false_positive(self) -> None:
+        from etcion.enums import JunctionType
+        from etcion.metamodel.relationships import Junction
+
+        j = Junction(junction_type=JunctionType.OR)
+        a1 = BusinessActor(name="a1")
+        a2 = BusinessActor(name="a2")
+        a3 = BusinessActor(name="a3")
+        r1 = Specialization(name="r1", source=a1, target=j)
+        r2 = Specialization(name="r2", source=a2, target=j)
+        r3 = Specialization(name="r3", source=j, target=a3)
+        m = Model(concepts=[j, a1, a2, a3, r1, r2, r3])
+        errors = m.validate()
+        assert not any("missing endpoint" in str(e) for e in errors)

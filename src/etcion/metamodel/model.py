@@ -259,6 +259,26 @@ class Model:
         self._nx_graph = g
         return g
 
+    def dangling_relationships(self) -> list[Relationship]:
+        """Return relationships whose source or target id is absent from the model.
+
+        A relationship is *dangling* when its ``source_id`` or ``target_id`` is
+        not present in the model's concept map -- i.e. it references a concept
+        that was never added (or has since been removed).  Such edges break
+        referential integrity (Issue #116).
+
+        This is the reusable primitive behind referential-integrity checks in
+        both :meth:`validate` and the deserialization fail-fast path.
+
+        :returns: List of :class:`Relationship` instances, in insertion order,
+            whose endpoints are not both resolvable within this model.
+        """
+        return [
+            r
+            for r in self.relationships
+            if r.source_id not in self._concepts or r.target_id not in self._concepts
+        ]
+
     def connected_to(self, concept: Concept) -> list[Relationship]:
         """Return all relationships where *concept* is source or target (by ID)."""
         return [
@@ -379,6 +399,20 @@ class Model:
         for rel in self.relationships:
             src = self._concepts.get(rel.source_id)
             tgt = self._concepts.get(rel.target_id)
+            # Referential integrity (Issue #116): endpoints absent from the model
+            # are dangling edges.  Report rather than silently skip.  This runs
+            # before junction tracking so a dangling rel is neither permission-
+            # checked nor mistaken for a junction adjacency.
+            missing = [eid for eid, c in ((rel.source_id, src), (rel.target_id, tgt)) if c is None]
+            if missing:
+                err = ValidationError(
+                    f"Relationship '{rel.id}' ({type(rel).__name__}) references "
+                    f"missing endpoint id(s): {missing}"
+                )
+                if strict:
+                    raise err
+                errors.append(err)
+                continue
             src_is_junc = isinstance(src, RelationshipConnector)
             tgt_is_junc = isinstance(tgt, RelationshipConnector)
             # Track Junction adjacency for later validation.
@@ -388,9 +422,6 @@ class Model:
                 junction_rels.setdefault(rel.target_id, []).append(rel)
             # Skip standard permission check for Junction-connected rels.
             if src_is_junc or tgt_is_junc:
-                continue
-            # Endpoints missing from the model cannot be permission-checked.
-            if src is None or tgt is None:
                 continue
             source_type = type(src)
             target_type = type(tgt)
