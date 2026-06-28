@@ -81,18 +81,22 @@ class TestTypeRegistry:
         desc = TYPE_REGISTRY[Access]
         assert "accessType" in desc.extra_attrs
 
-    def test_influence_has_modifier_and_strength(self):
+    def test_influence_has_only_conformant_modifier(self):
+        # The XSD folds sign+strength into the single @modifier; there is no
+        # @strength attribute (#118).
         from etcion.metamodel.relationships import Influence
 
         desc = TYPE_REGISTRY[Influence]
         assert "modifier" in desc.extra_attrs
-        assert "strength" in desc.extra_attrs
+        assert "strength" not in desc.extra_attrs
 
-    def test_junction_has_type_attr(self):
+    def test_junction_has_no_type_attr(self):
+        # Junctions serialize as <element xsi:type="AndJunction|OrJunction">
+        # with no @type attribute (#118).
         from etcion.metamodel.relationships import Junction
 
         desc = TYPE_REGISTRY[Junction]
-        assert "type" in desc.extra_attrs
+        assert "type" not in desc.extra_attrs
 
     def test_registry_count_at_least_57(self):
         """57 concrete types: ~52 elements + ~12 relationships/junction - overlaps."""

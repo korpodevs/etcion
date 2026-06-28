@@ -254,11 +254,13 @@ class TestSerializeModel:
         assert len(rels) == 1
 
     def test_empty_model(self):
+        # An empty model emits no <elements>/<relationships> containers, since
+        # the XSD forbids empty ones (#121); the result is still schema-valid.
         tree = serialize_model(Model())
         root = tree.getroot()
-        elems = root.find(f"{{{ARCHIMATE_NS}}}elements")
-        assert elems is not None
-        assert len(elems) == 0
+        assert root.find(f"{{{ARCHIMATE_NS}}}elements") is None
+        assert root.find(f"{{{ARCHIMATE_NS}}}relationships") is None
+        assert validate_exchange_format(tree) == []
 
 
 class TestWriteModel_1:
@@ -1344,3 +1346,114 @@ class TestOnInvalidIdPolicy:
         m.add(Serving(source_id=a.id, target_id=b.id))
         tree = serialize_model(m)  # default "raise" — should not raise
         assert validate_exchange_format(tree) == []
+
+
+class TestJunctionSerialization:
+    """Junctions serialize as <element xsi:type='AndJunction'|'OrJunction'> (#118)."""
+
+    def _junction_model(self):
+        from etcion import ModelBuilder
+        from etcion.enums import JunctionType
+
+        b = ModelBuilder()
+        a1 = b.application_component("App1", id="a1")
+        a2 = b.application_component("App2", id="a2")
+        j = b.junction(junction_type=JunctionType.AND)
+        b.serving(a1, j)
+        b.serving(j, a2)
+        return b.build(validate=False), j.id
+
+    def test_junction_emitted_as_element(self):
+        model, jid = self._junction_model()
+        root = serialize_model(model).getroot()
+        types = {el.get(f"{{{XSI_NS}}}type") for el in root.iter(f"{{{ARCHIMATE_NS}}}element")}
+        assert "AndJunction" in types
+
+    def test_junction_has_no_type_attr(self):
+        model, jid = self._junction_model()
+        root = serialize_model(model).getroot()
+        junction_el = next(
+            el
+            for el in root.iter(f"{{{ARCHIMATE_NS}}}element")
+            if el.get(f"{{{XSI_NS}}}type") == "AndJunction"
+        )
+        assert junction_el.get("type") is None
+
+    def test_junction_model_is_xsd_valid(self):
+        model, jid = self._junction_model()
+        assert validate_exchange_format(serialize_model(model)) == []
+
+    def test_junction_round_trips_with_no_dangling_refs(self):
+        from etcion.enums import JunctionType
+        from etcion.metamodel.relationships import Junction
+
+        model, jid = self._junction_model()
+        restored = deserialize_model(serialize_model(model))
+        juncs = [c for c in restored.concepts if isinstance(c, Junction)]
+        assert len(juncs) == 1
+        assert juncs[0].junction_type is JunctionType.AND
+        assert len(restored.relationships) == 2
+        ids = {c.id for c in restored.concepts}
+        assert all(r.source_id in ids and r.target_id in ids for r in restored.relationships)
+
+
+class TestInfluenceModifier:
+    """Influence folds sign/strength into the single conformant @modifier (#118)."""
+
+    def test_strength_emitted_as_modifier_not_strength_attr(self):
+        a = BusinessActor(name="A")
+        b = BusinessActor(name="B")
+        el = serialize_relationship(Influence(name="i", source=a, target=b, strength="high"))
+        assert el.get("modifier") == "high"
+        assert el.get("strength") is None
+
+    def test_sign_used_as_modifier_when_no_strength(self):
+        a = BusinessActor(name="A")
+        b = BusinessActor(name="B")
+        el = serialize_relationship(
+            Influence(name="i", source=a, target=b, sign=InfluenceSign.STRONG_POSITIVE)
+        )
+        assert el.get("modifier") == "++"
+        assert el.get("strength") is None
+
+    def test_sign_round_trips_through_modifier(self):
+        m = Model()
+        a = BusinessActor(name="A")
+        b = BusinessActor(name="B")
+        m.add(a)
+        m.add(b)
+        m.add(Influence(name="i", source=a, target=b, sign=InfluenceSign.NEGATIVE))
+        restored = deserialize_model(serialize_model(m))
+        inf = next(r for r in restored.relationships if isinstance(r, Influence))
+        assert inf.sign is InfluenceSign.NEGATIVE
+        assert inf.strength is None
+
+    def test_freetext_strength_round_trips_through_modifier(self):
+        m = Model()
+        a = BusinessActor(name="A")
+        b = BusinessActor(name="B")
+        m.add(a)
+        m.add(b)
+        m.add(Influence(name="i", source=a, target=b, strength="high"))
+        restored = deserialize_model(serialize_model(m))
+        inf = next(r for r in restored.relationships if isinstance(r, Influence))
+        assert inf.strength == "high"
+        assert inf.sign is None
+
+
+class TestFullSchemaValidation:
+    """validate_exchange_format covers the full Model+View+Diagram schema (#119)."""
+
+    def test_validator_uses_diagram_schema_set(self):
+        from etcion.serialization.xml import _XSD_PATH
+
+        assert _XSD_PATH.name == "archimate3_Diagram.xsd"
+
+    def test_model_with_relationships_validates_end_to_end(self):
+        m = Model()
+        a = BusinessActor(name="A")
+        b = BusinessService(name="B")
+        m.add(a)
+        m.add(b)
+        m.add(Serving(source=a, target=b))
+        assert validate_exchange_format(serialize_model(m)) == []
