@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 28 Jun 2026
+
+ArchiMate Exchange Format conformance hardening and a restored
+referential-integrity guarantee. Models built with etcion now produce XML that
+imports cleanly into Archi, and corrupt models fail closer to where they are
+introduced.
+
+### Added
+
+- `on_invalid_id` policy on `write_model` / `serialize_model`
+  (`"raise"` (default) | `"sanitize"` | `"allow"`) governing identifiers that
+  are not valid XML `NCName` values, and the
+  `InvalidExchangeIdentifierError` exception it raises (closes #117).
+- `Model.dangling_relationships()` — returns every relationship whose
+  `source_id` / `target_id` is absent from the model (closes #116).
+- `validate_endpoints` (opt-in, default `False`) on `model_from_dict` to
+  fail fast on dangling relationship endpoints during JSON load (closes #116).
+
+### Changed
+
+- **`write_model` now raises by default on non-`NCName` identifiers** instead of
+  emitting XML that fails the Exchange Format XSD. Pass `on_invalid_id="sanitize"`
+  to auto-rewrite, or `"allow"` for the previous verbatim behavior (#117).
+- **`Model.validate()` now reports a `ValidationError` for relationships with
+  absent endpoints**, instead of silently skipping them (#116).
+- **`validate_exchange_format` validates against the full Model + View + Diagram
+  schema set** (previously Model only), so the diagram side and its IDREFs are
+  checked (#119).
+- Influence relationships serialize a single conformant `@modifier` attribute
+  (the XSD has no `@strength`); `sign` / free-text `strength` round-trip through
+  it (#118).
+
+### Fixed
+
+- Junctions are now serialized as `<element xsi:type="AndJunction"|"OrJunction">`
+  and round-trip correctly. Previously junction concepts were dropped entirely,
+  leaving their relationships pointing at dangling IDREFs that failed XSD
+  validation and Archi import (#118).
+- Element-only (and empty) models no longer emit an empty `<elements>` /
+  `<relationships>` container, which the XSD rejects (#121).
+
 ## [0.13.0] - 15 Jun 2026
 
 Structural sharing for impact analysis and model editing
