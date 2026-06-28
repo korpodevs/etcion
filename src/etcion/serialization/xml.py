@@ -950,11 +950,19 @@ def read_model(path: str | Path) -> Model:
 # Exchange Format XSD validation (FEAT-19.6)
 # ---------------------------------------------------------------------------
 
-_XSD_PATH = Path(__file__).parent / "schema" / "archimate3_Model.xsd"
+# Validate against the most-inclusive bundled schema: archimate3_Diagram.xsd
+# <xs:include>s archimate3_View.xsd, which <xs:include>s archimate3_Model.xsd,
+# which <xs:import>s xml.xsd — so loading Diagram pulls in the whole set and
+# also checks the diagram side (view/node/connection, elementRef/relationshipRef
+# IDREFs), which the Model schema alone does not cover (#119).
+_XSD_PATH = Path(__file__).parent / "schema" / "archimate3_Diagram.xsd"
 
 
 def validate_exchange_format(tree: etree._ElementTree) -> list[str]:
-    """Validate a serialized Exchange Format tree against the bundled XSD.
+    """Validate a serialized Exchange Format tree against the bundled XSD set.
+
+    Loads the full schema set (Model + View + Diagram) so the diagram side is
+    validated as well as the model side (#119).
 
     Returns a list of validation error strings (empty list means valid).
     Raises :exc:`FileNotFoundError` if the XSD has not been bundled yet.
