@@ -36,6 +36,7 @@ from etcion.enums import (
 from etcion.exceptions import (
     ConformanceError,
     DerivationError,
+    InvalidExchangeIdentifierError,
     PyArchiError,
     ValidationError,
 )
@@ -227,6 +228,7 @@ __all__: list[str] = [
     "ValidationError",
     "DerivationError",
     "ConformanceError",
+    "InvalidExchangeIdentifierError",
     # conformance (FEAT-01.1)
     "ConformanceProfile",
     "CONFORMANCE",
