@@ -254,11 +254,13 @@ class TestSerializeModel:
         assert len(rels) == 1
 
     def test_empty_model(self):
+        # An empty model emits no <elements>/<relationships> containers, since
+        # the XSD forbids empty ones (#121); the result is still schema-valid.
         tree = serialize_model(Model())
         root = tree.getroot()
-        elems = root.find(f"{{{ARCHIMATE_NS}}}elements")
-        assert elems is not None
-        assert len(elems) == 0
+        assert root.find(f"{{{ARCHIMATE_NS}}}elements") is None
+        assert root.find(f"{{{ARCHIMATE_NS}}}relationships") is None
+        assert validate_exchange_format(tree) == []
 
 
 class TestWriteModel_1:

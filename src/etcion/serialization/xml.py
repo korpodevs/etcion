@@ -19,10 +19,12 @@ except ImportError as exc:
         "lxml is required for XML serialization. Install it with: pip install etcion[xml]"
     ) from exc
 
+from etcion.enums import InfluenceSign, JunctionType
 from etcion.exceptions import InvalidExchangeIdentifierError
 from etcion.metamodel.concepts import Concept, Element, Relationship
 from etcion.metamodel.model import Model
 from etcion.metamodel.profiles import Profile
+from etcion.metamodel.relationships import Influence, Junction
 from etcion.metamodel.viewpoints import View, Viewpoint
 from etcion.serialization.registry import (
     ARCHIMATE_NS,
@@ -206,6 +208,32 @@ def _expanded_attribute_extensions(
         for tgt in targets:
             expanded.setdefault(tgt, {}).update(attrs)
     return expanded
+
+
+# Junctions serialize as <element xsi:type="AndJunction"|"OrJunction"> because
+# the XSD's RelationshipConnectorType extends ElementType (#118).
+_JUNCTION_TYPE_TO_TAG: dict[JunctionType, str] = {
+    JunctionType.AND: "AndJunction",
+    JunctionType.OR: "OrJunction",
+}
+_TAG_TO_JUNCTION_TYPE: dict[str, JunctionType] = {v: k for k, v in _JUNCTION_TYPE_TO_TAG.items()}
+
+# InfluenceSign values that round-trip through @modifier (#118).
+_MODIFIER_TO_SIGN: dict[str, InfluenceSign] = {s.value: s for s in InfluenceSign}
+
+
+def serialize_junction(junction: Junction, *, id_mapper: _IdMapper | None = None) -> etree._Element:
+    """Serialize a Junction as an ``<element>`` node.
+
+    Per the Exchange Format XSD a junction is an element whose ``xsi:type`` is
+    ``AndJunction`` or ``OrJunction`` (RelationshipConnectorType extends
+    ElementType).  It carries no name, documentation, or source/target (#118).
+    """
+    mapper = _default_mapper(id_mapper)
+    el = etree.Element(f"{{{ARCHIMATE_NS}}}element", nsmap=NSMAP)
+    el.set("identifier", mapper.concept(junction.id))
+    el.set(f"{{{XSI_NS}}}type", _JUNCTION_TYPE_TO_TAG[junction.junction_type])
+    return el
 
 
 def serialize_element(elem: Element, *, id_mapper: _IdMapper | None = None) -> etree._Element:
@@ -395,13 +423,25 @@ def serialize_model(
     name_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
     name_el.text = model_name
 
-    elements_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}elements")
-    for elem in model.elements:
-        elements_container.append(serialize_element(elem, id_mapper=mapper))
+    # Junctions are RelationshipConnectors — neither model.elements nor
+    # model.relationships include them, so collect them explicitly (#118).
+    # Junction is the only concrete RelationshipConnector.
+    connectors = [c for c in model.concepts if isinstance(c, Junction)]
 
-    rels_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}relationships")
-    for rel in model.relationships:
-        rels_container.append(serialize_relationship(rel, id_mapper=mapper))
+    # The XSD makes <elements>/<relationships> optional (minOccurs=0) but
+    # non-empty (ElementsType/RelationshipsType require >=1 child), so only emit
+    # a container when it has content (#121).
+    if model.elements or connectors:
+        elements_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}elements")
+        for elem in model.elements:
+            elements_container.append(serialize_element(elem, id_mapper=mapper))
+        for junction in connectors:
+            elements_container.append(serialize_junction(junction, id_mapper=mapper))
+
+    if model.relationships:
+        rels_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}relationships")
+        for rel in model.relationships:
+            rels_container.append(serialize_relationship(rel, id_mapper=mapper))
 
     opaque = getattr(model, "_opaque_xml", [])
     for node in opaque:
@@ -591,17 +631,24 @@ def _from_exchange_id(exchange_id: str) -> str:
 def _deserialize_element(
     node: etree._Element,
     propdef_map: dict[str, tuple[str, type]] | None = None,
-) -> Element | None:
+) -> Concept | None:
     """Deserialize a single ``<element>`` node.
 
     Returns ``None`` and emits a :func:`warnings.warn` when the ArchiMate
     type attribute is not registered in ``_TAG_TO_TYPE``.
+
+    ``<element xsi:type="AndJunction"|"OrJunction">`` nodes are reconstructed as
+    :class:`~etcion.metamodel.relationships.Junction` instances (#118); these
+    carry no name or properties.
 
     ``propdef_map`` maps a propertyDefinitionRef identifier to a tuple of
     ``(attr_name, python_type)`` and is used to reconstruct extended
     attributes.  Pass ``None`` (default) for models without profiles.
     """
     type_attr = node.get(f"{{{XSI_NS}}}type")
+    if type_attr in _TAG_TO_JUNCTION_TYPE:
+        internal_id = _from_exchange_id(node.get("identifier", ""))
+        return Junction(id=internal_id, junction_type=_TAG_TO_JUNCTION_TYPE[type_attr])
     if type_attr not in _TAG_TO_TYPE:
         warnings.warn(f"Unknown element type: {type_attr}", stacklevel=2)
         return None
@@ -632,7 +679,7 @@ def _deserialize_element(
         kwargs["specialization"] = specialization
     if extended_attributes:
         kwargs["extended_attributes"] = extended_attributes
-    return cls(id=internal_id, name=name, description=desc, **kwargs)  # type: ignore[call-arg, return-value]
+    return cls(id=internal_id, name=name, description=desc, **kwargs)  # type: ignore[call-arg]
 
 
 def _deserialize_relationship(
@@ -679,10 +726,22 @@ def _deserialize_relationship(
                 attr_name, attr_type = propdef_map[ref]
                 extended_attributes[attr_name] = _coerce_attr_value(val_node.text, attr_type)
 
-    # Extra attrs (access_mode, sign, etc.) are deferred; Serving has none.
+    # Extra attrs (access_mode, direction, etc.) are deferred; Serving has none.
     kwargs: dict[str, Any] = {}
     if extended_attributes:
         kwargs["extended_attributes"] = extended_attributes
+
+    # Influence folds sign/strength into @modifier (#118): a value matching an
+    # InfluenceSign restores sign; anything else is free-text strength.
+    if cls is Influence:
+        modifier = node.get("modifier")
+        if modifier is not None:
+            sign = _MODIFIER_TO_SIGN.get(modifier)
+            if sign is not None:
+                kwargs["sign"] = sign
+            else:
+                kwargs["strength"] = modifier
+
     return cls(id=internal_id, name=name, source=source, target=target, **kwargs)  # type: ignore[call-arg, return-value]
 
 
@@ -763,9 +822,11 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
             attr_extensions[cls] = {}
         attr_extensions[cls].update(attrs)
 
-    # Phase 2: parse elements (collect, do not add yet); gather specializations
+    # Phase 2: parse elements (collect, do not add yet); gather specializations.
+    # Junctions deserialize here too (as <element xsi:type="*Junction">) but are
+    # RelationshipConnectors with no specialization, so they are skipped below.
     id_map: dict[str, Concept] = {}
-    parsed_elements: list[Element] = []
+    parsed_elements: list[Concept] = []
     specializations: dict[type[Element], list[str]] = {}
     elements_node = root.find(f"{{{ARCHIMATE_NS}}}elements")
     if elements_node is not None:
@@ -774,7 +835,7 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
             if concept is not None:
                 id_map[el_node.get("identifier", "")] = concept
                 parsed_elements.append(concept)
-                if concept.specialization:
+                if isinstance(concept, Element) and concept.specialization:
                     cls_type = type(concept)
                     if cls_type not in specializations:
                         specializations[cls_type] = []
