@@ -6,10 +6,11 @@ Reference: ADR-031.
 from __future__ import annotations
 
 import json
+import re
 import uuid
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 try:
     from lxml import etree
@@ -18,9 +19,12 @@ except ImportError as exc:
         "lxml is required for XML serialization. Install it with: pip install etcion[xml]"
     ) from exc
 
+from etcion.enums import InfluenceSign, JunctionType
+from etcion.exceptions import InvalidExchangeIdentifierError
 from etcion.metamodel.concepts import Concept, Element, Relationship
 from etcion.metamodel.model import Model
 from etcion.metamodel.profiles import Profile
+from etcion.metamodel.relationships import Influence, Junction
 from etcion.metamodel.viewpoints import View, Viewpoint
 from etcion.serialization.registry import (
     ARCHIMATE_NS,
@@ -81,6 +85,107 @@ def _to_exchange_id(internal_id: str) -> str:
     return internal_id if internal_id.startswith("id-") else f"id-{internal_id}"
 
 
+# Policy governing identifiers that are not valid XML NCNames on write (#117).
+OnInvalidId = Literal["raise", "sanitize", "allow"]
+
+# XML NCName character classes (XML 1.0 NameStartChar/NameChar minus ':').
+# Covers ASCII plus the common Unicode ranges; the rarely-used astral planes
+# (>= U+10000) are omitted for simplicity.
+_NCNAME_START = (
+    "A-Za-z_"
+    "\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u02ff\u0370-\u037d\u037f-\u1fff"
+    "\u200c-\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd"
+)
+_NCNAME_CHAR = _NCNAME_START + "\\-.0-9\u00b7\u0300-\u036f\u203f-\u2040"
+_NCNAME_START_RE = re.compile(f"[{_NCNAME_START}]")
+_NCNAME_CHAR_RE = re.compile(f"[{_NCNAME_CHAR}]")
+_NCNAME_RE = re.compile(f"^[{_NCNAME_START}][{_NCNAME_CHAR}]*$")
+
+
+def _ncname_violation(value: str) -> str | None:
+    """Return a human-readable reason *value* is not a valid NCName, else ``None``."""
+    if value == "":
+        return "empty identifier"
+    if _NCNAME_RE.match(value):
+        return None
+    if not _NCNAME_START_RE.match(value[0]):
+        return f"must start with a letter or underscore, not {value[0]!r}"
+    illegal = sorted({c for c in value if not _NCNAME_CHAR_RE.match(c)})
+    if illegal:
+        chars = ", ".join(repr(c) for c in illegal)
+        return f"contains characters not allowed in an NCName: {chars}"
+    return "not a valid NCName"  # pragma: no cover - defensive
+
+
+def _sanitize_ncname(value: str) -> str:
+    """Rewrite *value* into a valid NCName by replacing illegal characters with ``-``."""
+    out = "".join(c if _NCNAME_CHAR_RE.match(c) else "-" for c in value)
+    if not out or not _NCNAME_START_RE.match(out[0]):
+        out = "_" + out
+    return out
+
+
+class _IdMapper:
+    """Maps internal/raw identifiers to NCName-safe Exchange Format identifiers.
+
+    A single instance is shared across a whole ``serialize_model`` call so that
+    every reference to a given identifier (an element id and the ``source`` /
+    ``target`` / ``elementRef`` / ``relationshipRef`` that point at it, or a
+    ``propertyDefinition`` id and the ``propertyDefinitionRef`` that cites it)
+    resolves to the same output — keeping ID/IDREF pairings intact even when
+    sanitization rewrites a value (ADR-031 addendum, #117).
+
+    When ``sanitize`` is false, invalid identifiers pass through verbatim and are
+    recorded in :attr:`invalid`; the caller decides whether to raise (``"raise"``)
+    or emit them anyway (``"allow"``).
+    """
+
+    def __init__(self, *, sanitize: bool) -> None:
+        self._sanitize = sanitize
+        self._cache: dict[str, str] = {}
+        self._used: set[str] = set()
+        self.invalid: dict[str, str] = {}
+
+    def concept(self, internal_id: str) -> str:
+        """Map a concept's internal id to its (validated) Exchange Format id."""
+        return self._map(_to_exchange_id(internal_id))
+
+    def propdef(self, raw_id: str) -> str:
+        """Map a ``propdef-*`` identifier (built from a user-supplied attr name)."""
+        return self._map(raw_id)
+
+    def _map(self, raw: str) -> str:
+        cached = self._cache.get(raw)
+        if cached is not None:
+            return cached
+        reason = _ncname_violation(raw)
+        if reason is None:
+            # In sanitize mode, dedupe even already-valid ids so a sanitized
+            # value can never collide with a verbatim one (xs:ID uniqueness).
+            result = self._unique(raw) if self._sanitize else raw
+        elif self._sanitize:
+            result = self._unique(_sanitize_ncname(raw))
+        else:
+            self.invalid[raw] = reason
+            result = raw
+        self._cache[raw] = result
+        self._used.add(result)
+        return result
+
+    def _unique(self, candidate: str) -> str:
+        if candidate not in self._used:
+            return candidate
+        suffix = 2
+        while f"{candidate}-{suffix}" in self._used:
+            suffix += 1
+        return f"{candidate}-{suffix}"
+
+
+def _default_mapper(id_mapper: _IdMapper | None) -> _IdMapper:
+    """Return *id_mapper* or a permissive standalone mapper (verbatim, never raises)."""
+    return id_mapper if id_mapper is not None else _IdMapper(sanitize=False)
+
+
 def _expanded_attribute_extensions(
     profile: Profile, present_types: set[type[Concept]]
 ) -> dict[type[Concept], dict[str, Any]]:
@@ -105,11 +210,42 @@ def _expanded_attribute_extensions(
     return expanded
 
 
-def serialize_element(elem: Element) -> etree._Element:
-    """Serialize a single Element to an lxml element node."""
+# Junctions serialize as <element xsi:type="AndJunction"|"OrJunction"> because
+# the XSD's RelationshipConnectorType extends ElementType (#118).
+_JUNCTION_TYPE_TO_TAG: dict[JunctionType, str] = {
+    JunctionType.AND: "AndJunction",
+    JunctionType.OR: "OrJunction",
+}
+_TAG_TO_JUNCTION_TYPE: dict[str, JunctionType] = {v: k for k, v in _JUNCTION_TYPE_TO_TAG.items()}
+
+# InfluenceSign values that round-trip through @modifier (#118).
+_MODIFIER_TO_SIGN: dict[str, InfluenceSign] = {s.value: s for s in InfluenceSign}
+
+
+def serialize_junction(junction: Junction, *, id_mapper: _IdMapper | None = None) -> etree._Element:
+    """Serialize a Junction as an ``<element>`` node.
+
+    Per the Exchange Format XSD a junction is an element whose ``xsi:type`` is
+    ``AndJunction`` or ``OrJunction`` (RelationshipConnectorType extends
+    ElementType).  It carries no name, documentation, or source/target (#118).
+    """
+    mapper = _default_mapper(id_mapper)
+    el = etree.Element(f"{{{ARCHIMATE_NS}}}element", nsmap=NSMAP)
+    el.set("identifier", mapper.concept(junction.id))
+    el.set(f"{{{XSI_NS}}}type", _JUNCTION_TYPE_TO_TAG[junction.junction_type])
+    return el
+
+
+def serialize_element(elem: Element, *, id_mapper: _IdMapper | None = None) -> etree._Element:
+    """Serialize a single Element to an lxml element node.
+
+    *id_mapper* (internal) carries the NCName-safety policy across a full model
+    serialization; when omitted, identifiers are emitted verbatim (#117).
+    """
+    mapper = _default_mapper(id_mapper)
     desc = TYPE_REGISTRY[type(elem)]
     el = etree.Element(f"{{{ARCHIMATE_NS}}}element", nsmap=NSMAP)
-    el.set("identifier", _to_exchange_id(elem.id))
+    el.set("identifier", mapper.concept(elem.id))
     el.set(f"{{{XSI_NS}}}type", desc.xml_tag)
 
     name_el = etree.SubElement(el, f"{{{ARCHIMATE_NS}}}name")
@@ -136,7 +272,9 @@ def serialize_element(elem: Element) -> etree._Element:
             type_name = TYPE_REGISTRY[type(elem)].xml_tag
             for attr_name, value in elem.extended_attributes.items():
                 prop_el = etree.SubElement(props_container, f"{{{ARCHIMATE_NS}}}property")
-                prop_el.set("propertyDefinitionRef", f"propdef-{type_name}-{attr_name}")
+                prop_el.set(
+                    "propertyDefinitionRef", mapper.propdef(f"propdef-{type_name}-{attr_name}")
+                )
                 val_el = etree.SubElement(prop_el, f"{{{ARCHIMATE_NS}}}value")
                 val_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
                 val_el.text = str(value)
@@ -144,7 +282,9 @@ def serialize_element(elem: Element) -> etree._Element:
     return el
 
 
-def serialize_relationship(rel: Relationship) -> etree._Element:
+def serialize_relationship(
+    rel: Relationship, *, id_mapper: _IdMapper | None = None
+) -> etree._Element:
     """Serialize a single Relationship to an lxml element node.
 
     Per ADR-050, ``extended_attributes`` declared on a Relationship are
@@ -152,12 +292,16 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
     propdef-id scheme namespaces by the relationship's xml_tag so collisions
     with element propdefs are not possible (relationship and element xml_tag
     spaces are disjoint).
+
+    *id_mapper* (internal) carries the NCName-safety policy across a full model
+    serialization; when omitted, identifiers are emitted verbatim (#117).
     """
+    mapper = _default_mapper(id_mapper)
     desc = TYPE_REGISTRY[type(rel)]
     el = etree.Element(f"{{{ARCHIMATE_NS}}}relationship", nsmap=NSMAP)
-    el.set("identifier", _to_exchange_id(rel.id))
-    el.set("source", _to_exchange_id(rel.source_id))
-    el.set("target", _to_exchange_id(rel.target_id))
+    el.set("identifier", mapper.concept(rel.id))
+    el.set("source", mapper.concept(rel.source_id))
+    el.set("target", mapper.concept(rel.target_id))
     el.set(f"{{{XSI_NS}}}type", desc.xml_tag)
 
     if rel.name:
@@ -170,7 +314,7 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
         type_name = desc.xml_tag
         for attr_name, value in rel.extended_attributes.items():
             prop_el = etree.SubElement(props_container, f"{{{ARCHIMATE_NS}}}property")
-            prop_el.set("propertyDefinitionRef", f"propdef-{type_name}-{attr_name}")
+            prop_el.set("propertyDefinitionRef", mapper.propdef(f"propdef-{type_name}-{attr_name}"))
             val_el = etree.SubElement(prop_el, f"{{{ARCHIMATE_NS}}}value")
             val_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
             val_el.text = str(value)
@@ -183,7 +327,9 @@ def serialize_relationship(rel: Relationship) -> etree._Element:
     return el
 
 
-def _serialize_view(view: View, parent: etree._Element) -> None:
+def _serialize_view(
+    view: View, parent: etree._Element, *, id_mapper: _IdMapper | None = None
+) -> None:
     """Serialize a single View as a ``<view>`` element appended to *parent*.
 
     Emits ``<node>`` children for every :class:`~etcion.metamodel.concepts.Element`
@@ -193,6 +339,7 @@ def _serialize_view(view: View, parent: etree._Element) -> None:
     Connections whose source or target element is absent from the view are
     silently skipped.
     """
+    mapper = _default_mapper(id_mapper)
     view_id = f"id-view-{uuid.uuid4()}"
     view_el = etree.SubElement(parent, f"{{{ARCHIMATE_NS}}}view")
     view_el.set("identifier", view_id)
@@ -219,7 +366,7 @@ def _serialize_view(view: View, parent: etree._Element) -> None:
         col = index % _columns
         row = index // _columns
         node_id = f"id-node-{uuid.uuid4()}"
-        exchange_id = _to_exchange_id(elem.id)
+        exchange_id = mapper.concept(elem.id)
         elem_exchange_id_to_node_id[exchange_id] = node_id
 
         node_el = etree.SubElement(view_el, f"{{{ARCHIMATE_NS}}}node")
@@ -232,8 +379,8 @@ def _serialize_view(view: View, parent: etree._Element) -> None:
         node_el.set("h", str(_node_h))
 
     for rel in view_relationships:
-        src_exchange_id = _to_exchange_id(rel.source_id)
-        tgt_exchange_id = _to_exchange_id(rel.target_id)
+        src_exchange_id = mapper.concept(rel.source_id)
+        tgt_exchange_id = mapper.concept(rel.target_id)
         src_node_id = elem_exchange_id_to_node_id.get(src_exchange_id)
         tgt_node_id = elem_exchange_id_to_node_id.get(tgt_exchange_id)
         # Skip connections whose endpoints have no node in this view.
@@ -242,14 +389,32 @@ def _serialize_view(view: View, parent: etree._Element) -> None:
 
         conn_el = etree.SubElement(view_el, f"{{{ARCHIMATE_NS}}}connection")
         conn_el.set("identifier", f"id-conn-{uuid.uuid4()}")
-        conn_el.set("relationshipRef", _to_exchange_id(rel.id))
+        conn_el.set("relationshipRef", mapper.concept(rel.id))
         conn_el.set(f"{{{XSI_NS}}}type", "Relationship")
         conn_el.set("source", src_node_id)
         conn_el.set("target", tgt_node_id)
 
 
-def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etree._ElementTree:
-    """Serialize a Model to a complete Exchange Format ElementTree."""
+def serialize_model(
+    model: Model,
+    *,
+    model_name: str = "Untitled Model",
+    on_invalid_id: OnInvalidId = "raise",
+) -> etree._ElementTree:
+    """Serialize a Model to a complete Exchange Format ElementTree.
+
+    *on_invalid_id* governs identifiers that are not valid XML ``NCName`` values
+    once written (element/relationship ids, relationship ``source``/``target``,
+    and ``extended_attributes`` keys — the only user-controlled values that
+    reach ``xs:ID``/``xs:IDREF`` slots; see ADR-031 addendum, #117):
+
+    - ``"raise"`` (default): collect every offending identifier and raise
+      :class:`~etcion.exceptions.InvalidExchangeIdentifierError`.
+    - ``"sanitize"``: rewrite offending identifiers to valid NCNames, keeping
+      ID/IDREF pairings consistent. The *model* object is not mutated.
+    - ``"allow"``: emit identifiers verbatim (pre-#117 behavior).
+    """
+    mapper = _IdMapper(sanitize=(on_invalid_id == "sanitize"))
     root = etree.Element(f"{{{ARCHIMATE_NS}}}model", nsmap=NSMAP)
     root.set("identifier", "id-model-root")
     root.set(f"{{{XSI_NS}}}schemaLocation", ARCHIMATE_SCHEMA_LOCATION)
@@ -258,13 +423,25 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
     name_el.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
     name_el.text = model_name
 
-    elements_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}elements")
-    for elem in model.elements:
-        elements_container.append(serialize_element(elem))
+    # Junctions are RelationshipConnectors — neither model.elements nor
+    # model.relationships include them, so collect them explicitly (#118).
+    # Junction is the only concrete RelationshipConnector.
+    connectors = [c for c in model.concepts if isinstance(c, Junction)]
 
-    rels_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}relationships")
-    for rel in model.relationships:
-        rels_container.append(serialize_relationship(rel))
+    # The XSD makes <elements>/<relationships> optional (minOccurs=0) but
+    # non-empty (ElementsType/RelationshipsType require >=1 child), so only emit
+    # a container when it has content (#121).
+    if model.elements or connectors:
+        elements_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}elements")
+        for elem in model.elements:
+            elements_container.append(serialize_element(elem, id_mapper=mapper))
+        for junction in connectors:
+            elements_container.append(serialize_junction(junction, id_mapper=mapper))
+
+    if model.relationships:
+        rels_container = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}relationships")
+        for rel in model.relationships:
+            rels_container.append(serialize_relationship(rel, id_mapper=mapper))
 
     opaque = getattr(model, "_opaque_xml", [])
     for node in opaque:
@@ -328,7 +505,7 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
                         raw_value if isinstance(raw_value, type) else raw_value["type"]
                     )
                     pd = etree.SubElement(propdefs, f"{{{ARCHIMATE_NS}}}propertyDefinition")
-                    pd.set("identifier", f"propdef-{type_name}-{attr_name}")
+                    pd.set("identifier", mapper.propdef(f"propdef-{type_name}-{attr_name}"))
                     pd.set("type", _PY_TO_XSD_TYPE.get(attr_type.__name__, "string"))
                     pd_name = etree.SubElement(pd, f"{{{ARCHIMATE_NS}}}name")
                     pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
@@ -336,7 +513,7 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
 
         for pid, attr_name in undeclared.items():
             pd = etree.SubElement(propdefs, f"{{{ARCHIMATE_NS}}}propertyDefinition")
-            pd.set("identifier", pid)
+            pd.set("identifier", mapper.propdef(pid))
             pd.set("type", "string")
             pd_name = etree.SubElement(pd, f"{{{ARCHIMATE_NS}}}name")
             pd_name.set(f"{{{XML_NS}}}lang", DEFAULT_LANG)
@@ -372,7 +549,12 @@ def serialize_model(model: Model, *, model_name: str = "Untitled Model") -> etre
         views_el = etree.SubElement(root, f"{{{ARCHIMATE_NS}}}views")
         diagrams_el = etree.SubElement(views_el, f"{{{ARCHIMATE_NS}}}diagrams")
         for view in model.views:
-            _serialize_view(view, diagrams_el)
+            _serialize_view(view, diagrams_el, id_mapper=mapper)
+
+    # Under the default "raise" policy, fail once with every offending id rather
+    # than emitting XML that violates the bundled XSD (ADR-031 addendum, #117).
+    if on_invalid_id == "raise" and mapper.invalid:
+        raise InvalidExchangeIdentifierError(mapper.invalid)
 
     return etree.ElementTree(root)
 
@@ -414,9 +596,19 @@ def _collect_constraint_profiles(
     return result
 
 
-def write_model(model: Model, path: str | Path, *, model_name: str = "Untitled Model") -> None:
-    """Write a Model to an XML file in Exchange Format."""
-    tree = serialize_model(model, model_name=model_name)
+def write_model(
+    model: Model,
+    path: str | Path,
+    *,
+    model_name: str = "Untitled Model",
+    on_invalid_id: OnInvalidId = "raise",
+) -> None:
+    """Write a Model to an XML file in Exchange Format.
+
+    *on_invalid_id* controls handling of identifiers that are not valid XML
+    ``NCName`` values; see :func:`serialize_model` (#117).
+    """
+    tree = serialize_model(model, model_name=model_name, on_invalid_id=on_invalid_id)
     etree.indent(tree, space="  ")
     tree.write(
         str(path),
@@ -439,17 +631,24 @@ def _from_exchange_id(exchange_id: str) -> str:
 def _deserialize_element(
     node: etree._Element,
     propdef_map: dict[str, tuple[str, type]] | None = None,
-) -> Element | None:
+) -> Concept | None:
     """Deserialize a single ``<element>`` node.
 
     Returns ``None`` and emits a :func:`warnings.warn` when the ArchiMate
     type attribute is not registered in ``_TAG_TO_TYPE``.
+
+    ``<element xsi:type="AndJunction"|"OrJunction">`` nodes are reconstructed as
+    :class:`~etcion.metamodel.relationships.Junction` instances (#118); these
+    carry no name or properties.
 
     ``propdef_map`` maps a propertyDefinitionRef identifier to a tuple of
     ``(attr_name, python_type)`` and is used to reconstruct extended
     attributes.  Pass ``None`` (default) for models without profiles.
     """
     type_attr = node.get(f"{{{XSI_NS}}}type")
+    if type_attr in _TAG_TO_JUNCTION_TYPE:
+        internal_id = _from_exchange_id(node.get("identifier", ""))
+        return Junction(id=internal_id, junction_type=_TAG_TO_JUNCTION_TYPE[type_attr])
     if type_attr not in _TAG_TO_TYPE:
         warnings.warn(f"Unknown element type: {type_attr}", stacklevel=2)
         return None
@@ -480,7 +679,7 @@ def _deserialize_element(
         kwargs["specialization"] = specialization
     if extended_attributes:
         kwargs["extended_attributes"] = extended_attributes
-    return cls(id=internal_id, name=name, description=desc, **kwargs)  # type: ignore[call-arg, return-value]
+    return cls(id=internal_id, name=name, description=desc, **kwargs)  # type: ignore[call-arg]
 
 
 def _deserialize_relationship(
@@ -527,10 +726,22 @@ def _deserialize_relationship(
                 attr_name, attr_type = propdef_map[ref]
                 extended_attributes[attr_name] = _coerce_attr_value(val_node.text, attr_type)
 
-    # Extra attrs (access_mode, sign, etc.) are deferred; Serving has none.
+    # Extra attrs (access_mode, direction, etc.) are deferred; Serving has none.
     kwargs: dict[str, Any] = {}
     if extended_attributes:
         kwargs["extended_attributes"] = extended_attributes
+
+    # Influence folds sign/strength into @modifier (#118): a value matching an
+    # InfluenceSign restores sign; anything else is free-text strength.
+    if cls is Influence:
+        modifier = node.get("modifier")
+        if modifier is not None:
+            sign = _MODIFIER_TO_SIGN.get(modifier)
+            if sign is not None:
+                kwargs["sign"] = sign
+            else:
+                kwargs["strength"] = modifier
+
     return cls(id=internal_id, name=name, source=source, target=target, **kwargs)  # type: ignore[call-arg, return-value]
 
 
@@ -611,9 +822,11 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
             attr_extensions[cls] = {}
         attr_extensions[cls].update(attrs)
 
-    # Phase 2: parse elements (collect, do not add yet); gather specializations
+    # Phase 2: parse elements (collect, do not add yet); gather specializations.
+    # Junctions deserialize here too (as <element xsi:type="*Junction">) but are
+    # RelationshipConnectors with no specialization, so they are skipped below.
     id_map: dict[str, Concept] = {}
-    parsed_elements: list[Element] = []
+    parsed_elements: list[Concept] = []
     specializations: dict[type[Element], list[str]] = {}
     elements_node = root.find(f"{{{ARCHIMATE_NS}}}elements")
     if elements_node is not None:
@@ -622,7 +835,7 @@ def deserialize_model(tree: etree._ElementTree) -> Model:
             if concept is not None:
                 id_map[el_node.get("identifier", "")] = concept
                 parsed_elements.append(concept)
-                if concept.specialization:
+                if isinstance(concept, Element) and concept.specialization:
                     cls_type = type(concept)
                     if cls_type not in specializations:
                         specializations[cls_type] = []
@@ -737,11 +950,19 @@ def read_model(path: str | Path) -> Model:
 # Exchange Format XSD validation (FEAT-19.6)
 # ---------------------------------------------------------------------------
 
-_XSD_PATH = Path(__file__).parent / "schema" / "archimate3_Model.xsd"
+# Validate against the most-inclusive bundled schema: archimate3_Diagram.xsd
+# <xs:include>s archimate3_View.xsd, which <xs:include>s archimate3_Model.xsd,
+# which <xs:import>s xml.xsd — so loading Diagram pulls in the whole set and
+# also checks the diagram side (view/node/connection, elementRef/relationshipRef
+# IDREFs), which the Model schema alone does not cover (#119).
+_XSD_PATH = Path(__file__).parent / "schema" / "archimate3_Diagram.xsd"
 
 
 def validate_exchange_format(tree: etree._ElementTree) -> list[str]:
-    """Validate a serialized Exchange Format tree against the bundled XSD.
+    """Validate a serialized Exchange Format tree against the bundled XSD set.
+
+    Loads the full schema set (Model + View + Diagram) so the diagram side is
+    validated as well as the model side (#119).
 
     Returns a list of validation error strings (empty list means valid).
     Raises :exc:`FileNotFoundError` if the XSD has not been bundled yet.

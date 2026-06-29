@@ -384,3 +384,66 @@ class TestProfileAbstractBaseKeys:
         ext = restored.profiles[0].attribute_extensions
         assert ext[Element] == {"tag": str}
         assert ext[BusinessActor] == {"cost_centre": str}
+
+
+class TestReferentialIntegrity:
+    """model_from_dict referential-integrity handling (Issue #116)."""
+
+    @staticmethod
+    def _dangling_data() -> tuple[dict, str, str]:
+        """A serialized model whose Serving relationship dangles (target dropped)."""
+        actor = BusinessActor(name="A")
+        proc = BusinessProcess(name="P")
+        rel = Serving(name="s", source=actor, target=proc)
+        m = Model()
+        m.add(actor)
+        m.add(proc)
+        m.add(rel)
+        data = model_to_dict(m)
+        # Drop the target element from the envelope -> the relationship dangles.
+        data["elements"] = [e for e in data["elements"] if e["id"] != proc.id]
+        return data, rel.id, proc.id
+
+    def test_default_loads_dangling_silently(self) -> None:
+        data, rel_id, target_id = self._dangling_data()
+        m = model_from_dict(data)  # no flag -> no integrity check
+        assert len(m.relationships) == 1
+        assert m.relationships[0].id == rel_id
+        # The dangling endpoint is genuinely absent from the model.
+        assert target_id not in {c.id for c in m.concepts}
+
+    def test_validate_endpoints_raises_naming_offender(self) -> None:
+        from etcion.exceptions import ValidationError
+
+        data, rel_id, target_id = self._dangling_data()
+        with pytest.raises(ValidationError) as exc:
+            model_from_dict(data, validate_endpoints=True)
+        msg = str(exc.value)
+        assert rel_id in msg
+        assert target_id in msg
+
+    def test_validate_endpoints_collects_all_offenders(self) -> None:
+        from etcion.exceptions import ValidationError
+
+        actor = BusinessActor(name="A")
+        proc = BusinessProcess(name="P")
+        rel1 = Serving(name="s1", source=actor, target=proc)
+        rel2 = Serving(name="s2", source=proc, target=actor)
+        m = Model()
+        m.add(actor)
+        m.add(proc)
+        m.add(rel1)
+        m.add(rel2)
+        data = model_to_dict(m)
+        # Drop both elements -> both relationships dangle.
+        data["elements"] = []
+        with pytest.raises(ValidationError) as exc:
+            model_from_dict(data, validate_endpoints=True)
+        msg = str(exc.value)
+        assert rel1.id in msg
+        assert rel2.id in msg
+
+    def test_validate_endpoints_clean_model_ok(self, simple_model) -> None:
+        data = model_to_dict(simple_model)
+        m = model_from_dict(data, validate_endpoints=True)
+        assert len(m.relationships) == 1

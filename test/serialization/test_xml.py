@@ -13,6 +13,7 @@ from lxml import etree
 lxml = pytest.importorskip("lxml")
 
 from etcion.enums import AccessMode, ContentCategory, InfluenceSign, PurposeCategory  # noqa: E402
+from etcion.exceptions import InvalidExchangeIdentifierError  # noqa: E402
 from etcion.metamodel.application import (  # noqa: E402
     ApplicationComponent,
     DataObject,  # noqa: E402
@@ -44,6 +45,8 @@ from etcion.serialization.registry import (  # noqa: E402
 )
 from etcion.serialization.xml import (  # noqa: E402  # noqa: E402  # noqa: E402  # noqa: E402  # noqa: E402
     _from_exchange_id,
+    _ncname_violation,
+    _sanitize_ncname,
     _to_exchange_id,
     deserialize_model,
     read_model,
@@ -251,11 +254,13 @@ class TestSerializeModel:
         assert len(rels) == 1
 
     def test_empty_model(self):
+        # An empty model emits no <elements>/<relationships> containers, since
+        # the XSD forbids empty ones (#121); the result is still schema-valid.
         tree = serialize_model(Model())
         root = tree.getroot()
-        elems = root.find(f"{{{ARCHIMATE_NS}}}elements")
-        assert elems is not None
-        assert len(elems) == 0
+        assert root.find(f"{{{ARCHIMATE_NS}}}elements") is None
+        assert root.find(f"{{{ARCHIMATE_NS}}}relationships") is None
+        assert validate_exchange_format(tree) == []
 
 
 class TestWriteModel_1:
@@ -1231,3 +1236,224 @@ class TestIssue110ElementKeyedProfile:
         type_by_id = {pd.get("identifier"): pd.get("type") for pd in pd_container}
         # int -> XSD "number"; if Element's str had won we'd see "string".
         assert type_by_id["propdef-ApplicationComponent-_owner"] == "number"
+
+
+class TestNCNameHelpers:
+    """Unit tests for the NCName validation/sanitization primitives (#117)."""
+
+    def test_valid_ncname_returns_none(self) -> None:
+        assert _ncname_violation("id-good_id.1") is None
+
+    def test_colon_and_slash_rejected(self) -> None:
+        reason = _ncname_violation("id-api:default/load")
+        assert reason is not None
+        assert "'/'" in reason and "':'" in reason
+
+    def test_space_rejected(self) -> None:
+        assert _ncname_violation("id-a b") is not None
+
+    def test_empty_rejected(self) -> None:
+        assert _ncname_violation("") == "empty identifier"
+
+    def test_leading_digit_rejected(self) -> None:
+        # A bare value (no id- prefix) starting with a digit is not a valid start.
+        reason = _ncname_violation("3abc")
+        assert reason is not None and "start" in reason
+
+    def test_sanitize_replaces_illegal_chars(self) -> None:
+        assert _sanitize_ncname("id-api:default/load") == "id-api-default-load"
+
+    def test_sanitize_yields_valid_ncname(self) -> None:
+        assert _ncname_violation(_sanitize_ncname("3 weird/id:x")) is None
+
+
+class TestOnInvalidIdPolicy:
+    """write/serialize_model behavior for non-NCName identifiers (#117)."""
+
+    def _model_with_bad_ids(self) -> Model:
+        m = Model()
+        a = ApplicationComponent(id="api:default/load-template-api", name="API")
+        b = BusinessService(id="svc 1", name="Svc")
+        m.add(a)
+        m.add(b)
+        m.add(Serving(id="rel:1", source_id=a.id, target_id=b.id, name="serves"))
+        return m
+
+    def test_raise_is_default(self) -> None:
+        with pytest.raises(InvalidExchangeIdentifierError) as exc_info:
+            serialize_model(self._model_with_bad_ids())
+        # All three offending ids are reported in a single pass.
+        assert len(exc_info.value.invalid) == 3
+
+    def test_write_model_raises_by_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bad.xml"
+            with pytest.raises(InvalidExchangeIdentifierError):
+                write_model(self._model_with_bad_ids(), path)
+
+    def test_allow_emits_verbatim(self) -> None:
+        tree = serialize_model(self._model_with_bad_ids(), on_invalid_id="allow")
+        ids = {el.get("identifier") for el in tree.iter() if el.get("identifier")}
+        assert "id-api:default/load-template-api" in ids
+
+    def test_sanitize_produces_xsd_valid_output(self) -> None:
+        tree = serialize_model(self._model_with_bad_ids(), on_invalid_id="sanitize")
+        assert validate_exchange_format(tree) == []
+
+    def test_sanitize_keeps_source_target_consistent(self) -> None:
+        tree = serialize_model(self._model_with_bad_ids(), on_invalid_id="sanitize")
+        root = tree.getroot()
+        # Collect element identifiers and the relationship's source/target.
+        elem_ids = {el.get("identifier") for el in root.iter(f"{{{ARCHIMATE_NS}}}element")}
+        rel = root.find(f"{{{ARCHIMATE_NS}}}relationships/{{{ARCHIMATE_NS}}}relationship")
+        assert rel is not None
+        assert rel.get("source") in elem_ids
+        assert rel.get("target") in elem_ids
+
+    def test_sanitize_does_not_mutate_model(self) -> None:
+        model = self._model_with_bad_ids()
+        serialize_model(model, on_invalid_id="sanitize")
+        # Original ids on the in-memory model are untouched.
+        assert any(e.id == "api:default/load-template-api" for e in model.elements)
+
+    def test_extended_attribute_key_is_validated(self) -> None:
+        # A bad extended_attributes key reaches both an xs:ID and an xs:IDREF.
+        m = Model()
+        m.add(ApplicationComponent(name="App", extended_attributes={"bad key/x": 1}))
+        with pytest.raises(InvalidExchangeIdentifierError) as exc_info:
+            serialize_model(m)
+        assert any("bad key/x" in k for k in exc_info.value.invalid)
+
+    def test_extended_attribute_key_sanitized_consistently(self) -> None:
+        m = Model()
+        a = ApplicationComponent(name="App", extended_attributes={"bad key/x": 1})
+        b = BusinessService(name="Svc")
+        m.add(a)
+        m.add(b)
+        m.add(Serving(source_id=a.id, target_id=b.id))  # keep the model XSD-valid
+        tree = serialize_model(m, on_invalid_id="sanitize")
+        # The property ref and the propertyDefinition id must still match,
+        # which the XSD's IDREF->ID keyref enforces.
+        assert validate_exchange_format(tree) == []
+
+    def test_valid_uuid_model_unaffected(self) -> None:
+        # The default policy must not disturb ordinary UUID-id models.
+        m = Model()
+        a = ApplicationComponent(name="A")
+        b = BusinessService(name="B")
+        m.add(a)
+        m.add(b)
+        m.add(Serving(source_id=a.id, target_id=b.id))
+        tree = serialize_model(m)  # default "raise" — should not raise
+        assert validate_exchange_format(tree) == []
+
+
+class TestJunctionSerialization:
+    """Junctions serialize as <element xsi:type='AndJunction'|'OrJunction'> (#118)."""
+
+    def _junction_model(self):
+        from etcion import ModelBuilder
+        from etcion.enums import JunctionType
+
+        b = ModelBuilder()
+        a1 = b.application_component("App1", id="a1")
+        a2 = b.application_component("App2", id="a2")
+        j = b.junction(junction_type=JunctionType.AND)
+        b.serving(a1, j)
+        b.serving(j, a2)
+        return b.build(validate=False), j.id
+
+    def test_junction_emitted_as_element(self):
+        model, jid = self._junction_model()
+        root = serialize_model(model).getroot()
+        types = {el.get(f"{{{XSI_NS}}}type") for el in root.iter(f"{{{ARCHIMATE_NS}}}element")}
+        assert "AndJunction" in types
+
+    def test_junction_has_no_type_attr(self):
+        model, jid = self._junction_model()
+        root = serialize_model(model).getroot()
+        junction_el = next(
+            el
+            for el in root.iter(f"{{{ARCHIMATE_NS}}}element")
+            if el.get(f"{{{XSI_NS}}}type") == "AndJunction"
+        )
+        assert junction_el.get("type") is None
+
+    def test_junction_model_is_xsd_valid(self):
+        model, jid = self._junction_model()
+        assert validate_exchange_format(serialize_model(model)) == []
+
+    def test_junction_round_trips_with_no_dangling_refs(self):
+        from etcion.enums import JunctionType
+        from etcion.metamodel.relationships import Junction
+
+        model, jid = self._junction_model()
+        restored = deserialize_model(serialize_model(model))
+        juncs = [c for c in restored.concepts if isinstance(c, Junction)]
+        assert len(juncs) == 1
+        assert juncs[0].junction_type is JunctionType.AND
+        assert len(restored.relationships) == 2
+        ids = {c.id for c in restored.concepts}
+        assert all(r.source_id in ids and r.target_id in ids for r in restored.relationships)
+
+
+class TestInfluenceModifier:
+    """Influence folds sign/strength into the single conformant @modifier (#118)."""
+
+    def test_strength_emitted_as_modifier_not_strength_attr(self):
+        a = BusinessActor(name="A")
+        b = BusinessActor(name="B")
+        el = serialize_relationship(Influence(name="i", source=a, target=b, strength="high"))
+        assert el.get("modifier") == "high"
+        assert el.get("strength") is None
+
+    def test_sign_used_as_modifier_when_no_strength(self):
+        a = BusinessActor(name="A")
+        b = BusinessActor(name="B")
+        el = serialize_relationship(
+            Influence(name="i", source=a, target=b, sign=InfluenceSign.STRONG_POSITIVE)
+        )
+        assert el.get("modifier") == "++"
+        assert el.get("strength") is None
+
+    def test_sign_round_trips_through_modifier(self):
+        m = Model()
+        a = BusinessActor(name="A")
+        b = BusinessActor(name="B")
+        m.add(a)
+        m.add(b)
+        m.add(Influence(name="i", source=a, target=b, sign=InfluenceSign.NEGATIVE))
+        restored = deserialize_model(serialize_model(m))
+        inf = next(r for r in restored.relationships if isinstance(r, Influence))
+        assert inf.sign is InfluenceSign.NEGATIVE
+        assert inf.strength is None
+
+    def test_freetext_strength_round_trips_through_modifier(self):
+        m = Model()
+        a = BusinessActor(name="A")
+        b = BusinessActor(name="B")
+        m.add(a)
+        m.add(b)
+        m.add(Influence(name="i", source=a, target=b, strength="high"))
+        restored = deserialize_model(serialize_model(m))
+        inf = next(r for r in restored.relationships if isinstance(r, Influence))
+        assert inf.strength == "high"
+        assert inf.sign is None
+
+
+class TestFullSchemaValidation:
+    """validate_exchange_format covers the full Model+View+Diagram schema (#119)."""
+
+    def test_validator_uses_diagram_schema_set(self):
+        from etcion.serialization.xml import _XSD_PATH
+
+        assert _XSD_PATH.name == "archimate3_Diagram.xsd"
+
+    def test_model_with_relationships_validates_end_to_end(self):
+        m = Model()
+        a = BusinessActor(name="A")
+        b = BusinessService(name="B")
+        m.add(a)
+        m.add(b)
+        m.add(Serving(source=a, target=b))
+        assert validate_exchange_format(serialize_model(m)) == []

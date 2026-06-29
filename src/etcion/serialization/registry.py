@@ -222,11 +222,14 @@ def _register_all() -> None:
         xml_tag="Access",
         extra_attrs={"accessType": lambda r: _enum_val(r, "access_mode")},
     )
+    # The Exchange Format folds sign *and* strength into the single optional
+    # @modifier attribute (InfluenceModifierType = union(InfluenceStrengthEnum,
+    # xs:string)); there is no @strength attribute (#118).  Prefer the free-text
+    # strength when set, else fall back to the sign enum value.
     TYPE_REGISTRY[Influence] = TypeDescriptor(
         xml_tag="Influence",
         extra_attrs={
-            "modifier": lambda r: _enum_val(r, "sign"),
-            "strength": lambda r: r.strength,
+            "modifier": lambda r: r.strength if r.strength is not None else _enum_val(r, "sign"),
         },
     )
     TYPE_REGISTRY[Association] = TypeDescriptor(
@@ -237,10 +240,13 @@ def _register_all() -> None:
         xml_tag="Flow",
         extra_attrs={},
     )
-    TYPE_REGISTRY[Junction] = TypeDescriptor(
-        xml_tag="Junction",
-        extra_attrs={"type": lambda j: j.junction_type.value},
-    )
+    # Junctions are RelationshipConnectors (not Elements/Relationships) and are
+    # serialized by serialize_junction() as <element xsi:type="AndJunction|
+    # OrJunction"> per the XSD (RelationshipConnectorType extends ElementType).
+    # The xml_tag here is retained only for registry completeness; the concrete
+    # AndJunction/OrJunction tags are handled directly by the (de)serializer
+    # (#118).
+    TYPE_REGISTRY[Junction] = TypeDescriptor(xml_tag="Junction")
 
 
 _register_all()

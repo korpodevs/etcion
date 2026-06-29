@@ -212,3 +212,40 @@ Serializing Model to dict (via Pydantic), then dict to XML. Rejected because:
 - Users must import from `etcion.serialization.xml` rather than calling `model.to_xml()`. This is less discoverable but consistent with the library's separation of concerns.
 - The type registry must be kept in sync with the metamodel class hierarchy. A missing registration is a silent bug until a serialization test catches it.
 - Opaque XML preservation (`_opaque_xml`) adds memory overhead proportional to unrecognized content. For models with large view sections, this could be significant.
+
+## Addendum (2026-06-28): NCName-safe identifiers on write (#117)
+
+This addendum amends **Decision 4 (Identifier Format)** and **Decision 8 (XSD Validation)** in response to issue #117. It does not reopen those decisions; it constrains one edge they left open.
+
+### Problem
+
+`Concept.id` accepts any non-empty string (ADR-006: the ArchiMate spec mandates only uniqueness, not a format). On write, `_to_exchange_id()` prepends `id-` and emits the value verbatim into the `identifier` attribute (Decision 4). The Exchange Format XSD types every `identifier`/`source`/`target`/`*Ref` attribute as `xs:ID`/`xs:IDREF`, both derived from XML `NCName` — which forbids `:`, `/`, spaces, and a leading digit, among others.
+
+The result: a user-supplied id such as `api:default/load-template-api` produces XML that fails the bundled XSD. Because validation is opt-in (Decision 8), the library emitted non-conformant XML with no signal. Archi rejected it on import with `cvc-datatype-valid.1.2.1: ... is not a valid value for 'NCName'`.
+
+The in-memory model staying format-agnostic is correct (ADR-006) — a model may only ever be exported to JSON/CSV/graph, where NCName is irrelevant. The constraint is a property of the *Exchange Format serialization target*, so it is enforced at the serialization boundary, not on `Concept.id`.
+
+### Scope of the failure mode
+
+An audit of the serializer found that **every** user-controlled value reaching an `xs:ID`/`xs:IDREF` slot comes from one of four sources. All other user-controlled output (`name`, `documentation`, specialization/property values, model name) lands in `xs:string`, which has no lexical constraint and needs no validation. `xml:lang` is a hard-coded constant. There is therefore no need for a general "validate the whole tree on write" path; the failure surface is closed at these four sources:
+
+| User source | XML slot(s) | XSD type |
+|---|---|---|
+| `Concept.id` | element/relationship `@identifier`; transitively `node/@elementRef`, `connection/@relationshipRef` | `xs:ID` / `xs:IDREF` |
+| `Relationship.source_id` | relationship `@source` | `xs:IDREF` |
+| `Relationship.target_id` | relationship `@target` | `xs:IDREF` |
+| `extended_attributes` keys | `property/@propertyDefinitionRef` **and** `propertyDefinition/@identifier` | `xs:IDREF` + `xs:ID` |
+
+The `extended_attributes` keys are the non-obvious vector: a single malformed key violates the schema in two places (the `propertyDefinition` that declares it and every `property` that references it).
+
+### Decision
+
+`write_model()` / `serialize_model()` gain an `on_invalid_id` policy parameter governing what happens when any of the four sources produces a value that is not a valid `NCName` (after `id-` prefixing):
+
+- `"raise"` (**default**) — collect **all** offending values in one pass and raise a single typed exception (e.g. `InvalidExchangeIdentifierError`) carrying the full `{value: reason}` mapping. The "everything we emit conforms to the bundled XSD" contract holds unless explicitly waived.
+- `"sanitize"` — deterministically rewrite offending values to valid NCNames via the existing bidirectional id-map (Decision 4), collision-safely (a sanitized value that collides with another id must be disambiguated). `source`/`target`/`*Ref` resolve through the same map, so references are fixed consistently for free. The caller's model object is **not** mutated; the rewrite happens only in the emitted tree.
+- `"allow"` — emit verbatim (the pre-#117 behavior), for callers whose downstream consumer is lenient.
+
+Rationale for raise-as-default over silent sanitize: the offending ids are frequently meaningful external-system keys, and silently rewriting them breaks traceability and any external references. Failing loud and early is more debuggable than ids that silently changed shape. The check is a cheap regex over a bounded set, so it is on by default; full XSD validation (Decision 8) remains the authoritative, opt-in superset behind it.
+
+This is intentionally not a Pydantic validator on `Concept.id` — that would violate ADR-006 and reject valid models destined for non-XML formats.
